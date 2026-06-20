@@ -25,6 +25,22 @@ public class SlashArcProjectile : ModProjectile
 	private int _weaponItemType;
 	private int _nextSlashCount;
 	private float _targetRotation;
+	private bool _usesVisualProfile;
+	private int _profileAge;
+	private int _profileTrailCount;
+	private float _profileXScale = 1f;
+	private float _profileStartDepth;
+	private float _profileHitDepth;
+	private float _profileEndDepth;
+	private float _profileHitProgress = 0.5f;
+	private float _profileMainAlpha = 1f;
+	private float _profileCoreAlpha;
+	private float _profileFarRimAlpha;
+	private float _profileNearEdgeAlpha;
+	private float _profilePeakFlareAlpha;
+	private float _profileNearEdgeOffsetPixels;
+	private float _profileFarRimOffsetPixels;
+	private float _profileTrailDelayRadians;
 
 	public override string Texture => "Terraria/Images/Extra_193";
 
@@ -60,6 +76,39 @@ public class SlashArcProjectile : ModProjectile
 		SlashArcGlowProjectile.InitializeGlow(glow, startingRotation, configuredThickness, yScale, extraUpdates, !isPlayerOwned, color);
 	}
 
+	public static void CreateProfiledSlash(
+		bool isPlayerOwned,
+		IEntitySource source,
+		float rotation,
+		float startingRotation,
+		float length,
+		float thicknessScale,
+		float yScale,
+		int extraUpdates,
+		int damage,
+		float knockback,
+		int owner,
+		int ownerNPC,
+		int weaponItemType,
+		float knockbackRotation,
+		in SlashArcVisualProfile visual,
+		float hitProgress)
+	{
+		float configuredThickness = ModContent.GetInstance<MeleeWeaponEffectsGameplayConfig>().SlashScale * Math.Max(0.1f, thicknessScale);
+		Vector2 velocity = knockbackRotation.ToRotationVector2() * length;
+		Vector2 position = isPlayerOwned ? Main.player[owner].Center : Main.npc[ownerNPC].Center;
+		int projectileOwner = isPlayerOwned ? owner : Main.myPlayer;
+		float ai0 = isPlayerOwned ? 0f : ownerNPC;
+		Color color = visual.Tint == default ? Color.White : visual.Tint;
+
+		Projectile slash = Projectile.NewProjectileDirect(source, position, velocity, ModContent.ProjectileType<SlashArcProjectile>(), damage, knockback, projectileOwner, ai0, rotation);
+		InitializeSlash(slash, startingRotation, configuredThickness, yScale, extraUpdates, !isPlayerOwned, color, weaponItemType, nextSlashCount: 0, knockbackRotation);
+		InitializeVisualProfile(slash, in visual, hitProgress);
+
+		Projectile glow = Projectile.NewProjectileDirect(source, position, velocity, ModContent.ProjectileType<SlashArcGlowProjectile>(), damage, knockback, projectileOwner, ai0, rotation);
+		SlashArcGlowProjectile.InitializeProfiledGlow(glow, startingRotation, configuredThickness, yScale, extraUpdates, !isPlayerOwned, color, in visual, hitProgress);
+	}
+
 	private static void InitializeSlash(Projectile projectile, float startingRotation, float thickness, float yScale, int extraUpdates, bool npcOwned, Color color, int weaponItemType, int nextSlashCount, float targetRotation)
 	{
 		projectile.rotation = startingRotation;
@@ -75,6 +124,30 @@ public class SlashArcProjectile : ModProjectile
 			slash._weaponItemType = weaponItemType;
 			slash._nextSlashCount = nextSlashCount;
 			slash._targetRotation = targetRotation;
+			projectile.netUpdate = true;
+		}
+	}
+
+	private static void InitializeVisualProfile(Projectile projectile, in SlashArcVisualProfile visual, float hitProgress)
+	{
+		if (projectile.ModProjectile is SlashArcProjectile slash)
+		{
+			slash._usesVisualProfile = true;
+			slash._profileAge = 0;
+			slash._profileXScale = MathHelper.Clamp(visual.XScale, 0.2f, 2f);
+			slash._profileStartDepth = visual.StartDepth;
+			slash._profileHitDepth = visual.HitDepth;
+			slash._profileEndDepth = visual.EndDepth;
+			slash._profileHitProgress = MathHelper.Clamp(hitProgress, 0.08f, 0.92f);
+			slash._profileMainAlpha = MathHelper.Clamp(visual.MainAlpha, 0f, 1.5f);
+			slash._profileCoreAlpha = MathHelper.Clamp(visual.CoreAlpha, 0f, 1.5f);
+			slash._profileFarRimAlpha = MathHelper.Clamp(visual.FarRimAlpha, 0f, 1.5f);
+			slash._profileNearEdgeAlpha = MathHelper.Clamp(visual.NearEdgeAlpha, 0f, 1.5f);
+			slash._profilePeakFlareAlpha = MathHelper.Clamp(visual.PeakFlareAlpha, 0f, 1.5f);
+			slash._profileNearEdgeOffsetPixels = MathHelper.Clamp(visual.NearEdgeOffsetPixels, 0f, 24f);
+			slash._profileFarRimOffsetPixels = MathHelper.Clamp(visual.FarRimOffsetPixels, 0f, 24f);
+			slash._profileTrailCount = Math.Min(Math.Max(visual.TrailCount, 0), 2);
+			slash._profileTrailDelayRadians = MathHelper.ToRadians(MathHelper.Clamp(visual.TrailDelayDegrees, 0f, 30f));
 			projectile.netUpdate = true;
 		}
 	}
@@ -108,6 +181,22 @@ public class SlashArcProjectile : ModProjectile
 		writer.Write(_weaponItemType);
 		writer.Write(_nextSlashCount);
 		writer.Write(_targetRotation);
+		writer.Write(_usesVisualProfile);
+		writer.Write(_profileAge);
+		writer.Write(_profileTrailCount);
+		writer.Write(_profileXScale);
+		writer.Write(_profileStartDepth);
+		writer.Write(_profileHitDepth);
+		writer.Write(_profileEndDepth);
+		writer.Write(_profileHitProgress);
+		writer.Write(_profileMainAlpha);
+		writer.Write(_profileCoreAlpha);
+		writer.Write(_profileFarRimAlpha);
+		writer.Write(_profileNearEdgeAlpha);
+		writer.Write(_profilePeakFlareAlpha);
+		writer.Write(_profileNearEdgeOffsetPixels);
+		writer.Write(_profileFarRimOffsetPixels);
+		writer.Write(_profileTrailDelayRadians);
 	}
 
 	public override void ReceiveExtraAI(BinaryReader reader)
@@ -118,6 +207,22 @@ public class SlashArcProjectile : ModProjectile
 		_weaponItemType = reader.ReadInt32();
 		_nextSlashCount = reader.ReadInt32();
 		_targetRotation = reader.ReadSingle();
+		_usesVisualProfile = reader.ReadBoolean();
+		_profileAge = reader.ReadInt32();
+		_profileTrailCount = reader.ReadInt32();
+		_profileXScale = reader.ReadSingle();
+		_profileStartDepth = reader.ReadSingle();
+		_profileHitDepth = reader.ReadSingle();
+		_profileEndDepth = reader.ReadSingle();
+		_profileHitProgress = reader.ReadSingle();
+		_profileMainAlpha = reader.ReadSingle();
+		_profileCoreAlpha = reader.ReadSingle();
+		_profileFarRimAlpha = reader.ReadSingle();
+		_profileNearEdgeAlpha = reader.ReadSingle();
+		_profilePeakFlareAlpha = reader.ReadSingle();
+		_profileNearEdgeOffsetPixels = reader.ReadSingle();
+		_profileFarRimOffsetPixels = reader.ReadSingle();
+		_profileTrailDelayRadians = reader.ReadSingle();
 	}
 
 	public override bool ShouldUpdatePosition()
@@ -175,6 +280,11 @@ public class SlashArcProjectile : ModProjectile
 
 	public override void AI()
 	{
+		if (_usesVisualProfile)
+		{
+			_profileAge++;
+		}
+
 		Vector2 aimVector = Projectile.rotation.ToRotationVector2();
 		aimVector.Y *= Projectile.localAI[1];
 		aimVector = aimVector.RotatedBy(Projectile.ai[1]);
@@ -213,18 +323,26 @@ public class SlashArcProjectile : ModProjectile
 	{
 		Vector2 ownerCenter = OwnerCenterWorld() - Main.screenPosition;
 		float weaponRotation = CurrentWeaponRotation();
-		BuildVertices(ownerCenter);
-		if (_vertexCount >= 3)
+		int style = ModContent.GetInstance<MeleeWeaponEffectsVisualConfig>().SlashStyle;
+
+		if (_usesVisualProfile)
 		{
-			int style = ModContent.GetInstance<MeleeWeaponEffectsVisualConfig>().SlashStyle;
-			Main.spriteBatch.End();
-			Main.spriteBatch.Begin(SpriteSortMode.Immediate, style == 1 ? BlendState.AlphaBlend : BlendState.NonPremultiplied, SamplerState.AnisotropicClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
-			Main.graphics.GraphicsDevice.Textures[0] = style == 1 ? TextureAssets.Projectile[Projectile.type].Value : MeleeEffectAssets.GetTexture(MeleeEffectAssets.SlashTexture);
-			Main.graphics.GraphicsDevice.Textures[1] = GetWeaponTexture();
-			_slashEffect.CurrentTechnique.Passes[0].Apply();
-			Main.graphics.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleStrip, _vertices, 0, _vertexCount - 2);
-			Main.spriteBatch.End();
-			Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
+			DrawProfiledSlash(ownerCenter, style);
+		}
+		else
+		{
+			BuildVertices(ownerCenter);
+			if (_vertexCount >= 3)
+			{
+				Main.spriteBatch.End();
+				Main.spriteBatch.Begin(SpriteSortMode.Immediate, style == 1 ? BlendState.AlphaBlend : BlendState.NonPremultiplied, SamplerState.AnisotropicClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
+				Main.graphics.GraphicsDevice.Textures[0] = style == 1 ? TextureAssets.Projectile[Projectile.type].Value : MeleeEffectAssets.GetTexture(MeleeEffectAssets.SlashTexture);
+				Main.graphics.GraphicsDevice.Textures[1] = GetWeaponTexture();
+				_slashEffect.CurrentTechnique.Passes[0].Apply();
+				Main.graphics.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleStrip, _vertices, 0, _vertexCount - 2);
+				Main.spriteBatch.End();
+				Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
+			}
 		}
 
 		DrawWeapon(ownerCenter, weaponRotation);
@@ -248,6 +366,54 @@ public class SlashArcProjectile : ModProjectile
 		}
 
 		return Projectile.Center;
+	}
+
+	private void DrawProfiledSlash(Vector2 ownerCenter, int style)
+	{
+		Main.spriteBatch.End();
+		Main.spriteBatch.Begin(SpriteSortMode.Immediate, style == 1 ? BlendState.AlphaBlend : BlendState.NonPremultiplied, SamplerState.AnisotropicClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
+		Main.graphics.GraphicsDevice.Textures[0] = style == 1 ? TextureAssets.Projectile[Projectile.type].Value : MeleeEffectAssets.GetTexture(MeleeEffectAssets.SlashTexture);
+		Main.graphics.GraphicsDevice.Textures[1] = GetWeaponTexture();
+		_slashEffect.CurrentTechnique.Passes[0].Apply();
+
+		if (_profileFarRimAlpha > 0f)
+		{
+			DrawProfilePass(ownerCenter, style, ProfileVisualPass.FarRim, 0f);
+		}
+
+		for (int trail = _profileTrailCount; trail >= 1; trail--)
+		{
+			DrawProfilePass(ownerCenter, style, ProfileVisualPass.TrailEcho, -_profileTrailDelayRadians * trail);
+		}
+
+		DrawProfilePass(ownerCenter, style, ProfileVisualPass.Main, 0f);
+
+		if (_profileCoreAlpha > 0f)
+		{
+			DrawProfilePass(ownerCenter, style, ProfileVisualPass.Core, 0f);
+		}
+
+		if (_profilePeakFlareAlpha > 0f)
+		{
+			DrawProfilePass(ownerCenter, style, ProfileVisualPass.PeakFlare, 0f);
+		}
+
+		if (_profileNearEdgeAlpha > 0f)
+		{
+			DrawProfilePass(ownerCenter, style, ProfileVisualPass.NearEdge, 0f);
+		}
+
+		Main.spriteBatch.End();
+		Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
+	}
+
+	private void DrawProfilePass(Vector2 ownerCenter, int style, ProfileVisualPass pass, float angleOffset)
+	{
+		BuildProfileVertices(ownerCenter, style, pass, angleOffset);
+		if (_vertexCount >= 3)
+		{
+			Main.graphics.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleStrip, _vertices, 0, _vertexCount - 2);
+		}
 	}
 
 	private void BuildVertices(Vector2 ownerCenter)
@@ -288,6 +454,167 @@ public class SlashArcProjectile : ModProjectile
 			_vertices[_vertexCount++] = new SlashVertex(ownerCenter + outer, new Vector3(factor, 0f, 1f), _color * factor);
 			_vertices[_vertexCount++] = new SlashVertex(ownerCenter + inner, new Vector3(factor, 1f, 1f), _color * factor);
 		}
+	}
+
+	private void BuildProfileVertices(Vector2 ownerCenter, int style, ProfileVisualPass pass, float angleOffset)
+	{
+		_vertexCount = 0;
+		float trailLength = Projectile.oldPos.Length;
+
+		for (int i = 0; i < Projectile.oldPos.Length; i++)
+		{
+			if (Projectile.oldRot[i] == 0f)
+			{
+				continue;
+			}
+
+			float trailFactor = 1f - i / trailLength;
+			float progress = ProfileProgressAtTrailIndex(i);
+			float depth = EvaluateProfileDepth(progress);
+			float nearAmount = MathHelper.Clamp((depth + 0.9f) / 2.4f, 0f, 1f);
+			float farAmount = 1f - nearAmount;
+			float hitPeak = EvaluateHitPeak(progress);
+
+			GetProfilePassSettings(pass, nearAmount, farAmount, hitPeak, out float alpha, out float outerScale, out float widthScale, out float offsetPixels, out Color passColor);
+			if (alpha <= 0f)
+			{
+				continue;
+			}
+
+			float rotation = Projectile.oldRot[i] + angleOffset;
+			float depthScale = 1f + MathHelper.Clamp(depth, -1.2f, 1.5f) * 0.08f;
+			float length = Projectile.velocity.Length();
+			float outerRadius = length * outerScale * depthScale;
+			float innerRadius;
+			if (style == 1)
+			{
+				float width = MathHelper.Clamp(Projectile.localAI[0] * widthScale, 0.02f, 0.95f);
+				innerRadius = length * (outerScale - width + width * i / trailLength) * depthScale;
+			}
+			else
+			{
+				innerRadius = 10f * outerScale * depthScale;
+			}
+
+			Vector2 outer = ProfileVector(rotation, outerRadius);
+			Vector2 inner = ProfileVector(rotation, innerRadius);
+			Vector2 offset = ProfileScreenOffset(outer, offsetPixels);
+			float depthAlpha = 1f + MathHelper.Clamp(depth, -1f, 1.4f) * 0.1f;
+			Color color = passColor * alpha * trailFactor * depthAlpha;
+
+			if (_vertexCount + 2 > _vertices.Length)
+			{
+				break;
+			}
+
+			_vertices[_vertexCount++] = new SlashVertex(ownerCenter + outer + offset, new Vector3(trailFactor, 0f, 1f), color);
+			_vertices[_vertexCount++] = new SlashVertex(ownerCenter + inner + offset, new Vector3(trailFactor, 1f, 1f), color);
+		}
+	}
+
+	private Vector2 ProfileVector(float rotation, float radius)
+	{
+		Vector2 direction = rotation.ToRotationVector2();
+		direction.X *= _profileXScale;
+		direction.Y *= Projectile.localAI[1];
+		return (direction * radius).RotatedBy(Projectile.ai[1]);
+	}
+
+	private Vector2 ProfileScreenOffset(Vector2 outer, float offsetPixels)
+	{
+		if (offsetPixels == 0f)
+		{
+			return Vector2.Zero;
+		}
+
+		Vector2 normal = new(-outer.Y, outer.X);
+		if (normal.LengthSquared() < 0.001f)
+		{
+			return Vector2.Zero;
+		}
+
+		normal.Normalize();
+		if (_reverse)
+		{
+			normal *= -1f;
+		}
+
+		return normal * offsetPixels;
+	}
+
+	private void GetProfilePassSettings(ProfileVisualPass pass, float nearAmount, float farAmount, float hitPeak, out float alpha, out float outerScale, out float widthScale, out float offsetPixels, out Color passColor)
+	{
+		alpha = _profileMainAlpha;
+		outerScale = 1f;
+		widthScale = 1f;
+		offsetPixels = 0f;
+		passColor = _color;
+
+		switch (pass)
+		{
+			case ProfileVisualPass.FarRim:
+				alpha = _profileFarRimAlpha * (0.45f + farAmount * 0.75f);
+				outerScale = 0.98f;
+				widthScale = 0.2f;
+				offsetPixels = -_profileFarRimOffsetPixels * (0.4f + farAmount * 0.6f);
+				passColor = Color.Lerp(_color, Color.Black, 0.28f);
+				break;
+			case ProfileVisualPass.TrailEcho:
+				alpha = _profileMainAlpha * 0.24f;
+				outerScale = 0.96f;
+				widthScale = 0.58f;
+				offsetPixels = -_profileFarRimOffsetPixels * 0.35f;
+				passColor = Color.Lerp(_color, Color.White, 0.2f);
+				break;
+			case ProfileVisualPass.Core:
+				alpha = _profileCoreAlpha * (0.55f + hitPeak * 0.45f);
+				outerScale = 0.94f + nearAmount * 0.03f;
+				widthScale = 0.34f;
+				passColor = Color.Lerp(_color, Color.White, 0.62f);
+				break;
+			case ProfileVisualPass.PeakFlare:
+				alpha = _profilePeakFlareAlpha * hitPeak;
+				outerScale = 1.04f + nearAmount * 0.08f;
+				widthScale = 0.26f;
+				offsetPixels = _profileNearEdgeOffsetPixels * nearAmount * 0.45f;
+				passColor = Color.Lerp(_color, Color.White, 0.82f);
+				break;
+			case ProfileVisualPass.NearEdge:
+				alpha = _profileNearEdgeAlpha * (0.35f + nearAmount * 0.95f);
+				outerScale = 1.03f + nearAmount * 0.04f;
+				widthScale = 0.22f;
+				offsetPixels = _profileNearEdgeOffsetPixels * nearAmount;
+				passColor = Color.Lerp(_color, Color.White, 0.48f);
+				break;
+		}
+	}
+
+	private float ProfileProgressAtTrailIndex(int trailIndex)
+	{
+		return MathHelper.Clamp((_profileAge - trailIndex) / 60f, 0f, 1f);
+	}
+
+	private float EvaluateProfileDepth(float progress)
+	{
+		if (progress <= _profileHitProgress)
+		{
+			return MathHelper.Lerp(_profileStartDepth, _profileHitDepth, Smooth01(progress / _profileHitProgress));
+		}
+
+		return MathHelper.Lerp(_profileHitDepth, _profileEndDepth, Smooth01((progress - _profileHitProgress) / (1f - _profileHitProgress)));
+	}
+
+	private float EvaluateHitPeak(float progress)
+	{
+		float distance = Math.Abs(progress - _profileHitProgress);
+		float peak = 1f - MathHelper.Clamp(distance / 0.16f, 0f, 1f);
+		return peak * peak;
+	}
+
+	private static float Smooth01(float value)
+	{
+		value = MathHelper.Clamp(value, 0f, 1f);
+		return value * value * (3f - 2f * value);
 	}
 
 	private void DrawWeapon(Vector2 ownerCenter, float weaponRotation)
@@ -401,5 +728,15 @@ public class SlashArcProjectile : ModProjectile
 				Projectile.NewProjectile(Projectile.GetSource_FromAI(), target.Center, Main.rand.NextVector2Unit(0f, MathHelper.TwoPi) * 5f, ProjectileID.IchorSplash, Projectile.damage / 2, Projectile.knockBack, Projectile.owner);
 			}
 		}
+	}
+
+	private enum ProfileVisualPass
+	{
+		FarRim,
+		TrailEcho,
+		Main,
+		Core,
+		PeakFlare,
+		NearEdge
 	}
 }

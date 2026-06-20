@@ -174,22 +174,23 @@ public class SlashChannelProjectile : ModProjectile
 		float length = _weaponLength * LegacyAverageLengthScale * step.LengthScale;
 		float yScale = RuntimeYScaleForStep(in step);
 
-		SlashArcProjectile.CreateSlash(
+		SlashArcProjectile.CreateProfiledSlash(
 			isPlayerOwned: true,
 			source: Projectile.GetSource_FromAI(),
 			rotation: baseRotation,
 			startingRotation: startingRotation,
 			length: length,
-			thickness: 0.5f * step.ThicknessScale,
+			thicknessScale: step.ThicknessScale,
 			yScale: yScale,
 			extraUpdates: step.ExtraUpdates,
 			damage: Projectile.damage,
 			knockback: Projectile.knockBack,
 			owner: player.whoAmI,
-			color: step.Visual.Tint,
+			ownerNPC: 0,
 			weaponItemType: _weaponItemType,
 			knockbackRotation: _aimRotation,
-			weaponScale: _weaponLength);
+			visual: in step.Visual,
+			hitProgress: (step.ActiveStart + step.ActiveEnd) * 0.5f);
 
 		_comboStepIndex = (_comboStepIndex + 1) % Compact3DComboSchemeA.Count;
 		Projectile.netUpdate = true;

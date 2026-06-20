@@ -17,6 +17,16 @@ public class SlashArcGlowProjectile : ModProjectile
 	private bool _reverse;
 	private bool _npcOwned;
 	private Color _color = Color.White;
+	private bool _usesVisualProfile;
+	private int _profileAge;
+	private float _profileXScale = 1f;
+	private float _profileStartDepth;
+	private float _profileHitDepth;
+	private float _profileEndDepth;
+	private float _profileHitProgress = 0.5f;
+	private float _profileGlowAlpha = 1f;
+	private float _profilePeakFlareAlpha;
+	private float _profileNearEdgeOffsetPixels;
 
 	public override string Texture => MeleeEffectAssets.SlashGlowTexture;
 
@@ -32,6 +42,26 @@ public class SlashArcGlowProjectile : ModProjectile
 			glow._reverse = startingRotation > 0f;
 			glow._npcOwned = npcOwned;
 			glow._color = color == default ? Color.White : color;
+			projectile.netUpdate = true;
+		}
+	}
+
+	public static void InitializeProfiledGlow(Projectile projectile, float startingRotation, float thickness, float yScale, int extraUpdates, bool npcOwned, Color color, in SlashArcVisualProfile visual, float hitProgress)
+	{
+		InitializeGlow(projectile, startingRotation, thickness, yScale, extraUpdates, npcOwned, color);
+
+		if (projectile.ModProjectile is SlashArcGlowProjectile glow)
+		{
+			glow._usesVisualProfile = true;
+			glow._profileAge = 0;
+			glow._profileXScale = MathHelper.Clamp(visual.XScale, 0.2f, 2f);
+			glow._profileStartDepth = visual.StartDepth;
+			glow._profileHitDepth = visual.HitDepth;
+			glow._profileEndDepth = visual.EndDepth;
+			glow._profileHitProgress = MathHelper.Clamp(hitProgress, 0.08f, 0.92f);
+			glow._profileGlowAlpha = MathHelper.Clamp(visual.GlowAlpha, 0f, 1.5f);
+			glow._profilePeakFlareAlpha = MathHelper.Clamp(visual.PeakFlareAlpha, 0f, 1.5f);
+			glow._profileNearEdgeOffsetPixels = MathHelper.Clamp(visual.NearEdgeOffsetPixels, 0f, 24f);
 			projectile.netUpdate = true;
 		}
 	}
@@ -58,6 +88,16 @@ public class SlashArcGlowProjectile : ModProjectile
 		writer.Write(_reverse);
 		writer.Write(_npcOwned);
 		writer.Write(_color.PackedValue);
+		writer.Write(_usesVisualProfile);
+		writer.Write(_profileAge);
+		writer.Write(_profileXScale);
+		writer.Write(_profileStartDepth);
+		writer.Write(_profileHitDepth);
+		writer.Write(_profileEndDepth);
+		writer.Write(_profileHitProgress);
+		writer.Write(_profileGlowAlpha);
+		writer.Write(_profilePeakFlareAlpha);
+		writer.Write(_profileNearEdgeOffsetPixels);
 	}
 
 	public override void ReceiveExtraAI(BinaryReader reader)
@@ -65,6 +105,16 @@ public class SlashArcGlowProjectile : ModProjectile
 		_reverse = reader.ReadBoolean();
 		_npcOwned = reader.ReadBoolean();
 		_color = new Color { PackedValue = reader.ReadUInt32() };
+		_usesVisualProfile = reader.ReadBoolean();
+		_profileAge = reader.ReadInt32();
+		_profileXScale = reader.ReadSingle();
+		_profileStartDepth = reader.ReadSingle();
+		_profileHitDepth = reader.ReadSingle();
+		_profileEndDepth = reader.ReadSingle();
+		_profileHitProgress = reader.ReadSingle();
+		_profileGlowAlpha = reader.ReadSingle();
+		_profilePeakFlareAlpha = reader.ReadSingle();
+		_profileNearEdgeOffsetPixels = reader.ReadSingle();
 	}
 
 	public override bool ShouldUpdatePosition()
@@ -74,6 +124,11 @@ public class SlashArcGlowProjectile : ModProjectile
 
 	public override void AI()
 	{
+		if (_usesVisualProfile)
+		{
+			_profileAge++;
+		}
+
 		if (Projectile.timeLeft > 40)
 		{
 			float rotationStep = MathHelper.Lerp(0.14f, 0f, 1f - (Projectile.timeLeft - 40) / 60f);
@@ -136,22 +191,97 @@ public class SlashArcGlowProjectile : ModProjectile
 			}
 
 			float factor = 1f - i / 40f;
-			Vector2 outer = Projectile.oldRot[i].ToRotationVector2() * Projectile.velocity.Length();
-			outer.Y *= Projectile.localAI[1];
+			float progress = ProfileProgressAtTrailIndex(i);
+			float depth = _usesVisualProfile ? EvaluateProfileDepth(progress) : 0f;
+			float hitPeak = _usesVisualProfile ? EvaluateHitPeak(progress) : 0f;
+			float nearAmount = MathHelper.Clamp((depth + 0.9f) / 2.4f, 0f, 1f);
+			float depthScale = _usesVisualProfile ? 1f + MathHelper.Clamp(depth, -1.2f, 1.5f) * 0.1f : 1f;
+			float glowScale = _usesVisualProfile ? 1.04f + nearAmount * 0.08f + hitPeak * 0.05f : 1f;
+			float widthScale = _usesVisualProfile ? 1.08f + nearAmount * 0.16f : 1f;
+			Vector2 outer = ProfileVector(Projectile.oldRot[i], Projectile.velocity.Length() * glowScale * depthScale);
 			outer = outer.RotatedBy(Projectile.ai[1]);
 
-			Vector2 inner = Projectile.oldRot[i].ToRotationVector2() * Projectile.velocity.Length() * (1f - Projectile.localAI[0] + Projectile.localAI[0] * i / 40f);
-			inner.Y *= Projectile.localAI[1];
+			float width = MathHelper.Clamp(Projectile.localAI[0] * widthScale, 0.02f, 0.95f);
+			Vector2 inner = ProfileVector(Projectile.oldRot[i], Projectile.velocity.Length() * (glowScale - width + width * i / 40f) * depthScale);
 			inner = inner.RotatedBy(Projectile.ai[1]);
+			Vector2 offset = ProfileScreenOffset(outer, _usesVisualProfile ? _profileNearEdgeOffsetPixels * nearAmount * 0.55f : 0f);
 
 			if (_vertexCount + 2 > _vertices.Length)
 			{
 				break;
 			}
 
-			Color color = _color * blink * factor;
-			_vertices[_vertexCount++] = new SlashVertex(ownerCenter + outer, new Vector3(factor, 0f, 1f), color);
-			_vertices[_vertexCount++] = new SlashVertex(ownerCenter + inner, new Vector3(factor, 1f, 1f), color);
+			float alpha = _usesVisualProfile ? _profileGlowAlpha * (0.65f + nearAmount * 0.35f + _profilePeakFlareAlpha * hitPeak * 0.3f) : 1f;
+			Color color = _color * blink * factor * alpha;
+			_vertices[_vertexCount++] = new SlashVertex(ownerCenter + outer + offset, new Vector3(factor, 0f, 1f), color);
+			_vertices[_vertexCount++] = new SlashVertex(ownerCenter + inner + offset, new Vector3(factor, 1f, 1f), color);
 		}
+	}
+
+	private Vector2 ProfileVector(float rotation, float radius)
+	{
+		Vector2 direction = rotation.ToRotationVector2();
+		if (_usesVisualProfile)
+		{
+			direction.X *= _profileXScale;
+		}
+
+		direction.Y *= Projectile.localAI[1];
+		return direction * radius;
+	}
+
+	private Vector2 ProfileScreenOffset(Vector2 outer, float offsetPixels)
+	{
+		if (offsetPixels == 0f)
+		{
+			return Vector2.Zero;
+		}
+
+		Vector2 normal = new(-outer.Y, outer.X);
+		if (normal.LengthSquared() < 0.001f)
+		{
+			return Vector2.Zero;
+		}
+
+		normal.Normalize();
+		if (_reverse)
+		{
+			normal *= -1f;
+		}
+
+		return normal * offsetPixels;
+	}
+
+	private float ProfileProgressAtTrailIndex(int trailIndex)
+	{
+		return MathHelper.Clamp((_profileAge - trailIndex) / 60f, 0f, 1f);
+	}
+
+	private float EvaluateProfileDepth(float progress)
+	{
+		if (!_usesVisualProfile)
+		{
+			return 0f;
+		}
+
+		if (progress <= _profileHitProgress)
+		{
+			return MathHelper.Lerp(_profileStartDepth, _profileHitDepth, Smooth01(progress / _profileHitProgress));
+		}
+
+		return MathHelper.Lerp(_profileHitDepth, _profileEndDepth, Smooth01((progress - _profileHitProgress) / (1f - _profileHitProgress)));
+	}
+
+	private float EvaluateHitPeak(float progress)
+	{
+		float distance = System.Math.Abs(progress - _profileHitProgress);
+		float peak = 1f - MathHelper.Clamp(distance / 0.16f, 0f, 1f);
+		return peak * peak;
+	}
+
+	private static float Smooth01(float value)
+	{
+		value = MathHelper.Clamp(value, 0f, 1f);
+		return value * value * (3f - 2f * value);
 	}
 }
