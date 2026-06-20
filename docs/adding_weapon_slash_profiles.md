@@ -23,8 +23,10 @@
 
 - 目标武器是否已经有 exact profile。
 - 当前 tModLoader 版本里的 `ItemID` 常量名是否和游戏显示名一致。例如 Volcano 当前使用 `ItemID.FieryGreatsword`。
+- 当前 tModLoader 版本里的 `DustID` 常量名是否真实存在。不要按概念猜 `DustID.Plantera_Green`、`DustID.Pumpkin` 这类名字；先查本地元数据或用构建验证。
 - 目标武器是否已有原版弹幕逻辑，需要避免视觉过量。
 - 不要只实现设计表里的少数样例后就假设同类武器都有特效。当前系统只对 `ExactProfiles` 里显式映射的武器生效，漏掉映射就等于完全没有主题粒子。
+- 共享 profile 是允许的，例如木剑族、早期金属剑族、Phaseblade 族。但每把武器仍要显式写入 `ExactProfiles`。
 
 ## 2. 当前正确扩展点
 
@@ -127,6 +129,15 @@ SlashProfileId.TargetWeapon => SlashProfiles.TargetWeapon,
 
 如果不确定 `ItemID` 名称，先 `rg` 搜索或尝试构建。Volcano 的经验是：游戏显示名可能是 Volcano，但代码常量仍是 `ItemID.FieryGreatsword`。
 
+本轮继续适配其他刀剑时，确认到几个类似例子：
+
+- Light's Bane 是 `ItemID.LightsBane`。
+- The Horseman's Blade 是 `ItemID.TheHorsemansBlade`。
+- Brand of the Inferno 是 `ItemID.DD2SquireDemonSword`。
+- Flying Dragon 是 `ItemID.DD2SquireBetsySword`。
+
+可以用 Mono.Cecil 或构建验证确认本地 tModLoader 的常量名。构建能捕获拼写错误，但不能判断武器是否真的走当前横斩路径；特殊动作武器仍要进游戏验证。
+
 ## 5. 数值建议
 
 ### 5.1 挥舞粒子
@@ -145,10 +156,14 @@ SlashProfileId.TargetWeapon => SlashProfiles.TargetWeapon,
 
 - `CommonSpark`、`DarkSpark`、`StarSpark` 都基于 `Dusts/Spark.png` 短线贴图，容易在挥砍中形成白带/色带。当前 active profile 不应再使用这些 dust。
 - 火焰类优先用 `DustID.Torch`。
+- 木剑可用 `DustID.WoodFurniture`。
 - 自然/草系可用参考项目的 `DustGrassLeaf = 107`。
 - 冰系可用 `DustIceShard = 135`。
 - 金属/圣光可用 `DustMetalSpark = 15`。
 - 星辰类使用参考项目的 `DustSoftStar = 278`，并使用粉金随机色：`new Color(255, 98, 206)` 或 `new Color(255, 218, 82)`。
+- 相位剑/光剑可用对应宝石尘：`DustID.GemSapphire/GemRuby/GemEmerald/GemAmethyst/GemDiamond/GemTopaz/GemAmber`。
+- 火星科技可用 `DustID.Electric` 和 `DustID.MartianHit`。
+- 彩虹/节日类可用 `DustID.RainbowMk2`、`DustID.FireworksRGB`、`DustID.Confetti*`。
 - 需要随机色时使用 `SlashParticleProfile` 的 `alternateDustColor`；需要漂浮感时设置 `noGravity: true`。
 
 ### 5.2 命中粒子
@@ -216,6 +231,20 @@ thicknessScale: 1.55f
 4. 再调长度/宽度。
 
 不要同一轮同时改粒子、长宽、颜色、连招和 shader。否则进游戏看到问题时很难判断来源。
+
+### 6.4 批量适配刀剑的经验
+
+批量适配时不要复制几十份几乎一样的 profile。可用私有 helper 或共享 profile 组织低身份武器：
+
+- 木剑族共用 `WoodSword`。
+- 铜/锡/铁/铅共用 `EarlyMetalSword`。
+- 银/钨/金/铂金共用 `NobleMetalSword`。
+- Phaseblade/Phasesaber 用 helper 按颜色生成同结构 profile。
+- 困难模式矿物剑用 helper 传颜色和长宽倍率。
+
+但是 resolver 映射必须逐把写清楚。共享 profile 只是减少参数重复，不等于启用 fallback。
+
+本轮暂时排除短剑、手套、长矛、鱼叉、Arkhalis/Terragrim、Zenith 等特殊动作武器。原因不是不能做，而是它们可能不走当前横斩刀光路径，或者原版 projectile 行为更特殊，需要单独验证。
 
 ## 7. 验证流程
 

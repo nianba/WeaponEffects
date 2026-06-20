@@ -70,10 +70,6 @@ public class SlashGlobalItem : GlobalItem
 		}
 
 		int projectileDamage = player.GetWeaponDamage(item);
-		if (player.altFunctionUse == 2)
-		{
-			projectileDamage *= ModContent.GetInstance<MeleeWeaponEffectsGameplayConfig>().ChargeDamage;
-		}
 
 		Projectile projectile = Projectile.NewProjectileDirect(
 			player.GetSource_ItemUse(item),

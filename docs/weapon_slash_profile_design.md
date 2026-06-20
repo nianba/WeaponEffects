@@ -141,21 +141,57 @@ finalThickness =
 | 神圣/圣光类 | Excalibur 系 | 金白光点 | 亮色爆点 | 长度 1.05-1.2，宽度 1.1-1.3 |
 | 星辰类 | Starfury、Star Wrath | 白蓝星点 | 亮色短爆闪 | 长度 1.1-1.25，宽度 0.8-1.0 |
 
-## 8. 重点武器建议
+## 8. 当前已适配武器
 
-| 武器 | 挥舞粒子 | 命中粒子 | 长宽建议 | 备注 |
+本轮以后，`SlashProfileResolver.ExactProfiles` 已经覆盖主要横斩刀剑。低身份武器使用共享族 profile，强主题武器使用单独 profile。共享 profile 仍然需要逐把 `ItemID` 映射，不能依赖 fallback。
+
+| 武器或武器组 | Exact 映射 | 挥舞粒子 | 命中粒子 | 长宽 |
 | --- | --- | --- | --- | --- |
-| Volcano / Fiery Greatsword | 橙红余烬 | 大型火焰爆点 | 长度 1.18，宽度 1.55 | 已实现 |
-| Night's Edge | 紫/亮紫随机 `DustSoftStar = 278` | 紫/深紫随机爆点 | 长度 1.08，宽度 0.95 | 不再使用 `DarkSpark`，避免白带 |
-| True Night's Edge | 亮紫/粉紫随机 `DustSoftStar = 278` | 强紫/深紫随机爆点 | 长度 1.15，宽度 1.05 | 注意保留原版弹幕 |
-| Excalibur | 金白随机 `DustMetalSpark = 15` | 金白/亮金爆点 | 长度 1.08，宽度 1.18 | 使用原生金属尘，避免线状白带 |
-| True Excalibur | 金白/亮白随机 `DustMetalSpark = 15` | 明亮金白/金色爆点 | 长度 1.15，宽度 1.25 | 注意保留原版弹幕 |
-| Blade of Grass | 草绿/黄绿随机 `DustGrassLeaf = 107` | 草绿色命中碎屑 | 长度 1.08，宽度 1.10 | 必须加入 exact profile，否则不会有主题粒子 |
-| Muramasa | 蓝/青蓝随机 `DustIceShard = 135` | 小型蓝白爆点 | 长度 1.0，宽度 0.7 | 适合展示窄快刀光 |
-| Ice Blade | 浅蓝/冰白随机 `DustIceShard = 135` | 冰晶爆点 | 长度 1.0，宽度 0.8 | 使用原生冰尘 |
-| Frostbrand | 亮蓝/冰白随机 `DustIceShard = 135` | 更强冰裂爆点 | 长度 1.12，宽度 0.9 | 比 Ice Blade 稍强 |
-| Starfury | 粉色/金色随机 `DustSoftStar = 278` | 粉金星光爆点 | 长度 1.12，宽度 0.85 | 参考项目粉金色，noGravity，避免叠原版落星 |
-| Bladetongue | 红黄粒子 | 红黄命中喷射 | 长度 1.05，宽度 1.05 | 已有 Ichor projectile，命中粒子别过量 |
+| 木剑族 | Wooden/Boreal/Palm/Ebon/Shade/Rich Mahogany/Pearl/Ash Wood Sword | 原生木屑 `DustID.WoodFurniture`，棕/浅木色随机 | 木屑爆点 | 0.96 / 0.88 |
+| 早期金属剑族 | Copper/Tin/Iron/Lead Broadsword | `DustMetalSpark = 15`，铜黄/冷白随机 | 小型金属火星 | 0.98 / 0.95 |
+| 贵金属剑族 | Silver/Tungsten/Gold/Platinum Broadsword | `DustMetalSpark = 15`，金白/银白随机 | 更亮金属火星 | 1.07 / 1.08 |
+| Cactus Sword | `ItemID.CactusSword` | 仙人掌/沙绿粒子 | 仙人掌碎屑 | 1.02 / 0.98 |
+| Bone Sword | `ItemID.BoneSword` | 骨屑 `DustID.Bone` | 骨屑爆点 | 1.00 / 0.95 |
+| Zombie Arm | `ItemID.ZombieArm` | 血色/腐绿色粒子 | 血色命中点 | 0.94 / 1.08 |
+| Candy Cane Sword | `ItemID.CandyCaneSword` | 红白纸屑 | 红白纸屑爆点 | 1.02 / 0.90 |
+| Katana | `ItemID.Katana` | 细金属火星 | 快速金属爆点 | 1.08 / 0.65 |
+| Falcon Blade | `ItemID.FalconBlade` | 银白/金色轻快火星 | 金属爆点 | 1.05 / 0.72 |
+| Light's Bane | `ItemID.LightsBane` | 恶魔矿紫尘/诅咒绿 | 紫绿命中爆点 | 1.02 / 0.90 |
+| Blood Butcherer | `ItemID.BloodButcherer` | 猩红粒子 | 血色命中爆点 | 1.06 / 1.16 |
+| Bee Keeper | `ItemID.BeeKeeper` | 蜂蜜/深棕粒子 | 蜂群/蜂蜜命中点 | 0.98 / 0.95 |
+| Enchanted Sword | `ItemID.EnchantedSword` | 金粉/粉光 | 金粉爆点 | 1.04 / 0.78 |
+| Volcano / Fiery Greatsword | `ItemID.FieryGreatsword` | 橙红余烬 | 大型火焰爆点 | 1.18 / 1.55 |
+| Night's Edge | `ItemID.NightsEdge` | 紫/亮紫 `DustSoftStar = 278` | 紫/深紫爆点 | 1.08 / 0.95 |
+| True Night's Edge | `ItemID.TrueNightsEdge` | 亮紫/粉紫 `DustSoftStar = 278` | 强紫/深紫爆点 | 1.15 / 1.05 |
+| Excalibur | `ItemID.Excalibur` | 金白金属尘 | 金白/亮金爆点 | 1.08 / 1.18 |
+| True Excalibur | `ItemID.TrueExcalibur` | 金白/亮白金属尘 | 明亮金白爆点 | 1.15 / 1.25 |
+| Blade of Grass | `ItemID.BladeofGrass` | 草绿/黄绿叶片尘 | 草绿色命中碎屑 | 1.08 / 1.10 |
+| Muramasa | `ItemID.Muramasa` | 蓝/青蓝冰尘 | 小型蓝白爆点 | 1.00 / 0.70 |
+| Ice Blade | `ItemID.IceBlade` | 浅蓝/冰白冰尘 | 冰晶爆点 | 1.00 / 0.80 |
+| Frostbrand | `ItemID.Frostbrand` | 亮蓝/冰白冰尘 | 更强冰裂爆点 | 1.12 / 0.90 |
+| Starfury | `ItemID.Starfury` | 粉/金 `DustSoftStar = 278` | 粉金星光爆点 | 1.12 / 0.85 |
+| Bladetongue | `ItemID.Bladetongue` | 红黄火尘 | 红黄命中喷射 | 1.05 / 1.05 |
+| Phaseblade 族 | Blue/Red/Green/Purple/White/Yellow/Orange Phaseblade | 对应宝石尘 | 同色宝石爆点 | 1.05 / 0.78 |
+| Phasesaber 族 | Blue/Red/Green/Purple/White/Yellow/Orange Phasesaber | 更强同色宝石尘 | 同色宝石爆点 | 1.12 / 0.72 |
+| 困难矿物剑族 | Cobalt/Palladium/Mythril/Orichalcum/Adamantite/Titanium Sword | 同主题色金属火星 | 同主题色金属爆点 | 1.04-1.10 / 0.95-1.12 |
+| Chlorophyte Saber | `ItemID.ChlorophyteSaber` | 叶绿武器尘 | 叶绿命中点 | 0.98 / 0.75 |
+| Chlorophyte Claymore | `ItemID.ChlorophyteClaymore` | 更重叶绿武器尘 | 叶绿爆点 | 1.16 / 1.20 |
+| Breaker Blade | `ItemID.BreakerBlade` | 灰烟/暗红 | 血色重击爆点 | 1.22 / 1.60 |
+| Cutlass | `ItemID.Cutlass` | 银白/金色金属火星 | 快速金属爆点 | 1.00 / 0.75 |
+| Keybrand | `ItemID.Keybrand` | 金色金属火星 | 金色钥匙光爆点 | 1.06 / 1.10 |
+| Beam Sword | `ItemID.BeamSword` | 青蓝/金色光尘 | 星光命中点 | 1.10 / 0.82 |
+| Terra Blade | `ItemID.TerraBlade` | 叶绿/浅绿光尘 | 叶绿爆点 | 1.20 / 1.05 |
+| The Horseman's Blade | `ItemID.TheHorsemansBlade` | 橙色火焰粒子 | 南瓜月火焰爆点 | 1.12 / 1.15 |
+| Christmas Tree Sword | `ItemID.ChristmasTreeSword` | 红绿彩灯/纸屑 | 彩灯爆点 | 1.15 / 1.05 |
+| Seedler | `ItemID.Seedler` | 绿叶/粉色种荚感 | 叶绿/粉色命中点 | 1.08 / 0.98 |
+| Influx Waver | `ItemID.InfluxWaver` | 青绿电弧 | 火星科技命中点 | 1.12 / 0.90 |
+| Star Wrath | `ItemID.StarWrath` | 蓝/金星光 | 蓝金星光爆点 | 1.20 / 0.85 |
+| Meowmere | `ItemID.Meowmere` | 彩虹/粉青粒子 | 粉金彩虹爆点 | 1.12 / 0.90 |
+| Psycho Knife | `ItemID.PsychoKnife` | 紫色暗影焰 | 短促紫色命中点 | 0.78 / 0.55 |
+| Brand of the Inferno | `ItemID.DD2SquireDemonSword` | 红橙火尘 | 火焰爆点 | 1.18 / 1.25 |
+| Flying Dragon | `ItemID.DD2SquireBetsySword` | 橙火/青色龙息感 | 火焰爆点 | 1.22 / 1.15 |
+
+本轮有意没有把短剑、手套、长矛、鞭、鱼叉类、Arkhalis/Terragrim、Zenith 等特殊动作武器纳入“已适配”。这些武器可能不走当前横斩 slash 路径，或者需要单独验证动作和原版 projectile 行为。
 
 ## 9. 验证标准
 
