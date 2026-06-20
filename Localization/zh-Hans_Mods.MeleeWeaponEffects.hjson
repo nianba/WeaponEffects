@@ -1,50 +1,47 @@
-Items: {
-	SlashTest: {
-		DisplayName: Slash Test
-		Tooltip: ""
-	}
-}
-
 Projectiles: {
-	ExampleSlash.DisplayName: Example Slash
-	ExampleSlashingEffect.DisplayName: Example Slashing Effect
-	ExampleSlashWeapon.DisplayName: Example Slash Weapon
-	HeroSlash2.DisplayName: Hero Slash2
-	HeroSlashMethod.DisplayName: Hero Slash Method
+	SlashChannelProjectile.DisplayName: 斩击引导
+	ChargedSlashProjectile.DisplayName: 蓄力斩击
+	SlashArcProjectile.DisplayName: 斩击弧光
+	SlashArcGlowProjectile.DisplayName: 斩击边光
+	SlashHitEffectProjectile.DisplayName: 斩击命中特效
 }
 
 Configs: {
-	Mconfig: {
-		DisplayName: ��ս��Ч�޸�-����
+	MeleeWeaponEffectsGameplayConfig: {
+		DisplayName: 近战武器特效 - 玩法
 
 		SlashScale: {
-			Label: ն������
-			// Tooltip: Slash Scale (0~1):This config can modify the effect's width
-		}
-
-		SlashBlink: {
-			Label: ն�������Ƿ񷢹�
-			// Tooltip: Slash Blink (0~1):This config can modify the effect's edge's glow
+			Label: 斩击宽度
+			Tooltip: 斩击宽度（0~1）：调整斩击判定和特效宽度。
 		}
 
 		ChargeDamage: {
-			Label: �����˺�����
-			// Tooltip: Charge (2~10 times):This config can modify the charged damage
+			Label: 蓄力伤害倍率
+			Tooltip: 蓄力（2~10 倍）：调整蓄力斩击伤害。
 		}
 
 		SlashCanKillProjectiles: {
-			Label: ն���Ƿ���Է��Ƶ�Ļ
-			// Tooltip: Determine whether your slash can destroy hostile projectiles
+			Label: 斩击摧毁敌方弹幕
+			Tooltip: 决定斩击是否可以摧毁敌方弹幕。
 		}
 
 		CanCharge: {
-			Label: �Ƿ�����Ҽ�����
-			// Tooltip: Determine whether the function that 'Right click to charge' is enable.
+			Label: 允许蓄力
+			Tooltip: 决定是否允许右键蓄力斩击。
+		}
+	}
+
+	MeleeWeaponEffectsVisualConfig: {
+		DisplayName: 近战武器特效 - 视觉
+
+		SlashBlink: {
+			Label: 边缘亮度
+			Tooltip: 边缘亮度（0~1）：调整斩击边缘发光强度。
 		}
 
-		Style: {
-			Label: ���
-			Tooltip: ������Ӱ���Ӿ�Ч��
+		SlashStyle: {
+			Label: 斩击样式
+			Tooltip: 选择斩击视觉样式。
 		}
 	}
 }

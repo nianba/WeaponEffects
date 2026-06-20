@@ -1,50 +1,47 @@
-Items: {
-	SlashTest: {
-		DisplayName: Slash Test
-		Tooltip: ""
-	}
-}
-
 Projectiles: {
-	ExampleSlash.DisplayName: Example Slash
-	ExampleSlashingEffect.DisplayName: Example Slashing Effect
-	ExampleSlashWeapon.DisplayName: Example Slash Weapon
-	HeroSlash2.DisplayName: Hero Slash2
-	HeroSlashMethod.DisplayName: Hero Slash Method
+	SlashChannelProjectile.DisplayName: Slash Channel
+	ChargedSlashProjectile.DisplayName: Charged Slash
+	SlashArcProjectile.DisplayName: Slash Arc
+	SlashArcGlowProjectile.DisplayName: Slash Arc Glow
+	SlashHitEffectProjectile.DisplayName: Slash Hit Effect
 }
 
 Configs: {
-	Mconfig: {
-		DisplayName: Mconfig
+	MeleeWeaponEffectsGameplayConfig: {
+		DisplayName: Melee Weapon Effects Gameplay
 
 		SlashScale: {
 			Label: Slash Scale
-			Tooltip: Slash Scale (0~1):This config can modify the effect's width
-		}
-
-		SlashBlink: {
-			Label: Slash Blink
-			Tooltip: Slash Blink (0~1):This config can modify the effect's edge's glow
+			Tooltip: Slash Scale (0~1): modifies the slash width.
 		}
 
 		ChargeDamage: {
 			Label: Charge Damage
-			Tooltip: Charge (2~10 times):This config can modify the charged damage
+			Tooltip: Charge (2~10 times): modifies charged slash damage.
 		}
 
 		SlashCanKillProjectiles: {
-			Label: Slash Can Kill Projectiles
-			Tooltip: Determine whether your slash can destroy hostile projectiles
+			Label: Slash Can Destroy Projectiles
+			Tooltip: Determines whether slashes can destroy hostile projectiles.
 		}
 
 		CanCharge: {
 			Label: Can Charge
-			Tooltip: Determine whether the function that 'Right click to charge' is enable.
+			Tooltip: Determines whether right click can charge a slash.
+		}
+	}
+
+	MeleeWeaponEffectsVisualConfig: {
+		DisplayName: Melee Weapon Effects Visuals
+
+		SlashBlink: {
+			Label: Slash Blink
+			Tooltip: Slash Blink (0~1): modifies the slash edge glow.
 		}
 
-		Style: {
-			Label: Style
-			Tooltip: ""
+		SlashStyle: {
+			Label: Slash Style
+			Tooltip: Selects the slash visual style.
 		}
 	}
 }
