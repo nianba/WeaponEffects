@@ -157,10 +157,10 @@ SlashProfileId.TargetWeapon => SlashProfiles.TargetWeapon,
 - `CommonSpark`、`DarkSpark`、`StarSpark` 都基于 `Dusts/Spark.png` 短线贴图，容易在挥砍中形成白带/色带。当前 active profile 不应再使用这些 dust。
 - 火焰类优先用 `DustID.Torch`。
 - 木剑可用 `DustID.WoodFurniture`。
-- 自然/草系可用参考项目的 `DustGrassLeaf = 107`。
+- 自然/草系可用参考项目的 `DustGrassLeaf = 107`；但 Blade of Grass 当前回退为更大、更亮的 `DustID.Grass`，这是一次实测观感优先的例外。
 - 冰系可用 `DustIceShard = 135`。
 - 金属/圣光可用 `DustMetalSpark = 15`。
-- 星辰类使用参考项目的 `DustSoftStar = 278`，并使用粉金随机色：`new Color(255, 98, 206)` 或 `new Color(255, 218, 82)`。
+- 星辰类可使用参考项目的 `DustSoftStar = 278`，并使用粉金随机色：`new Color(255, 98, 206)` 或 `new Color(255, 218, 82)`。Starfury 当前是例外：它改用 `StarSlashSparkleProjectile` 纯几何绘制四角星芒，不新增贴图。
 - 相位剑/光剑可用对应宝石尘：`DustID.GemSapphire/GemRuby/GemEmerald/GemAmethyst/GemDiamond/GemTopaz/GemAmber`。
 - 火星科技可用 `DustID.Electric` 和 `DustID.MartianHit`。
 - 彩虹/节日类可用 `DustID.RainbowMk2`、`DustID.FireworksRGB`、`DustID.Confetti*`。
@@ -298,3 +298,5 @@ dotnet build .\MeleeWeaponEffects.csproj
 ### Q: 粒子看起来像白色拖带，不像目标主题
 
 优先检查 `DustType`。如果主题需要点状、叶片、碎屑、星光或元素尘，不要使用基于 `Dusts/Spark.png` 的线状自定义 dust。Starfury 的经验是：用线状 dust 会出现白色带状火花，应该使用 `DustSoftStar = 278`，并随机粉色/金色。
+
+如果 `DustSoftStar = 278` 看起来仍然只是小团，不像星星，可以像 Starfury 一样改用纯绘制 projectile：`StarSlashSparkleProjectile` 用 `VertexPositionColor`/`BasicEffect` 画四角星和小伴星，不依赖任何新增星形贴图。

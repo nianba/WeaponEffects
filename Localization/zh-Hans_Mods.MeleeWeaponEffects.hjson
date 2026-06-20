@@ -4,6 +4,7 @@ Projectiles: {
 	SlashArcProjectile.DisplayName: 斩击弧光
 	SlashArcGlowProjectile.DisplayName: 斩击边光
 	SlashHitEffectProjectile.DisplayName: 斩击命中特效
+	// StarSlashSparkleProjectile.DisplayName: Star Slash Sparkle Projectile
 }
 
 Configs: {
@@ -17,7 +18,22 @@ Configs: {
 
 		ChargeDamage: {
 			Label: 蓄力伤害倍率
-			Tooltip: 蓄力（2~10 倍）：调整蓄力斩击伤害。
+			Tooltip: 蓄力（1~5 倍）：调整蓄力斩击伤害。
+		}
+
+		ChargeMinDurationMultiplier: {
+			Label: 最短蓄力时间
+			Tooltip: 右键蓄力至少达到多少倍 useAnimation 后才能释放斩击。
+		}
+
+		ChargeMaxDurationMultiplier: {
+			Label: 最大蓄力时间
+			Tooltip: 右键蓄满需要多少倍 useAnimation。
+		}
+
+		ChargeLengthScale: {
+			Label: 蓄力斩击距离
+			Tooltip: 蓄力斩击的最大距离倍率。
 		}
 
 		SlashCanKillProjectiles: {
@@ -42,6 +58,11 @@ Configs: {
 		SlashStyle: {
 			Label: 斩击样式
 			Tooltip: 选择斩击视觉样式。
+		}
+
+		ShowChargeBar: {
+			Label: 显示蓄力条
+			Tooltip: 显示右键蓄力进度条。
 		}
 	}
 }

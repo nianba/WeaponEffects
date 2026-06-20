@@ -12,12 +12,9 @@ namespace MeleeWeaponEffects;
 
 public class ChargedSlashProjectile : ModProjectile
 {
-	private const int ChargeDurationMultiplier = 5;
-	private const float MaxChargeLengthScale = 2f;
 	private const float MaxChargeDamageScale = 5f;
 	private const int AimSyncInterval = 6;
 	private const float AimSyncThreshold = 0.03f;
-	private static readonly bool DrawChargeBarEnabled = false;
 
 	private int _weaponItemType;
 	private int _useAnimation;
@@ -26,6 +23,7 @@ public class ChargedSlashProjectile : ModProjectile
 	private float _aimRotation;
 	private float _lastSyncedAimRotation;
 	private bool _released;
+	private bool _readyBurstEmitted;
 
 	public override string Texture => "Terraria/Images/Item_" + ItemID.TerraBlade;
 
@@ -108,6 +106,8 @@ public class ChargedSlashProjectile : ModProjectile
 		Projectile.velocity = Vector2.Zero;
 		Projectile.Center = player.Center;
 
+		EmitChargingDust(player);
+
 		if (Projectile.ai[1] >= ChargeReadyFrame)
 		{
 			EmitChargedReadyVisuals(player);
@@ -133,7 +133,7 @@ public class ChargedSlashProjectile : ModProjectile
 		}
 
 		DrawHeldWeapon(weaponTexture);
-		if (DrawChargeBarEnabled)
+		if (ModContent.GetInstance<MeleeWeaponEffectsVisualConfig>().ShowChargeBar)
 		{
 			DrawChargeBar(player);
 		}
@@ -141,11 +141,13 @@ public class ChargedSlashProjectile : ModProjectile
 		return false;
 	}
 
-	private int ChargeReadyFrame => Math.Max(1, _useAnimation) * ChargeDurationMultiplier;
+	private int MinChargeFrame => Math.Max(1, _useAnimation) * Math.Max(1, ModContent.GetInstance<MeleeWeaponEffectsGameplayConfig>().ChargeMinDurationMultiplier);
+
+	private int ChargeReadyFrame => Math.Max(MinChargeFrame, Math.Max(1, _useAnimation) * Math.Max(1, ModContent.GetInstance<MeleeWeaponEffectsGameplayConfig>().ChargeMaxDurationMultiplier));
 
 	private float ChargeProgress => MathHelper.Clamp(Projectile.ai[1] / ChargeReadyFrame, 0f, 1f);
 
-	private float CurrentLengthScale => MathHelper.Lerp(1f, MaxChargeLengthScale, ChargeProgress);
+	private float CurrentLengthScale => MathHelper.Lerp(1f, MathHelper.Clamp(ModContent.GetInstance<MeleeWeaponEffectsGameplayConfig>().ChargeLengthScale, 1f, 4f), ChargeProgress);
 
 	private float CurrentDamageScale => MathHelper.Lerp(1f, Math.Min(MaxChargeDamageScale, ModContent.GetInstance<MeleeWeaponEffectsGameplayConfig>().ChargeDamage), ChargeProgress);
 
@@ -233,6 +235,11 @@ public class ChargedSlashProjectile : ModProjectile
 		}
 
 		_released = true;
+		if (Projectile.ai[1] < MinChargeFrame)
+		{
+			return;
+		}
+
 		float lengthScale = CurrentLengthScale;
 		int damage = Math.Max(1, (int)MathF.Round(Projectile.damage * CurrentDamageScale));
 		Projectile.damage = damage;
@@ -246,7 +253,7 @@ public class ChargedSlashProjectile : ModProjectile
 			source: Projectile.GetSource_FromAI(),
 			rotation: _aimRotation,
 			startingRotation: Projectile.ai[0],
-			length: _weaponLength * lengthScale,
+			length: _weaponLength * 3f * lengthScale,
 			thickness: 0.45f,
 			yScale: 0.35f,
 			extraUpdates: 5,
@@ -263,13 +270,86 @@ public class ChargedSlashProjectile : ModProjectile
 
 	private void EmitChargedReadyVisuals(Player player)
 	{
+		WeaponSlashProfile profile = GetChargeProfile(player);
+		if (!_readyBurstEmitted)
+		{
+			_readyBurstEmitted = true;
+			EmitReadyBurstParticles(in profile, player.Center);
+		}
+
 		if (Projectile.ai[1] % 5f != 0f)
 		{
 			return;
 		}
 
-		WeaponSlashProfile profile = GetChargeProfile(player);
 		SlashParticleEmitter.EmitSwingParticles(in profile, player.Center, _aimRotation + MathHelper.Pi, _weaponLength * 0.55f, 0.25f, 0.45f);
+	}
+
+	private void EmitChargingDust(Player player)
+	{
+		if (Main.dedServ || Projectile.ai[1] % 4f != 0f)
+		{
+			return;
+		}
+
+		WeaponSlashProfile profile = GetChargeProfile(player);
+		SlashParticleProfile particles = profile.SwingParticles;
+		Vector2 basePosition = player.Center + new Vector2(Main.rand.NextFloat(-18f, 18f), player.height * 0.45f);
+		Vector2 velocity = new(Main.rand.NextFloat(-0.7f, 0.7f), Main.rand.NextFloat(1.8f, 3.4f));
+		Color color = particles.AlternateDustColor != default && Main.rand.NextBool()
+			? particles.AlternateDustColor
+			: particles.DustColor;
+		Dust dust = Dust.NewDustDirect(basePosition, 1, 1, particles.DustType, velocity.X, velocity.Y, 0, color, Main.rand.NextFloat(particles.MinScale, particles.MaxScale) * 0.75f);
+		dust.noGravity = false;
+		dust.fadeIn = particles.DustType == DustID.Torch ? 0.6f : 0f;
+	}
+
+	private void EmitReadyBurstParticles(in WeaponSlashProfile profile, Vector2 center)
+	{
+		if (Main.dedServ)
+		{
+			return;
+		}
+
+		SlashParticleProfile particles = profile.SwingParticles;
+		int flashCount = Math.Max(16, particles.Count * 3);
+		for (int i = 0; i < flashCount; i++)
+		{
+			Vector2 direction = Main.rand.NextVector2CircularEdge(1f, 1f);
+			Vector2 position = center + Main.rand.NextVector2Circular(10f, 10f);
+			Vector2 velocity = direction * Main.rand.NextFloat(0.8f, 3.2f) * particles.VelocityScale;
+			Color color = Color.Lerp(ParticleColor(in particles), Color.White, 0.55f);
+			Dust dust = Dust.NewDustDirect(position, 1, 1, particles.DustType, velocity.X, velocity.Y, 0, color, Main.rand.NextFloat(particles.MaxScale, particles.MaxScale * 1.8f));
+			dust.noGravity = true;
+			dust.fadeIn = particles.DustType == DustID.Torch ? 1f : 0.4f;
+		}
+
+		int burstCount = Math.Max(64, particles.Count * 9);
+		for (int i = 0; i < burstCount; i++)
+		{
+			Vector2 direction = Main.rand.NextVector2CircularEdge(1f, 1f);
+			float radius = Main.rand.NextFloat(18f, 74f);
+			Vector2 position = center + direction * radius + Main.rand.NextVector2Circular(5f, 5f);
+			Vector2 velocity = direction * Main.rand.NextFloat(4.5f, 11.5f) * particles.VelocityScale;
+			Dust dust = Dust.NewDustDirect(position, 1, 1, particles.DustType, velocity.X, velocity.Y, 0, ParticleColor(in particles), Main.rand.NextFloat(particles.MinScale, particles.MaxScale) * 1.75f);
+			dust.noGravity = true;
+			dust.fadeIn = particles.DustType == DustID.Torch ? 1.1f : 0.25f;
+		}
+
+		int sparkCount = Math.Max(14, particles.Count * 2);
+		for (int i = 0; i < sparkCount; i++)
+		{
+			Vector2 direction = Main.rand.NextVector2CircularEdge(1f, 1f);
+			Dust spark = Dust.NewDustDirect(center + direction * Main.rand.NextFloat(38f, 90f), 1, 1, DustID.GemDiamond, direction.X * Main.rand.NextFloat(3f, 8f), direction.Y * Main.rand.NextFloat(3f, 8f), 0, Color.Lerp(profile.SlashColor, Color.White, 0.35f), Main.rand.NextFloat(1.15f, 1.9f));
+			spark.noGravity = true;
+		}
+	}
+
+	private static Color ParticleColor(in SlashParticleProfile particles)
+	{
+		return particles.AlternateDustColor != default && Main.rand.NextBool()
+			? particles.AlternateDustColor
+			: particles.DustColor;
 	}
 
 	private WeaponSlashProfile GetChargeProfile(Player player)

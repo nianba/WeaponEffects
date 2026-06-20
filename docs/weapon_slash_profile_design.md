@@ -165,11 +165,11 @@ finalThickness =
 | True Night's Edge | `ItemID.TrueNightsEdge` | 亮紫/粉紫 `DustSoftStar = 278` | 强紫/深紫爆点 | 1.15 / 1.05 |
 | Excalibur | `ItemID.Excalibur` | 金白金属尘 | 金白/亮金爆点 | 1.08 / 1.18 |
 | True Excalibur | `ItemID.TrueExcalibur` | 金白/亮白金属尘 | 明亮金白爆点 | 1.15 / 1.25 |
-| Blade of Grass | `ItemID.BladeofGrass` | 草绿/黄绿叶片尘 | 草绿色命中碎屑 | 1.08 / 1.10 |
+| Blade of Grass | `ItemID.BladeofGrass` | 更大、更亮的 `DustID.Grass` 草尘 | `DustID.Grass` 草绿色命中碎屑 | 1.08 / 1.10 |
 | Muramasa | `ItemID.Muramasa` | 蓝/青蓝冰尘 | 小型蓝白爆点 | 1.00 / 0.70 |
 | Ice Blade | `ItemID.IceBlade` | 浅蓝/冰白冰尘 | 冰晶爆点 | 1.00 / 0.80 |
 | Frostbrand | `ItemID.Frostbrand` | 亮蓝/冰白冰尘 | 更强冰裂爆点 | 1.12 / 0.90 |
-| Starfury | `ItemID.Starfury` | 粉/金 `DustSoftStar = 278` | 粉金星光爆点 | 1.12 / 0.85 |
+| Starfury | `ItemID.Starfury` | 粉/金绘制星芒，不使用星形贴图 | 粉金星芒簇爆点 | 1.12 / 0.85 |
 | Bladetongue | `ItemID.Bladetongue` | 红黄火尘 | 红黄命中喷射 | 1.05 / 1.05 |
 | Phaseblade 族 | Blue/Red/Green/Purple/White/Yellow/Orange Phaseblade | 对应宝石尘 | 同色宝石爆点 | 1.05 / 0.78 |
 | Phasesaber 族 | Blue/Red/Green/Purple/White/Yellow/Orange Phasesaber | 更强同色宝石尘 | 同色宝石爆点 | 1.12 / 0.72 |

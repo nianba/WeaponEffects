@@ -4,6 +4,7 @@ Projectiles: {
 	SlashArcProjectile.DisplayName: Slash Arc
 	SlashArcGlowProjectile.DisplayName: Slash Arc Glow
 	SlashHitEffectProjectile.DisplayName: Slash Hit Effect
+	StarSlashSparkleProjectile.DisplayName: Star Slash Sparkle Projectile
 }
 
 Configs: {
@@ -17,7 +18,22 @@ Configs: {
 
 		ChargeDamage: {
 			Label: Charge Damage
-			Tooltip: Charge (2~10 times): modifies charged slash damage.
+			Tooltip: Charge (1~5 times): modifies charged slash damage.
+		}
+
+		ChargeMinDurationMultiplier: {
+			Label: Min Charge Time
+			Tooltip: Minimum right-click charge time in useAnimation multiples before a slash can be released.
+		}
+
+		ChargeMaxDurationMultiplier: {
+			Label: Max Charge Time
+			Tooltip: Full right-click charge time in useAnimation multiples.
+		}
+
+		ChargeLengthScale: {
+			Label: Charge Slash Range
+			Tooltip: Maximum charged slash range multiplier.
 		}
 
 		SlashCanKillProjectiles: {
@@ -42,6 +58,11 @@ Configs: {
 		SlashStyle: {
 			Label: Slash Style
 			Tooltip: Selects the slash visual style.
+		}
+
+		ShowChargeBar: {
+			Label: Show Charge Bar
+			Tooltip: Shows the right-click charge progress bar.
 		}
 	}
 }

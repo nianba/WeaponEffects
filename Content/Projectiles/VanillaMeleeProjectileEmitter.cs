@@ -44,8 +44,7 @@ public static class VanillaMeleeProjectileEmitter
 	{
 		if (itemType == StarfuryItemType)
 		{
-			Vector2 start = targetWorld + new Vector2(Main.rand.Next(-500, 500), Main.rand.Next(-520, -450));
-			Projectile.NewProjectile(source.GetSource_FromAI(), start, SafeDirection(start, targetWorld, source.ai[1]) * 13f, ProjectileID.Starfury, source.damage * 2, source.knockBack, source.owner);
+			EmitBladeLaunchedStarfury(source, playerCenter, aimDirection);
 			return;
 		}
 
@@ -80,13 +79,9 @@ public static class VanillaMeleeProjectileEmitter
 	{
 		if (itemType == StarfuryItemType)
 		{
-			for (int i = 0; i < 3; i++)
-			{
-				Vector2 start = targetWorld + new Vector2(Main.rand.Next(-500, 500), Main.rand.Next(-550, -430));
-				Projectile projectile = Projectile.NewProjectileDirect(source.GetSource_FromAI(), start, SafeDirection(start, targetWorld, source.ai[1]) * 13f, ProjectileID.Starfury, source.damage * 2, source.knockBack, source.owner);
-				ScaleProjectile(projectile, 2f);
-			}
-
+			EmitBladeLaunchedStarfury(source, playerCenter, aimDirection);
+			EmitBladeLaunchedStarfury(source, playerCenter, aimDirection.RotatedBy(0.12f));
+			EmitBladeLaunchedStarfury(source, playerCenter, aimDirection.RotatedBy(-0.12f));
 			return;
 		}
 
@@ -95,8 +90,7 @@ public static class VanillaMeleeProjectileEmitter
 			for (int i = 0; i < 9; i++)
 			{
 				Vector2 start = targetWorld + new Vector2(Main.rand.Next(-200, 200), Main.rand.Next(-810, -450));
-				Projectile projectile = Projectile.NewProjectileDirect(source.GetSource_FromAI(), start, SafeDirection(start, targetWorld, source.ai[1]) * 19f, ProjectileID.StarWrath, source.damage * 2, source.knockBack, source.owner);
-				ScaleProjectile(projectile, 2f);
+				Projectile.NewProjectile(source.GetSource_FromAI(), start, SafeDirection(start, targetWorld, source.ai[1]) * 19f, ProjectileID.StarWrath, source.damage * 2, source.knockBack, source.owner);
 			}
 
 			return;
@@ -119,30 +113,30 @@ public static class VanillaMeleeProjectileEmitter
 
 		for (int i = 1; i < 3; i++)
 		{
-			Projectile spread = Projectile.NewProjectileDirect(source.GetSource_FromAI(), playerCenter, aimDirection.RotatedByRandom(0.25) * 30f, player.HeldItem.shoot, source.damage / 2, source.knockBack / 2f, source.owner);
-			ScaleProjectile(spread, 2f);
+			Projectile.NewProjectile(source.GetSource_FromAI(), playerCenter, aimDirection.RotatedByRandom(0.25) * 30f, player.HeldItem.shoot, source.damage / 2, source.knockBack / 2f, source.owner);
 		}
 
-		Projectile center = Projectile.NewProjectileDirect(source.GetSource_FromAI(), playerCenter, aimDirection * 30f, player.HeldItem.shoot, source.damage / 2, source.knockBack / 2f, source.owner);
-		ScaleProjectile(center, 2f);
+		Projectile.NewProjectile(source.GetSource_FromAI(), playerCenter, aimDirection * 30f, player.HeldItem.shoot, source.damage / 2, source.knockBack / 2f, source.owner);
 	}
 
 	private static void EmitScaledSpread(Projectile source, Vector2 playerCenter, Vector2 aimDirection, int projectileType)
 	{
 		for (int i = 1; i < 3; i++)
 		{
-			Projectile projectile = Projectile.NewProjectileDirect(source.GetSource_FromAI(), playerCenter, aimDirection.RotatedByRandom(0.25) * 30f, projectileType, source.damage / 2, source.knockBack / 2f, source.owner);
-			ScaleProjectile(projectile, 2f);
+			Projectile.NewProjectile(source.GetSource_FromAI(), playerCenter, aimDirection.RotatedByRandom(0.25) * 30f, projectileType, source.damage / 2, source.knockBack / 2f, source.owner);
 		}
 	}
 
-	private static void ScaleProjectile(Projectile projectile, float scale)
+	private static void EmitBladeLaunchedStarfury(Projectile source, Vector2 playerCenter, Vector2 aimDirection)
 	{
-		Vector2 center = projectile.Center;
-		projectile.scale *= scale;
-		projectile.width = (int)(projectile.width * scale);
-		projectile.height = (int)(projectile.height * scale);
-		projectile.Center = center;
+		Vector2 start = BladeEmissionPoint(source, playerCenter, aimDirection);
+		Projectile.NewProjectile(source.GetSource_FromAI(), start, aimDirection * 13f, ProjectileID.Starfury, source.damage * 2, source.knockBack, source.owner);
+	}
+
+	private static Vector2 BladeEmissionPoint(Projectile source, Vector2 playerCenter, Vector2 aimDirection)
+	{
+		float weaponLength = MathHelper.Clamp(source.localAI[1], 36f, 120f);
+		return playerCenter + aimDirection * (weaponLength * 0.58f);
 	}
 
 	private static Vector2 SafeDirection(Vector2 from, Vector2 to, float fallbackRotation)
