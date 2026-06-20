@@ -138,12 +138,17 @@ public class SlashGlobalItem : GlobalItem
 			return false;
 		}
 
-		if (item.damage <= 0 || item.type == ItemID.Sickle || item.accessory || item.axe > 0 || item.pick > 0 || item.hammer > 0)
+		if (item == null || item.IsAir || item.damage <= 0 || item.type == ItemID.Sickle || item.accessory || item.axe > 0 || item.pick > 0 || item.hammer > 0)
 		{
 			return false;
 		}
 
 		if (item.DamageType != DamageClass.Melee && item.DamageType != DamageClass.MeleeNoSpeed)
+		{
+			return false;
+		}
+
+		if (!SlashProfileResolver.TryGetExactProfile(item.type, out _))
 		{
 			return false;
 		}

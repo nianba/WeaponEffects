@@ -13,6 +13,8 @@ namespace WeaponEffects;
 public class SlashChannelProjectile : ModProjectile
 {
 	private const float LegacyAverageLengthScale = 190f / 110f;
+	private const int AimSyncInterval = 6;
+	private const float AimSyncThreshold = 0.03f;
 	private static readonly SlashEmissionMode EmissionMode = SlashEmissionMode.Compact3DComboSchemeA;
 
 	private int _weaponItemType;
@@ -20,6 +22,7 @@ public class SlashChannelProjectile : ModProjectile
 	private float _weaponLength;
 	private Vector2 _targetWorld;
 	private float _aimRotation;
+	private float _lastSyncedAimRotation;
 
 	public override string Texture => "Terraria/Images/Item_" + ItemID.TerraBlade;
 
@@ -30,6 +33,7 @@ public class SlashChannelProjectile : ModProjectile
 		_weaponLength = Math.Max(1f, weaponLength);
 		_targetWorld = targetWorld;
 		_aimRotation = (targetWorld - Projectile.Center).SafeNormalize(Vector2.UnitX * Math.Sign(Projectile.ai[0])).ToRotation();
+		_lastSyncedAimRotation = _aimRotation;
 		Projectile.netUpdate = true;
 	}
 
@@ -60,6 +64,7 @@ public class SlashChannelProjectile : ModProjectile
 		_weaponLength = reader.ReadSingle();
 		_targetWorld = new Vector2(reader.ReadSingle(), reader.ReadSingle());
 		_aimRotation = reader.ReadSingle();
+		_lastSyncedAimRotation = _aimRotation;
 	}
 
 	public override void AI()
@@ -121,7 +126,13 @@ public class SlashChannelProjectile : ModProjectile
 		Vector2 direction = (_targetWorld - player.Center).SafeNormalize(Vector2.UnitX * player.direction);
 		_aimRotation = direction.ToRotation();
 		player.direction = Math.Sign(direction.X);
-		Projectile.netUpdate = true;
+
+		float aimDelta = Math.Abs(MathHelper.WrapAngle(_aimRotation - _lastSyncedAimRotation));
+		if (aimDelta >= AimSyncThreshold || Projectile.ai[1] % AimSyncInterval == 0f)
+		{
+			_lastSyncedAimRotation = _aimRotation;
+			Projectile.netUpdate = true;
+		}
 	}
 
 	private void FireSlash(Player player, int useAnimation)

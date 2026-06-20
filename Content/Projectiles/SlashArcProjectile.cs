@@ -18,7 +18,7 @@ public class SlashArcProjectile : ModProjectile
 	private const int MaxCollisionSamples = 16;
 
 	private readonly SlashVertex[] _vertices = new SlashVertex[96];
-	private readonly Effect _slashEffect = ModContent.Request<Effect>("WeaponEffects/Effects/Mhd", AssetRequestMode.ImmediateLoad).Value;
+	private static Asset<Effect> _slashEffect;
 	private int _vertexCount;
 
 	private bool _reverse;
@@ -346,9 +346,9 @@ public class SlashArcProjectile : ModProjectile
 	public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
 	{
 		Player player = Main.player[Projectile.owner];
-		if (!_npcOwned && player.active)
+		if (!_npcOwned && player.active && TryGetHeldSourceWeapon(player, out Item sourceItem))
 		{
-			ItemLoader.OnHitNPC(player.HeldItem, player, target, in hit, damageDone);
+			ItemLoader.OnHitNPC(sourceItem, player, target, in hit, damageDone);
 		}
 
 		MeleeEffectAssets.NewProjectileDirect(Projectile.GetSource_FromAI(), target.Center, Vector2.Zero, ModContent.ProjectileType<SlashHitEffectProjectile>(), 0, 0f, Projectile.owner, Main.rand.NextFloat(-MathHelper.Pi, MathHelper.Pi));
@@ -420,13 +420,19 @@ public class SlashArcProjectile : ModProjectile
 
 	public override bool PreDraw(ref Color lightColor)
 	{
+		Effect slashEffect = GetSlashEffect();
+		if (slashEffect == null)
+		{
+			return false;
+		}
+
 		Vector2 ownerCenter = OwnerCenterWorld() - Main.screenPosition;
 		float weaponRotation = CurrentWeaponRotation();
 		int style = ModContent.GetInstance<WeaponEffectsVisualConfig>().SlashStyle;
 
 		if (_usesVisualProfile)
 		{
-			DrawProfiledSlash(ownerCenter, style);
+			DrawProfiledSlash(ownerCenter, style, slashEffect);
 		}
 		else
 		{
@@ -437,7 +443,7 @@ public class SlashArcProjectile : ModProjectile
 				Main.spriteBatch.Begin(SpriteSortMode.Immediate, style == 1 ? BlendState.AlphaBlend : BlendState.NonPremultiplied, SamplerState.AnisotropicClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
 				Main.graphics.GraphicsDevice.Textures[0] = style == 1 ? TextureAssets.Projectile[Projectile.type].Value : MeleeEffectAssets.GetTexture(MeleeEffectAssets.SlashTexture);
 				Main.graphics.GraphicsDevice.Textures[1] = GetWeaponTexture();
-				_slashEffect.CurrentTechnique.Passes[0].Apply();
+				slashEffect.CurrentTechnique.Passes[0].Apply();
 				Main.graphics.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleStrip, _vertices, 0, _vertexCount - 2);
 				Main.spriteBatch.End();
 				Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
@@ -450,6 +456,17 @@ public class SlashArcProjectile : ModProjectile
 		}
 
 		return false;
+	}
+
+	private static Effect GetSlashEffect()
+	{
+		if (Main.dedServ)
+		{
+			return null;
+		}
+
+		_slashEffect ??= ModContent.Request<Effect>("WeaponEffects/Effects/Mhd", AssetRequestMode.ImmediateLoad);
+		return _slashEffect.Value;
 	}
 
 	private Vector2 OwnerCenterWorld()
@@ -471,13 +488,13 @@ public class SlashArcProjectile : ModProjectile
 		return Projectile.Center;
 	}
 
-	private void DrawProfiledSlash(Vector2 ownerCenter, int style)
+	private void DrawProfiledSlash(Vector2 ownerCenter, int style, Effect slashEffect)
 	{
 		Main.spriteBatch.End();
 		Main.spriteBatch.Begin(SpriteSortMode.Immediate, style == 1 ? BlendState.AlphaBlend : BlendState.NonPremultiplied, SamplerState.AnisotropicClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
 		Main.graphics.GraphicsDevice.Textures[0] = style == 1 ? TextureAssets.Projectile[Projectile.type].Value : MeleeEffectAssets.GetTexture(MeleeEffectAssets.SlashTexture);
 		Main.graphics.GraphicsDevice.Textures[1] = GetWeaponTexture();
-		_slashEffect.CurrentTechnique.Passes[0].Apply();
+		slashEffect.CurrentTechnique.Passes[0].Apply();
 
 		if (_profileFarRimAlpha > 0f)
 		{
@@ -925,7 +942,7 @@ public class SlashArcProjectile : ModProjectile
 
 	private void HandleProjectileBlocking()
 	{
-		if (!ModContent.GetInstance<WeaponEffectsGameplayConfig>().SlashCanKillProjectiles)
+		if (Main.netMode == NetmodeID.MultiplayerClient || !ModContent.GetInstance<WeaponEffectsGameplayConfig>().SlashCanKillProjectiles)
 		{
 			return;
 		}
@@ -1019,13 +1036,19 @@ public class SlashArcProjectile : ModProjectile
 
 	private void EmitOnHitProjectiles(NPC target)
 	{
-		if (!_npcOwned && Main.player[Projectile.owner].HeldItem.type == ItemID.Bladetongue)
+		if (!_npcOwned && _weaponItemType == ItemID.Bladetongue)
 		{
 			for (int i = 0; i < 3; i++)
 			{
 				Projectile.NewProjectile(Projectile.GetSource_FromAI(), target.Center, Main.rand.NextVector2Unit(0f, MathHelper.TwoPi) * 5f, ProjectileID.IchorSplash, Projectile.damage / 2, Projectile.knockBack, Projectile.owner);
 			}
 		}
+	}
+
+	private bool TryGetHeldSourceWeapon(Player player, out Item sourceItem)
+	{
+		sourceItem = player.HeldItem;
+		return sourceItem != null && !sourceItem.IsAir && sourceItem.type == _weaponItemType;
 	}
 
 	private void ApplyWeaponOnHitBuffs(NPC target)

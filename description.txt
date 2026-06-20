@@ -6,8 +6,8 @@ Just for cool slashing.After all I have not finished some specialization yet.
 仅仅是有斩击效果而已。毕竟我还没有完成一些特化。
 
 
-ALL sounds are from the game "DNF".
-音效均来自游戏DNF。
+This mod includes bundled slash, charge, hit, and block sound effects.
+本模组包含随包发布的斩击、蓄力、命中和格挡音效。
 
 v0.1.6:Fixed the knockback direction bug and item consuming bug.
 v0.2.0:The effects have been redone.Now you can modify the effects by the modconfig.
