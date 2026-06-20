@@ -20,7 +20,6 @@ public class SlashChannelProjectile : ModProjectile
 	private float _weaponLength;
 	private Vector2 _targetWorld;
 	private float _aimRotation;
-	private int _comboStepIndex;
 
 	public override string Texture => "Terraria/Images/Item_" + ItemID.TerraBlade;
 
@@ -31,7 +30,6 @@ public class SlashChannelProjectile : ModProjectile
 		_weaponLength = Math.Max(1f, weaponLength);
 		_targetWorld = targetWorld;
 		_aimRotation = (targetWorld - Projectile.Center).SafeNormalize(Vector2.UnitX * Math.Sign(Projectile.ai[0])).ToRotation();
-		_comboStepIndex = 0;
 		Projectile.netUpdate = true;
 	}
 
@@ -53,7 +51,6 @@ public class SlashChannelProjectile : ModProjectile
 		writer.Write(_targetWorld.X);
 		writer.Write(_targetWorld.Y);
 		writer.Write(_aimRotation);
-		writer.Write(_comboStepIndex);
 	}
 
 	public override void ReceiveExtraAI(BinaryReader reader)
@@ -63,7 +60,6 @@ public class SlashChannelProjectile : ModProjectile
 		_weaponLength = reader.ReadSingle();
 		_targetWorld = new Vector2(reader.ReadSingle(), reader.ReadSingle());
 		_aimRotation = reader.ReadSingle();
-		_comboStepIndex = reader.ReadInt32();
 	}
 
 	public override void AI()
@@ -165,7 +161,8 @@ public class SlashChannelProjectile : ModProjectile
 	{
 		VanillaMeleeProjectileEmitter.Emit(this, charged: false, player.HeldItem.type, player, _targetWorld);
 
-		ref readonly SlashComboStep step = ref Compact3DComboSchemeA.GetStep(_comboStepIndex);
+		int comboStepIndex = player.GetModPlayer<MeleeEffectsPlayer>().ConsumeNextSlashComboStep();
+		ref readonly SlashComboStep step = ref Compact3DComboSchemeA.GetStep(comboStepIndex);
 		SoundEngine.PlaySound(new SoundStyle("MeleeWeaponEffects/Sounds/S2") { Volume = 0.36f }, player.Center);
 
 		float hitAngle = MathHelper.ToRadians(step.HitAngleDegrees);
@@ -192,7 +189,6 @@ public class SlashChannelProjectile : ModProjectile
 			visual: in step.Visual,
 			hitProgress: (step.ActiveStart + step.ActiveEnd) * 0.5f);
 
-		_comboStepIndex = (_comboStepIndex + 1) % Compact3DComboSchemeA.Count;
 		Projectile.netUpdate = true;
 	}
 

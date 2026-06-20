@@ -19,15 +19,24 @@
 4. `SlashArcProjectile.BuildVertices(...)` 根据 `oldRot` 生成 triangle strip。
 5. `SlashArcProjectile.OnHitNPC(...)` 处理命中特效、声音、命中粒子和部分原版武器弹幕。
 
+当前项目已经加入连招动作层：
+
+- `SlashChannelProjectile` 可以按 `Compact3DComboSchemeA` 发出确定性的四段挥砍。
+- `Core/Combos/SlashComboStep` 定义每段的起始角、命中角、结束角、长度倍率、宽度倍率和 active window。
+- `Core/Combos/SlashArcVisualProfile` 定义每段的视觉层参数，包括 X/Y 缩放、伪 3D 深度、透明度、辉光、近远边缘和峰值闪光。
+- `SlashArcProjectile.CreateProfiledSlash(...)` 和 `SlashArcGlowProjectile.InitializeProfiledGlow(...)` 已经支持 profile 化刀光。
+
 第一阶段最适合接入 profile 的位置：
 
 - `SlashChannelProjectile.FireSlash(...)`：控制挥砍粒子、长度、宽度、Y 缩放、颜色、角度随机。
 - `SlashArcProjectile.OnHitNPC(...)`：控制命中粒子、命中颜色、特殊命中反馈。
 - `SlashArcProjectile.CreateSlash(...)`：接收 profile 后把形状参数传给主刀光和辉光层。
+- `SlashArcProjectile.CreateProfiledSlash(...)`：当前连招路径的主要接入点，应叠加武器 profile 和连招 step profile。
 
 当前一个需要修正的实现细节：
 
 - `SlashArcProjectile.CreateSlash(...)` 有 `thickness` 参数，但现在实际使用的是配置里的 `SlashScale`，传入的 `thickness` 没有生效。做武器宽度差异时，应改成 `config.SlashScale * profile.Shape.ThicknessScale`，或者让 `thickness` 真正参与计算。
+- `CreateProfiledSlash(...)` 已经让 `thicknessScale` 参与 `SlashScale` 计算，所以当前连招路径没有这个问题；旧的随机挥砍路径仍需要单独修正。
 
 ## 3. 推荐架构
 
@@ -88,8 +97,48 @@ public static class SlashProfileResolver
 - 普通武器按剑型、材质、元素、稀有度、武器尺寸走兜底。
 - projectile 内部只同步 `ProfileId` 或 `weaponItemType`，不要同步一整套复杂对象。
 - `SlashArcProjectile` 继续负责绘制，不直接写“某把武器应该是什么风格”的逻辑。
+- 连招 profile 是动作层，武器 profile 是主题层。武器 profile 不应该定义连招段数、段落角度或动作时序。
 
-## 4. 设计分类
+## 4. 连招动作层与武器主题层
+
+新增连招功能不会推翻武器 profile 设计，但要求设计分层更清楚。
+
+| 层级 | 负责内容 | 不应该负责 |
+| --- | --- | --- |
+| 连招 profile | 第几段、起止角度、命中角、active window、段落强弱、伪 3D 深度、段落视觉层次 | 某把武器的元素主题、专属粒子、命中主题 |
+| 武器 profile | 武器主题、粒子、颜色、长度修正、宽度修正、YScale 修正、命中特效 | 连招段数、动作时序、固定段落角度 |
+| 渲染 projectile | 根据最终参数绘制刀光、辉光、武器贴图和碰撞表现 | 武器分类规则、每把武器的设计判断 |
+
+最终参数应当由“连招动作参数”和“武器主题参数”叠加：
+
+```text
+finalLength = weaponLength * comboStep.LengthScale * weaponProfile.Shape.LengthScale
+
+finalThickness =
+    config.SlashScale
+    * comboStep.ThicknessScale
+    * weaponProfile.Shape.ThicknessScale
+
+finalColor =
+    weaponProfile.SlashColor
+    * comboStep.Visual.MainAlpha
+```
+
+粒子也应使用同样的叠加思路：
+
+```text
+finalSwingParticleCount =
+    weaponProfile.SwingParticles.SwingCount
+    * comboStepParticleMultiplier
+
+finalHitParticleCount =
+    weaponProfile.HitParticles.HitCount
+    * comboStepHitMultiplier
+```
+
+`comboStepParticleMultiplier` 不需要写死在武器 profile 里，可以由连招段落类型推导。例如普通段为 `1.0`，第 3 段展示段为 `1.2`，第 4 段终结段为 `1.5`。这样后续修改连招段数或段落动作时，不需要重写每把武器的设计。
+
+## 5. 设计分类
 
 | 分类 | 参数 | 第一阶段用途 | 难度 |
 | --- | --- | --- | --- |
@@ -107,7 +156,7 @@ public static class SlashProfileResolver
 
 第一阶段建议只实现表中“低”和“低到中”的内容。
 
-## 5. 武器类别设计
+## 6. 武器类别设计
 
 | 类别 | 适用对象 | 粒子设计 | 刀光形状 | 实现难度 |
 | --- | --- | --- | --- | --- |
@@ -126,7 +175,7 @@ public static class SlashProfileResolver
 | 事件/特殊类 | The Horseman's Blade、Flying Dragon 等 | 根据武器主题做橙色、红色或风压粒子 | 形状差异更明显，但先不改纹理 | 中 |
 | 终局特殊武器 | Zenith 等当前未必被本 mod 接管的武器 | 暂不第一阶段处理 | 需要先确认兼容路径 | 高 |
 
-## 6. 重点武器设计
+## 7. 重点武器设计
 
 这些武器适合先做精确 profile。原因是玩家辨识度高，且大部分能用现有粒子和形状参数表达。
 
@@ -156,7 +205,7 @@ public static class SlashProfileResolver
 | Flying Dragon | 红橙风压粒子，尾部较长 | 长度 1.18，宽度 0.95，YScale 0.45 到 0.62 | 需要确认原版弹幕保留路径 | 中 |
 | Zenith | 暂不做第一阶段 | 暂不做第一阶段 | 当前全局接管规则可能不会覆盖它，先不要强接 | 高 |
 
-## 7. 形状 profile 建议
+## 8. 形状 profile 建议
 
 | 形状 profile | 用途 | LengthScale | ThicknessScale | YScale | AngleRandomness | ExtraUpdates |
 | --- | --- | ---: | ---: | --- | ---: | ---: |
@@ -170,7 +219,7 @@ public static class SlashProfileResolver
 
 这些数值应作为初始调参范围，不是最终平衡值。第一版实现时建议把每类 profile 做成常量，进游戏后再微调。
 
-## 8. 粒子 profile 建议
+## 9. 粒子 profile 建议
 
 | 粒子 profile | 视觉主题 | 挥砍粒子 | 命中粒子 | 生成位置 | 难度 |
 | --- | --- | --- | --- | --- | --- |
@@ -191,7 +240,7 @@ public static class SlashProfileResolver
 - 重武器和终局武器可以稍多，但不要每帧沿整条 `oldRot` 都生成粒子。
 - 添加一个客户端视觉配置项，例如 `ParticleIntensity`，用于整体调节粒子数量。
 
-## 9. 推荐实现阶段
+## 10. 推荐实现阶段
 
 ### 阶段 1：profile 数据结构和 resolver
 
@@ -215,11 +264,13 @@ public static class SlashProfileResolver
 
 修改 `SlashChannelProjectile.FireSlash(...)`：
 
-- `length = baseLength * profile.Shape.LengthScale`
-- `thickness = config.SlashScale * profile.Shape.ThicknessScale`
-- `yScale = Main.rand.NextFloat(profile.Shape.MinYScale, profile.Shape.MaxYScale)`
-- `randomizedRotation = aim + Main.rand.NextFloat(-profile.Shape.AngleRandomness, profile.Shape.AngleRandomness)`
-- `color = profile.SlashColor`
+- 旧随机路径：`length = baseLength * profile.Shape.LengthScale`
+- 旧随机路径：`thickness = config.SlashScale * profile.Shape.ThicknessScale`
+- 旧随机路径：`yScale = Main.rand.NextFloat(profile.Shape.MinYScale, profile.Shape.MaxYScale)`
+- 旧随机路径：`randomizedRotation = aim + Main.rand.NextFloat(-profile.Shape.AngleRandomness, profile.Shape.AngleRandomness)`
+- 当前连招路径：`length = weaponLength * comboStep.LengthScale * profile.Shape.LengthScale`
+- 当前连招路径：`thickness = config.SlashScale * comboStep.ThicknessScale * profile.Shape.ThicknessScale`
+- 当前连招路径：`visual.Tint` 或最终传入颜色叠加 `profile.SlashColor`
 
 同时修正 `SlashArcProjectile.CreateSlash(...)` 中 `thickness` 参数不生效的问题。
 
@@ -233,6 +284,12 @@ public static class SlashProfileResolver
 - `EmitHitParticles(profile, target, slashRotation)`
 
 挥砍粒子放在 `SlashChannelProjectile.FireSlash(...)`，命中粒子放在 `SlashArcProjectile.OnHitNPC(...)`。
+
+在连招路径下，粒子数量和爆发强度应由连招段落修正：
+
+- 第 1、2 段：粒子克制，重点表现动作方向。
+- 第 3 段：可以增加刀光外沿粒子，让伪 3D 展示段更明显。
+- 第 4 段：命中粒子和峰值闪光更强，表现终结段重量。
 
 难度：低。
 
@@ -248,10 +305,12 @@ public static class SlashProfileResolver
 
 ### 阶段 5：和连段 profile 合并
 
-当前 `Core/Combos/` 已有 `SlashComboStep` 和 `SlashArcVisualProfile` 草稿。后续可以让武器 profile 和连段 profile 叠加：
+当前 `Core/Combos/` 已有 `SlashComboStep`、`SlashArcVisualProfile` 和 `Compact3DComboSchemeA`。这部分应视为动作层，武器 profile 应视为主题层，两者叠加：
 
 - 武器 profile 决定主题：颜色、粒子、基础宽度、基础长度。
 - 连段 profile 决定动作：第几段、角度、深度、段落强弱。
+- 武器 profile 不直接指定 `StartAngleDegrees`、`HitAngleDegrees`、`EndAngleDegrees`、`ActiveStart`、`ActiveEnd`。
+- 如果某类武器需要影响连段表现，应提供倍率或偏好，例如 `FinisherParticleMultiplier`、`LengthScale`、`ThicknessScale`，而不是重写连招本身。
 
 最终形状参数：
 
@@ -261,9 +320,9 @@ finalThickness = config.SlashScale * weaponProfile.Shape.ThicknessScale * comboS
 finalColor = weaponProfile.SlashColor * comboStep.Visual.MainAlpha
 ```
 
-难度：中到高。建议等第一阶段粒子和形状稳定后再做。
+难度：中。当前代码已经有 `CreateProfiledSlash(...)`，所以不需要从零开始；主要风险是不要把武器主题规则塞进 `Compact3DComboSchemeA` 或 projectile 绘制类。
 
-## 10. 第一批推荐实现清单
+## 11. 第一批推荐实现清单
 
 第一批不要追求覆盖所有武器。建议先做这些：
 
@@ -276,7 +335,7 @@ finalColor = weaponProfile.SlashColor * comboStep.Visual.MainAlpha
 | P2 | Seedler、Influx Waver、The Horseman's Blade、Flying Dragon | 主题明显，但调参成本更高 |
 | P3 | Zenith 和其他复杂终局武器 | 先确认是否被当前全局接管规则覆盖 |
 
-## 11. 验证标准
+## 12. 验证标准
 
 实现后建议这样验证：
 
@@ -287,16 +346,17 @@ finalColor = weaponProfile.SlashColor * comboStep.Visual.MainAlpha
 - 重武器应该看起来更厚更重，但不能遮住角色和敌人。
 - 星辰、原版弹幕类武器不能重复发射或视觉过载。
 - 多人环境下 profile 颜色和粒子风格应保持一致，至少不能因为未同步字段导致刀光形状不同步。
+- 修改连招段落后，武器 profile 不应需要大面积跟着改。
+- 第 3 段和第 4 段可以更强，但不能让所有武器都失去各自主题。
 
-## 12. 结论
+## 13. 结论
 
 最推荐的工程路线是：
 
 1. 先做 `SlashProfileResolver`。
-2. 先接入粒子和形状参数。
+2. 先接入粒子和形状参数，但按“武器主题层 + 连招动作层”叠加。
 3. 先覆盖 fallback 类别和少量重点武器。
-4. 再和四段连斩 / combo profile 结合。
+4. 当前四段连斩继续作为动作层演进，不让每把武器重写连招动作。
 5. 最后才考虑每把武器专属纹理或 Shader。
 
 这样能在较小改动下让大部分武器立刻产生差异，同时保留后续扩展空间。
-
