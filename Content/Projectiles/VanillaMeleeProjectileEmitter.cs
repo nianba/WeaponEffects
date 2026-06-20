@@ -135,7 +135,9 @@ public static class VanillaMeleeProjectileEmitter
 	private static void EmitBladeLaunchedStarfury(Projectile source, Vector2 playerCenter, Vector2 aimDirection)
 	{
 		Vector2 start = BladeEmissionPoint(source, playerCenter, aimDirection);
-		Projectile.NewProjectile(source.GetSource_FromAI(), start, aimDirection * 13f, ProjectileID.Starfury, source.damage * 2, source.knockBack, source.owner);
+		Projectile star = Projectile.NewProjectileDirect(source.GetSource_FromAI(), start, aimDirection * 13f, ProjectileID.Starfury, source.damage * 2, source.knockBack, source.owner);
+		star.tileCollide = false;
+		star.netUpdate = true;
 	}
 
 	private static Vector2 BladeEmissionPoint(Projectile source, Vector2 playerCenter, Vector2 aimDirection)

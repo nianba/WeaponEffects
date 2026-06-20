@@ -53,21 +53,56 @@ public class SlashGlobalItem : GlobalItem
 			return _usesSlashAction ? true : null;
 		}
 
+		bool charged = player.altFunctionUse == 2;
+		if (charged && !ModContent.GetInstance<WeaponEffectsGameplayConfig>().CanCharge)
+		{
+			return true;
+		}
+
+		StartSlashAction(item, player, charged);
+		return true;
+	}
+
+	internal static bool TryStartChargeInterrupt(Player player)
+	{
+		if (!CanStartChargeFromInput(player))
+		{
+			return false;
+		}
+
+		Item item = player.HeldItem;
+		if (!ShouldUseSlashAction(item) || HasOwnedProjectile(player, ModContent.ProjectileType<ChargedSlashProjectile>()))
+		{
+			return false;
+		}
+
+		int slashChannelType = ModContent.ProjectileType<SlashChannelProjectile>();
+		bool interruptingSlashChannel = HasOwnedProjectile(player, slashChannelType);
+		if (!interruptingSlashChannel && player.itemAnimation <= 0 && player.itemTime <= 0)
+		{
+			return false;
+		}
+
+		KillOwnedSlashChannels(player);
+		player.itemAnimation = 0;
+		player.itemTime = 0;
+		StartSlashAction(item, player, charged: true);
+		return true;
+	}
+
+	private static void StartSlashAction(Item item, Player player, bool charged)
+	{
 		float weaponLength = GetWeaponLength(item);
 		Vector2 targetWorld = Main.MouseWorld;
 		float startingRotation = Main.rand.NextBool() ? -1.9f : 1.9f;
-		int projectileType = player.altFunctionUse == 2
+		int projectileType = charged
 			? ModContent.ProjectileType<ChargedSlashProjectile>()
 			: ModContent.ProjectileType<SlashChannelProjectile>();
 
-		if (player.altFunctionUse == 2 && ModContent.GetInstance<WeaponEffectsGameplayConfig>().CanCharge)
+		if (charged)
 		{
 			SoundStyle chargeSound = new("WeaponEffects/Sounds/Xuli") { Volume = 0.25f };
 			MeleeEffectAssets.PlaySound(in chargeSound, player.Center);
-		}
-		else if (player.altFunctionUse == 2)
-		{
-			return true;
 		}
 
 		int projectileDamage = player.GetWeaponDamage(item);
@@ -94,8 +129,6 @@ public class SlashGlobalItem : GlobalItem
 		{
 			chargedSlash.Initialize(item.type, item.useAnimation, weaponLength, targetWorld);
 		}
-
-		return true;
 	}
 
 	private static bool ShouldUseSlashAction(Item item)
@@ -141,5 +174,48 @@ public class SlashGlobalItem : GlobalItem
 	{
 		Texture2D texture = TextureAssets.Item[item.type].Value;
 		return item.scale * new Vector2(texture.Width, texture.Height).Length();
+	}
+
+	private static bool CanStartChargeFromInput(Player player)
+	{
+		if (player.whoAmI != Main.myPlayer || !Main.mouseRight || !ModContent.GetInstance<WeaponEffectsGameplayConfig>().CanCharge)
+		{
+			return false;
+		}
+
+		if (!player.active || player.dead || player.noItems || player.CCed)
+		{
+			return false;
+		}
+
+		Item item = player.HeldItem;
+		return item != null && !item.IsAir;
+	}
+
+	private static bool HasOwnedProjectile(Player player, int projectileType)
+	{
+		for (int i = 0; i < Main.maxProjectiles; i++)
+		{
+			Projectile projectile = Main.projectile[i];
+			if (projectile.active && projectile.owner == player.whoAmI && projectile.type == projectileType)
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private static void KillOwnedSlashChannels(Player player)
+	{
+		int slashChannelType = ModContent.ProjectileType<SlashChannelProjectile>();
+		for (int i = 0; i < Main.maxProjectiles; i++)
+		{
+			Projectile projectile = Main.projectile[i];
+			if (projectile.active && projectile.owner == player.whoAmI && projectile.type == slashChannelType)
+			{
+				projectile.Kill();
+			}
+		}
 	}
 }

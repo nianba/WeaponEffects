@@ -85,6 +85,10 @@ public class SlashArcGlowProjectile : ModProjectile
 
 	public override void SendExtraAI(BinaryWriter writer)
 	{
+		writer.Write(Projectile.rotation);
+		writer.Write(Projectile.localAI[0]);
+		writer.Write(Projectile.localAI[1]);
+		writer.Write(Projectile.extraUpdates);
 		writer.Write(_reverse);
 		writer.Write(_npcOwned);
 		writer.Write(_color.PackedValue);
@@ -102,6 +106,10 @@ public class SlashArcGlowProjectile : ModProjectile
 
 	public override void ReceiveExtraAI(BinaryReader reader)
 	{
+		Projectile.rotation = reader.ReadSingle();
+		Projectile.localAI[0] = reader.ReadSingle();
+		Projectile.localAI[1] = reader.ReadSingle();
+		Projectile.extraUpdates = reader.ReadInt32();
 		_reverse = reader.ReadBoolean();
 		_npcOwned = reader.ReadBoolean();
 		_color = new Color { PackedValue = reader.ReadUInt32() };

@@ -77,6 +77,12 @@ public class SlashChannelProjectile : ModProjectile
 
 		if (Projectile.owner == Main.myPlayer)
 		{
+			if (SlashGlobalItem.TryStartChargeInterrupt(player))
+			{
+				Projectile.Kill();
+				return;
+			}
+
 			UpdateLocalAim(player);
 		}
 

@@ -35,6 +35,11 @@ public class WeaponEffectsPlayer : ModPlayer
 
 	public override void PostUpdate()
 	{
+		if (Player.whoAmI == Main.myPlayer)
+		{
+			SlashGlobalItem.TryStartChargeInterrupt(Player);
+		}
+
 		if (_slashComboResetTimer <= 0)
 		{
 			SlashComboStepIndex = 0;

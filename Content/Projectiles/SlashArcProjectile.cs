@@ -15,6 +15,8 @@ namespace WeaponEffects;
 
 public class SlashArcProjectile : ModProjectile
 {
+	private const int MaxCollisionSamples = 16;
+
 	private readonly SlashVertex[] _vertices = new SlashVertex[96];
 	private readonly Effect _slashEffect = ModContent.Request<Effect>("WeaponEffects/Effects/Mhd", AssetRequestMode.ImmediateLoad).Value;
 	private int _vertexCount;
@@ -43,6 +45,7 @@ public class SlashArcProjectile : ModProjectile
 	private float _profileTrailDelayRadians;
 
 	public override string Texture => "Terraria/Images/Extra_193";
+	private const int VolcanoOnFireDuration = 180;
 
 	public static void CreateSlash(
 		bool isPlayerOwned,
@@ -175,6 +178,10 @@ public class SlashArcProjectile : ModProjectile
 
 	public override void SendExtraAI(BinaryWriter writer)
 	{
+		writer.Write(Projectile.rotation);
+		writer.Write(Projectile.localAI[0]);
+		writer.Write(Projectile.localAI[1]);
+		writer.Write(Projectile.extraUpdates);
 		writer.Write(_reverse);
 		writer.Write(_npcOwned);
 		writer.Write(_color.PackedValue);
@@ -201,6 +208,10 @@ public class SlashArcProjectile : ModProjectile
 
 	public override void ReceiveExtraAI(BinaryReader reader)
 	{
+		Projectile.rotation = reader.ReadSingle();
+		Projectile.localAI[0] = reader.ReadSingle();
+		Projectile.localAI[1] = reader.ReadSingle();
+		Projectile.extraUpdates = reader.ReadInt32();
 		_reverse = reader.ReadBoolean();
 		_npcOwned = reader.ReadBoolean();
 		_color = new Color { PackedValue = reader.ReadUInt32() };
@@ -232,19 +243,104 @@ public class SlashArcProjectile : ModProjectile
 
 	public override void CutTiles()
 	{
-		Vector2 center = OwnerCenterWorld();
-		Vector2 end = center + Projectile.velocity.Length() * Projectile.ai[1].ToRotationVector2();
-		float width = Projectile.velocity.Length() * Projectile.localAI[1];
 		DelegateMethods.tilecut_0 = TileCuttingContext.AttackProjectile;
-		Utils.PlotTileLine(center, end, width, DelegateMethods.CutTiles);
+		ForEachCollisionLine((center, end, width) =>
+		{
+			Utils.PlotTileLine(center, end, width, DelegateMethods.CutTiles);
+			return false;
+		});
 	}
 
 	public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
 	{
-		float _ = 0f;
+		return CollisionAreaIntersects(targetHitbox);
+	}
+
+	private bool CollisionAreaIntersects(Rectangle targetHitbox)
+	{
+		Vector2 targetPosition = targetHitbox.TopLeft();
+		Vector2 targetSize = targetHitbox.Size();
+		float collisionPoint = 0f;
+		return ForEachCollisionLine((center, end, width) =>
+		{
+			collisionPoint = 0f;
+			return Collision.CheckAABBvLineCollision(targetPosition, targetSize, center, end, width, ref collisionPoint);
+		});
+	}
+
+	private bool ForEachCollisionLine(Func<Vector2, Vector2, float, bool> predicate)
+	{
 		Vector2 center = OwnerCenterWorld();
-		Vector2 end = center + Projectile.velocity.Length() * Projectile.ai[1].ToRotationVector2();
-		return Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), center, end, Projectile.velocity.Length() * Projectile.localAI[1], ref _);
+		float length = Projectile.velocity.Length();
+		if (length <= 0f)
+		{
+			return false;
+		}
+
+		float lineWidth = CollisionLineWidth(length);
+		float outerPadding = CollisionOuterPadding(length);
+		if (predicate(center, center + CollisionOffsetForRotation(Projectile.rotation, 0, length, outerPadding), lineWidth))
+		{
+			return true;
+		}
+
+		int activeTrailCount = CountActiveTrailSamples();
+		if (activeTrailCount <= 0)
+		{
+			return false;
+		}
+
+		int maxTrailSamples = MaxCollisionSamples - 1;
+		int stride = Math.Max(1, (int)MathF.Ceiling(activeTrailCount / (float)maxTrailSamples));
+		int activeIndex = 0;
+		for (int i = 0; i < Projectile.oldRot.Length; i++)
+		{
+			if (Projectile.oldRot[i] == 0f)
+			{
+				continue;
+			}
+
+			bool shouldSample = activeIndex % stride == 0 || activeIndex == activeTrailCount - 1;
+			if (shouldSample && predicate(center, center + CollisionOffsetForRotation(Projectile.oldRot[i], i, length, outerPadding), lineWidth))
+			{
+				return true;
+			}
+
+			activeIndex++;
+		}
+
+		return false;
+	}
+
+	private Vector2 CollisionOffsetForRotation(float rotation, int trailIndex, float length, float outerPadding)
+	{
+		float radius = length;
+		if (_usesVisualProfile)
+		{
+			float depth = EvaluateProfileDepth(ProfileProgressAtTrailIndex(trailIndex));
+			float depthScale = 1f + MathHelper.Clamp(depth, -1.2f, 1.5f) * 0.08f;
+			radius *= depthScale * 1.08f;
+		}
+
+		Vector2 offset = SlashOffsetForRotation(rotation, radius);
+		if (offset.LengthSquared() <= 0.001f)
+		{
+			return offset;
+		}
+
+		Vector2 outward = Vector2.Normalize(offset);
+		return offset + outward * outerPadding;
+	}
+
+	private float CollisionLineWidth(float length)
+	{
+		float visualThickness = Math.Max(0.1f, Projectile.localAI[0]);
+		return MathHelper.Clamp(length * visualThickness * 0.35f, 10f, 30f);
+	}
+
+	private static float CollisionOuterPadding(float length)
+	{
+		return MathHelper.Clamp(length * 0.08f, 8f, 24f);
 	}
 
 	public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -276,6 +372,7 @@ public class SlashArcProjectile : ModProjectile
 		}
 
 		EmitExactProfileHitParticles(target);
+		ApplyWeaponOnHitBuffs(target);
 		EmitOnHitProjectiles(target);
 	}
 
@@ -823,11 +920,7 @@ public class SlashArcProjectile : ModProjectile
 
 	private bool CanBlock(Projectile target)
 	{
-		float _ = 0f;
-		Rectangle hitbox = target.Hitbox;
-		Vector2 center = OwnerCenterWorld();
-		Vector2 end = center + Projectile.velocity.Length() * Projectile.ai[1].ToRotationVector2();
-		return Collision.CheckAABBvLineCollision(hitbox.TopLeft(), hitbox.Size(), center, end, Projectile.velocity.Length() * Projectile.localAI[1], ref _);
+		return CollisionAreaIntersects(target.Hitbox);
 	}
 
 	private void HandleProjectileBlocking()
@@ -931,6 +1024,22 @@ public class SlashArcProjectile : ModProjectile
 			for (int i = 0; i < 3; i++)
 			{
 				Projectile.NewProjectile(Projectile.GetSource_FromAI(), target.Center, Main.rand.NextVector2Unit(0f, MathHelper.TwoPi) * 5f, ProjectileID.IchorSplash, Projectile.damage / 2, Projectile.knockBack, Projectile.owner);
+			}
+		}
+	}
+
+	private void ApplyWeaponOnHitBuffs(NPC target)
+	{
+		if (_npcOwned)
+		{
+			return;
+		}
+
+		if (_weaponItemType == ItemID.FieryGreatsword)
+		{
+			if (Main.rand.NextBool(2))
+			{
+				target.AddBuff(BuffID.OnFire, VolcanoOnFireDuration);
 			}
 		}
 	}
