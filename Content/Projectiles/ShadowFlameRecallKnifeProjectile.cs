@@ -1,9 +1,7 @@
 using System.IO;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.DataStructures;
-using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -40,8 +38,6 @@ public class ShadowFlameRecallKnifeProjectile : ModProjectile
 
 	public override void SetStaticDefaults()
 	{
-		ProjectileID.Sets.TrailCacheLength[Projectile.type] = 10;
-		ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
 	}
 
 	public override void SetDefaults()
@@ -77,7 +73,7 @@ public class ShadowFlameRecallKnifeProjectile : ModProjectile
 
 		if (Projectile.velocity.LengthSquared() > 0.01f)
 		{
-			Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
+			Projectile.rotation = ShadowFlameKnifeHelper.KnifeDrawRotation(Projectile.velocity);
 		}
 
 		Lighting.AddLight(Projectile.Center, 0.2f, 0.04f, 0.32f);
@@ -90,18 +86,7 @@ public class ShadowFlameRecallKnifeProjectile : ModProjectile
 
 		if (!Main.dedServ)
 		{
-			Dust dust = Dust.NewDustDirect(
-				Projectile.position,
-				Projectile.width,
-				Projectile.height,
-				ModContent.DustType<DarkSpark>(),
-				-Projectile.velocity.X * 0.08f,
-				-Projectile.velocity.Y * 0.08f,
-				0,
-				new Color(180, 70, 255),
-				0.75f);
-
-			dust.noGravity = true;
+			ShadowFlameKnifeHelper.EmitShadowFlameTrailParticle(Projectile.Center, Projectile.velocity, 1.8f);
 		}
 	}
 
@@ -114,55 +99,12 @@ public class ShadowFlameRecallKnifeProjectile : ModProjectile
 				.RegisterShadowFlameRecallHit(target, Projectile, _explosionDamage);
 		}
 
-		MeleeEffectAssets.NewProjectileDirect(
-			Projectile.GetSource_FromAI(),
-			target.Center,
-			Vector2.Zero,
-			ModContent.ProjectileType<SlashHitEffectProjectile>(),
-			0,
-			0f,
-			Projectile.owner,
-			Projectile.velocity.ToRotation());
+		ShadowFlameKnifeHelper.EmitShadowFlameImpactParticles(target.Center, Projectile.velocity, 14, 1f);
 	}
 
 	public override bool PreDraw(ref Color lightColor)
 	{
-		Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
-		Vector2 origin = texture.Size() / 2f;
-
-		for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
-		{
-			Vector2 oldPosition = Projectile.oldPos[i];
-			if (oldPosition == Vector2.Zero)
-			{
-				continue;
-			}
-
-			float factor = 1f - i / (float)Projectile.oldPos.Length;
-			Color trailColor = new Color(120, 40, 220, 0) * factor * 0.45f;
-			Main.EntitySpriteDraw(
-				texture,
-				oldPosition + Projectile.Size / 2f - Main.screenPosition,
-				null,
-				trailColor,
-				Projectile.oldRot[i] == 0f ? Projectile.rotation : Projectile.oldRot[i],
-				origin,
-				Projectile.scale * (0.75f + factor * 0.2f),
-				SpriteEffects.None,
-				0f);
-		}
-
-		Main.EntitySpriteDraw(
-			texture,
-			Projectile.Center - Main.screenPosition,
-			null,
-			Color.Lerp(lightColor, Color.White, 0.35f),
-			Projectile.rotation,
-			origin,
-			Projectile.scale,
-			SpriteEffects.None,
-			0f);
-
+		ShadowFlameKnifeHelper.DrawShadowKnife(Projectile, lightColor, 0.86f);
 		return false;
 	}
 }

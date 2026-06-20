@@ -5,6 +5,10 @@ Projectiles: {
 	SlashArcGlowProjectile.DisplayName: 斩击边光
 	SlashHitEffectProjectile.DisplayName: 斩击命中特效
 	StarSlashSparkleProjectile.DisplayName: 星光斩击火花
+	// ShadowFlameExplosionProjectile.DisplayName: Shadow Flame Explosion Projectile
+	// ShadowFlamePierceKnifeProjectile.DisplayName: Shadow Flame Pierce Knife Projectile
+	// ShadowFlameRecallKnifeProjectile.DisplayName: Shadow Flame Recall Knife Projectile
+	// ShadowFlameStuckKnifeProjectile.DisplayName: Shadow Flame Stuck Knife Projectile
 }
 
 Configs: {

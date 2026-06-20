@@ -8,6 +8,8 @@ namespace WeaponEffects;
 
 public class ShadowFlamePierceKnifeProjectile : ModProjectile
 {
+	private bool _placedStuckKnife;
+
 	public override string Texture => "Terraria/Images/Projectile_" + ProjectileID.ShadowFlameKnife;
 
 	public override void SetDefaults()
@@ -31,26 +33,21 @@ public class ShadowFlamePierceKnifeProjectile : ModProjectile
 	{
 		if (Projectile.velocity.LengthSquared() > 0.01f)
 		{
-			Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
+			Projectile.rotation = ShadowFlameKnifeHelper.KnifeDrawRotation(Projectile.velocity);
 		}
 
 		Lighting.AddLight(Projectile.Center, 0.18f, 0.04f, 0.28f);
 
-		if (!Main.dedServ && Main.rand.NextBool(4))
+		if (!Main.dedServ)
 		{
-			Dust dust = Dust.NewDustDirect(
-				Projectile.position,
-				Projectile.width,
-				Projectile.height,
-				ModContent.DustType<DarkSpark>(),
-				-Projectile.velocity.X * 0.15f,
-				-Projectile.velocity.Y * 0.15f,
-				0,
-				new Color(160, 60, 255),
-				0.8f);
-
-			dust.noGravity = true;
+			ShadowFlameKnifeHelper.EmitShadowFlameTrailParticle(Projectile.Center, Projectile.velocity, 1.3f);
 		}
+	}
+
+	public override bool PreDraw(ref Color lightColor)
+	{
+		ShadowFlameKnifeHelper.DrawShadowKnife(Projectile, lightColor);
+		return false;
 	}
 
 	public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -61,11 +58,7 @@ public class ShadowFlamePierceKnifeProjectile : ModProjectile
 		{
 			float behindDistance = MathHelper.Max(target.width, target.height) * 0.55f + 18f;
 			Vector2 stuckPosition = target.Center + direction * behindDistance;
-			ShadowFlameKnifeHelper.SpawnStuckKnife(
-				Projectile.GetSource_FromAI(),
-				stuckPosition,
-				direction,
-				Projectile.owner);
+			PlaceStuckKnife(stuckPosition, direction);
 		}
 
 		target.AddBuff(BuffID.ShadowFlame, 120);
@@ -75,23 +68,31 @@ public class ShadowFlamePierceKnifeProjectile : ModProjectile
 
 	public override bool OnTileCollide(Vector2 oldVelocity)
 	{
-		EmitTileCollideDust();
+		Vector2 direction = oldVelocity.SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX));
+		if (Projectile.owner == Main.myPlayer)
+		{
+			PlaceStuckKnife(Projectile.Center, direction);
+		}
+
+		EmitTileCollideDust(direction);
 		Projectile.Kill();
 		return false;
 	}
 
+	public override void OnKill(int timeLeft)
+	{
+		if (_placedStuckKnife || timeLeft > 0 || Projectile.owner != Main.myPlayer)
+		{
+			return;
+		}
+
+		Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+		PlaceStuckKnife(Projectile.Center, direction);
+		ShadowFlameKnifeHelper.EmitShadowFlameImpactParticles(Projectile.Center, -direction, 10, 0.8f);
+	}
+
 	private void EmitHitFeedback(NPC target, Vector2 direction)
 	{
-		MeleeEffectAssets.NewProjectileDirect(
-			Projectile.GetSource_FromAI(),
-			target.Center,
-			Vector2.Zero,
-			ModContent.ProjectileType<SlashHitEffectProjectile>(),
-			0,
-			0f,
-			Projectile.owner,
-			Projectile.velocity.ToRotation());
-
 		SoundStyle hitSound = new("WeaponEffects/Sounds/Onhit")
 		{
 			Volume = 0.32f,
@@ -99,47 +100,31 @@ public class ShadowFlamePierceKnifeProjectile : ModProjectile
 		};
 		MeleeEffectAssets.PlaySound(in hitSound, target.Center);
 
-		int count = MeleeEffectAssets.ScaleParticleCount(10);
-		for (int i = 0; i < count; i++)
-		{
-			Vector2 velocity = direction.RotatedByRandom(0.9f) * Main.rand.NextFloat(0.8f, 4.5f);
-			Dust dust = Dust.NewDustDirect(
-				target.position,
-				target.width,
-				target.height,
-				ModContent.DustType<DarkSpark>(),
-				velocity.X,
-				velocity.Y,
-				0,
-				new Color(155, 45, 230),
-				Main.rand.NextFloat(0.65f, 1f));
-
-			dust.noGravity = true;
-		}
+		ShadowFlameKnifeHelper.EmitShadowFlameImpactParticles(target.Center, direction, 20, 1.2f);
 	}
 
-	private void EmitTileCollideDust()
+	private void EmitTileCollideDust(Vector2 direction)
 	{
 		if (Main.dedServ)
 		{
 			return;
 		}
 
-		int count = MeleeEffectAssets.ScaleParticleCount(5);
-		for (int i = 0; i < count; i++)
-		{
-			Dust dust = Dust.NewDustDirect(
-				Projectile.position,
-				Projectile.width,
-				Projectile.height,
-				ModContent.DustType<DarkSpark>(),
-				-Projectile.velocity.X * Main.rand.NextFloat(0.03f, 0.16f),
-				-Projectile.velocity.Y * Main.rand.NextFloat(0.03f, 0.16f),
-				0,
-				new Color(110, 35, 185),
-				Main.rand.NextFloat(0.45f, 0.75f));
+		ShadowFlameKnifeHelper.EmitShadowFlameImpactParticles(Projectile.Center, -direction, 14, 0.9f);
+	}
 
-			dust.noGravity = true;
+	private void PlaceStuckKnife(Vector2 position, Vector2 direction)
+	{
+		if (_placedStuckKnife)
+		{
+			return;
 		}
+
+		_placedStuckKnife = true;
+		ShadowFlameKnifeHelper.SpawnStuckKnife(
+			Projectile.GetSource_FromAI(),
+			position,
+			direction,
+			Projectile.owner);
 	}
 }

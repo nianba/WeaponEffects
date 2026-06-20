@@ -1,9 +1,7 @@
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
-using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -13,7 +11,7 @@ public class ShadowFlameExplosionProjectile : ModProjectile
 {
 	private bool _played;
 
-	public override string Texture => "Terraria/Images/Extra_98";
+	public override string Texture => "Terraria/Images/Projectile_" + ProjectileID.ShadowFlameKnife;
 
 	public static void Spawn(IEntitySource source, Vector2 center, int owner, int damage, float knockback)
 	{
@@ -77,22 +75,6 @@ public class ShadowFlameExplosionProjectile : ModProjectile
 
 	public override bool PreDraw(ref Color lightColor)
 	{
-		Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
-		float progress = 1f - Projectile.timeLeft / 8f;
-		float scale = MathHelper.Lerp(0.45f, 1.35f, progress);
-		float alpha = MathHelper.Clamp(Projectile.timeLeft / 8f, 0f, 1f) * 0.75f;
-
-		Main.EntitySpriteDraw(
-			texture,
-			Projectile.Center - Main.screenPosition,
-			null,
-			new Color(160, 60, 255, 0) * alpha,
-			Projectile.rotation,
-			texture.Size() / 2f,
-			scale,
-			SpriteEffects.None,
-			0f);
-
 		return false;
 	}
 
@@ -103,22 +85,24 @@ public class ShadowFlameExplosionProjectile : ModProjectile
 			return;
 		}
 
-		int count = MeleeEffectAssets.ScaleParticleCount(36);
+		int count = MeleeEffectAssets.ScaleParticleCount(52);
 		for (int i = 0; i < count; i++)
 		{
-			Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.2f, 7.5f);
+			Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.6f, 8.4f);
 			Dust dust = Dust.NewDustDirect(
 				Projectile.Center - new Vector2(4f),
 				8,
 				8,
-				ModContent.DustType<DarkSpark>(),
+				Main.rand.NextBool(3) ? DustID.Demonite : DustID.Shadowflame,
 				velocity.X,
 				velocity.Y,
 				0,
 				new Color(175, 55, 255),
-				Main.rand.NextFloat(0.8f, 1.35f));
+				Main.rand.NextFloat(1f, 1.65f));
 
 			dust.noGravity = true;
 		}
+
+		ShadowFlameKnifeHelper.EmitShadowFlameImpactParticles(Projectile.Center, Main.rand.NextVector2Unit(), 28, 1.5f);
 	}
 }

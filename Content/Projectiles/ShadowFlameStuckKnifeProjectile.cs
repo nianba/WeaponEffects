@@ -1,8 +1,6 @@
 using System.IO;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Terraria;
-using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -27,18 +25,22 @@ public class ShadowFlameStuckKnifeProjectile : ModProjectile
 
 	public override void SendExtraAI(BinaryWriter writer)
 	{
+		writer.Write(Projectile.ai[0]);
 		writer.Write(Projectile.rotation);
 	}
 
 	public override void ReceiveExtraAI(BinaryReader reader)
 	{
+		Projectile.ai[0] = reader.ReadSingle();
 		Projectile.rotation = reader.ReadSingle();
 	}
 
 	public void Initialize(Vector2 direction)
 	{
+		Vector2 normalizedDirection = direction.SafeNormalize(Vector2.UnitX);
 		Projectile.velocity = Vector2.Zero;
-		Projectile.rotation = direction.SafeNormalize(Vector2.UnitX).ToRotation() + MathHelper.PiOver4;
+		Projectile.ai[0] = normalizedDirection.ToRotation();
+		Projectile.rotation = ShadowFlameKnifeHelper.KnifeDrawRotation(normalizedDirection);
 		Projectile.netUpdate = true;
 	}
 
@@ -50,6 +52,7 @@ public class ShadowFlameStuckKnifeProjectile : ModProjectile
 	public override void AI()
 	{
 		Projectile.velocity = Vector2.Zero;
+		Projectile.rotation = ShadowFlameKnifeHelper.KnifeDrawRotation(Projectile.ai[0].ToRotationVector2());
 		Lighting.AddLight(Projectile.Center, 0.1f, 0.02f, 0.18f);
 
 		if (Projectile.owner < 0 || Projectile.owner >= Main.maxPlayers)
@@ -59,6 +62,10 @@ public class ShadowFlameStuckKnifeProjectile : ModProjectile
 		}
 
 		Player owner = Main.player[Projectile.owner];
+		Vector2 directionToPlayer = (owner.Center - Projectile.Center).SafeNormalize(Projectile.ai[0].ToRotationVector2());
+		Projectile.ai[0] = directionToPlayer.ToRotation();
+		Projectile.rotation = ShadowFlameKnifeHelper.KnifeDrawRotation(directionToPlayer);
+
 		bool shouldFadeFast =
 			!owner.active ||
 			owner.dead ||
@@ -70,47 +77,18 @@ public class ShadowFlameStuckKnifeProjectile : ModProjectile
 			Projectile.timeLeft = 15;
 		}
 
-		if (!Main.dedServ && Main.rand.NextBool(10))
+		if (!Main.dedServ && Main.rand.NextBool(4))
 		{
-			Dust dust = Dust.NewDustDirect(
-				Projectile.position,
-				Projectile.width,
-				Projectile.height,
-				ModContent.DustType<DarkSpark>(),
-				0f,
-				-0.2f,
-				0,
-				new Color(120, 40, 220),
-				0.65f);
-
-			dust.noGravity = true;
+			ShadowFlameKnifeHelper.EmitShadowFlameTrailParticle(Projectile.Center, directionToPlayer, 0.55f);
 		}
 	}
 
 	public override bool PreDraw(ref Color lightColor)
 	{
-		Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
-		float fade = Projectile.timeLeft > ShadowFlameKnifeTuning.FadeStartTicks
-			? 0.68f
-			: MathHelper.Clamp(Projectile.timeLeft / (float)ShadowFlameKnifeTuning.FadeStartTicks, 0f, 1f) * 0.68f;
-
-		if (Projectile.timeLeft <= ShadowFlameKnifeTuning.FadeStartTicks)
-		{
-			fade *= Main.rand.NextBool(5) ? 0.65f : 1f;
-		}
-
-		Color drawColor = Color.Lerp(new Color(110, 40, 190), lightColor, 0.35f) * fade;
-		Main.EntitySpriteDraw(
-			texture,
-			Projectile.Center - Main.screenPosition,
-			null,
-			drawColor,
-			Projectile.rotation,
-			texture.Size() / 2f,
-			Projectile.scale,
-			SpriteEffects.None,
-			0f);
-
+		float opacity = Projectile.timeLeft > ShadowFlameKnifeTuning.FadeStartTicks
+			? 0.48f
+			: MathHelper.Clamp(Projectile.timeLeft / (float)ShadowFlameKnifeTuning.FadeStartTicks, 0f, 1f) * 0.48f;
+		ShadowFlameKnifeHelper.DrawShadowKnife(Projectile, lightColor, opacity);
 		return false;
 	}
 }
