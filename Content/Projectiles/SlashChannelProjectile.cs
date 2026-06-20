@@ -137,6 +137,7 @@ public class SlashChannelProjectile : ModProjectile
 		SoundEngine.PlaySound(new SoundStyle("MeleeWeaponEffects/Sounds/S2") { Volume = 0.36f }, player.Center);
 		float randomizedRotation = _aimRotation + Main.rand.NextFloat(-0.5f, 0.5f);
 		float length = Main.rand.Next(160, 220) / 110f * _weaponLength;
+		float yScale = Main.rand.NextFloat(0.36f, 0.8f);
 		int startRotation = Main.rand.NextBool() ? -2 : 2;
 
 		SlashArcProjectile.CreateSlash(
@@ -146,7 +147,7 @@ public class SlashChannelProjectile : ModProjectile
 			startingRotation: startRotation,
 			length: length,
 			thickness: 0.5f,
-			yScale: Main.rand.NextFloat(0.36f, 0.8f),
+			yScale: yScale,
 			extraUpdates: Main.rand.Next(4, 6),
 			damage: Projectile.damage,
 			knockback: Projectile.knockBack,

@@ -275,6 +275,7 @@ public class SlashArcProjectile : ModProjectile
 			SpawnHitDust(target, DustID.Blood, 32, 0.9f, 1.7f);
 		}
 
+		EmitExactProfileHitParticles(target);
 		EmitOnHitProjectiles(target);
 	}
 
@@ -310,6 +311,7 @@ public class SlashArcProjectile : ModProjectile
 		{
 			float rotationStep = MathHelper.Lerp(0.14f, 0f, 1f - (Projectile.timeLeft - 40) / 60f);
 			Projectile.rotation += _reverse ? -rotationStep : rotationStep;
+			EmitExactProfileSwingParticles();
 		}
 
 		if (Projectile.timeLeft == 60 && !_npcOwned)
@@ -474,6 +476,7 @@ public class SlashArcProjectile : ModProjectile
 			float nearAmount = MathHelper.Clamp((depth + 0.9f) / 2.4f, 0f, 1f);
 			float farAmount = 1f - nearAmount;
 			float hitPeak = EvaluateHitPeak(progress);
+			float crescent = CrescentWidthFactor(i, trailLength);
 
 			GetProfilePassSettings(pass, nearAmount, farAmount, hitPeak, out float alpha, out float outerScale, out float widthScale, out float offsetPixels, out Color passColor);
 			if (alpha <= 0f)
@@ -488,8 +491,9 @@ public class SlashArcProjectile : ModProjectile
 			float innerRadius;
 			if (style == 1)
 			{
-				float width = MathHelper.Clamp(Projectile.localAI[0] * widthScale, 0.02f, 0.95f);
-				innerRadius = length * (outerScale - width + width * i / trailLength) * depthScale;
+				float width = MathHelper.Clamp(Projectile.localAI[0] * widthScale * crescent, 0.01f, 0.95f);
+				float innerTaper = 0.18f + 0.82f * crescent;
+				innerRadius = length * (outerScale - width + width * i / trailLength * innerTaper) * depthScale;
 			}
 			else
 			{
@@ -500,7 +504,7 @@ public class SlashArcProjectile : ModProjectile
 			Vector2 inner = ProfileVector(rotation, innerRadius);
 			Vector2 offset = ProfileScreenOffset(outer, offsetPixels);
 			float depthAlpha = 1f + MathHelper.Clamp(depth, -1f, 1.4f) * 0.1f;
-			Color color = passColor * alpha * trailFactor * depthAlpha;
+			Color color = passColor * alpha * trailFactor * depthAlpha * CrescentAlphaFactor(crescent);
 
 			if (_vertexCount + 2 > _vertices.Length)
 			{
@@ -518,6 +522,21 @@ public class SlashArcProjectile : ModProjectile
 		direction.X *= _profileXScale;
 		direction.Y *= Projectile.localAI[1];
 		return (direction * radius).RotatedBy(Projectile.ai[1]);
+	}
+
+	private static float CrescentWidthFactor(int trailIndex, float trailLength)
+	{
+		float position = MathHelper.Clamp(trailIndex / Math.Max(1f, trailLength - 1f), 0f, 1f);
+		float centerWeight = MathF.Sin(position * MathHelper.Pi);
+		float leadingTip = Smooth01(MathHelper.Clamp(position / 0.14f, 0f, 1f));
+		float trailingTip = Smooth01(MathHelper.Clamp((1f - position) / 0.22f, 0f, 1f));
+		float tipWeight = Math.Min(leadingTip, trailingTip);
+		return MathHelper.Clamp(0.08f + centerWeight * 0.92f * tipWeight, 0.04f, 1f);
+	}
+
+	private static float CrescentAlphaFactor(float crescent)
+	{
+		return MathHelper.Lerp(0.18f, 1f, MathF.Sqrt(MathHelper.Clamp(crescent, 0f, 1f)));
 	}
 
 	private Vector2 ProfileScreenOffset(Vector2 outer, float offsetPixels)
@@ -553,38 +572,38 @@ public class SlashArcProjectile : ModProjectile
 		switch (pass)
 		{
 			case ProfileVisualPass.FarRim:
-				alpha = _profileFarRimAlpha * (0.45f + farAmount * 0.75f);
-				outerScale = 0.98f;
-				widthScale = 0.2f;
+				alpha = _profileFarRimAlpha * (0.35f + farAmount * 0.55f);
+				outerScale = 0.985f;
+				widthScale = 0.14f;
 				offsetPixels = -_profileFarRimOffsetPixels * (0.4f + farAmount * 0.6f);
 				passColor = Color.Lerp(_color, Color.Black, 0.28f);
 				break;
 			case ProfileVisualPass.TrailEcho:
-				alpha = _profileMainAlpha * 0.24f;
+				alpha = _profileMainAlpha * 0.12f;
 				outerScale = 0.96f;
-				widthScale = 0.58f;
+				widthScale = 0.36f;
 				offsetPixels = -_profileFarRimOffsetPixels * 0.35f;
 				passColor = Color.Lerp(_color, Color.White, 0.2f);
 				break;
 			case ProfileVisualPass.Core:
-				alpha = _profileCoreAlpha * (0.55f + hitPeak * 0.45f);
-				outerScale = 0.94f + nearAmount * 0.03f;
-				widthScale = 0.34f;
-				passColor = Color.Lerp(_color, Color.White, 0.62f);
+				alpha = _profileCoreAlpha * (0.72f + hitPeak * 0.38f);
+				outerScale = 0.965f + nearAmount * 0.025f;
+				widthScale = 0.16f;
+				passColor = Color.Lerp(_color, Color.White, 0.78f);
 				break;
 			case ProfileVisualPass.PeakFlare:
-				alpha = _profilePeakFlareAlpha * hitPeak;
-				outerScale = 1.04f + nearAmount * 0.08f;
-				widthScale = 0.26f;
+				alpha = _profilePeakFlareAlpha * hitPeak * 0.82f;
+				outerScale = 1.02f + nearAmount * 0.06f;
+				widthScale = 0.16f;
 				offsetPixels = _profileNearEdgeOffsetPixels * nearAmount * 0.45f;
 				passColor = Color.Lerp(_color, Color.White, 0.82f);
 				break;
 			case ProfileVisualPass.NearEdge:
-				alpha = _profileNearEdgeAlpha * (0.35f + nearAmount * 0.95f);
-				outerScale = 1.03f + nearAmount * 0.04f;
-				widthScale = 0.22f;
+				alpha = _profileNearEdgeAlpha * (0.55f + nearAmount * 0.85f);
+				outerScale = 1.025f + nearAmount * 0.035f;
+				widthScale = 0.12f;
 				offsetPixels = _profileNearEdgeOffsetPixels * nearAmount;
-				passColor = Color.Lerp(_color, Color.White, 0.48f);
+				passColor = Color.Lerp(_color, Color.White, 0.62f);
 				break;
 		}
 	}
@@ -717,6 +736,50 @@ public class SlashArcProjectile : ModProjectile
 			Dust dust = Dust.NewDustDirect(target.position, target.width, target.height, dustType, 0f, 0f, 0, default, Main.rand.NextFloat(minScale, maxScale));
 			dust.velocity = (Projectile.ai[1] + Main.rand.NextFloat(-0.45f, 0.45f)).ToRotationVector2() * Main.rand.NextFloat(0.4f, 10f);
 		}
+	}
+
+	private void EmitExactProfileHitParticles(NPC target)
+	{
+		if (SlashProfileResolver.TryGetExactProfile(_weaponItemType, out WeaponSlashProfile profile))
+		{
+			float strength = _usesVisualProfile ? MathHelper.Clamp(1f + _profilePeakFlareAlpha * 0.4f, 1f, 1.4f) : 1f;
+			SlashParticleEmitter.EmitHitParticles(in profile, target.Center, Projectile.ai[1], strength);
+		}
+	}
+
+	private void EmitExactProfileSwingParticles()
+	{
+		if (Projectile.timeLeft % 3 != 0 || !SlashProfileResolver.TryGetExactProfile(_weaponItemType, out WeaponSlashProfile profile))
+		{
+			return;
+		}
+
+		int maxTrailIndex = Math.Min(8, Projectile.oldRot.Length - 1);
+		int trailIndex = maxTrailIndex > 0 ? Main.rand.Next(maxTrailIndex + 1) : 0;
+		float rotation = Projectile.oldRot[trailIndex] == 0f ? Projectile.rotation : Projectile.oldRot[trailIndex];
+		float radius = Projectile.velocity.Length() * Main.rand.NextFloat(0.72f, 1.02f);
+		Vector2 offset = SlashOffsetForRotation(rotation, radius);
+		Vector2 radial = offset.SafeNormalize(Vector2.UnitX);
+		Vector2 tangent = new(-radial.Y, radial.X);
+		if (_reverse)
+		{
+			tangent *= -1f;
+		}
+
+		float strength = _usesVisualProfile ? MathHelper.Clamp(0.13f + _profilePeakFlareAlpha * 0.11f, 0.13f, 0.24f) : 0.16f;
+		SlashParticleEmitter.EmitSwingTrailParticles(in profile, OwnerCenterWorld() + offset, tangent, radial, strength);
+	}
+
+	private Vector2 SlashOffsetForRotation(float rotation, float radius)
+	{
+		if (_usesVisualProfile)
+		{
+			return ProfileVector(rotation, radius);
+		}
+
+		Vector2 direction = rotation.ToRotationVector2();
+		direction.Y *= Projectile.localAI[1];
+		return (direction * radius).RotatedBy(Projectile.ai[1]);
 	}
 
 	private void EmitOnHitProjectiles(NPC target)

@@ -198,11 +198,13 @@ public class SlashArcGlowProjectile : ModProjectile
 			float depthScale = _usesVisualProfile ? 1f + MathHelper.Clamp(depth, -1.2f, 1.5f) * 0.1f : 1f;
 			float glowScale = _usesVisualProfile ? 1.04f + nearAmount * 0.08f + hitPeak * 0.05f : 1f;
 			float widthScale = _usesVisualProfile ? 1.08f + nearAmount * 0.16f : 1f;
+			float crescent = _usesVisualProfile ? GlowCrescentWidthFactor(i, Projectile.oldPos.Length) : 1f;
 			Vector2 outer = ProfileVector(Projectile.oldRot[i], Projectile.velocity.Length() * glowScale * depthScale);
 			outer = outer.RotatedBy(Projectile.ai[1]);
 
-			float width = MathHelper.Clamp(Projectile.localAI[0] * widthScale, 0.02f, 0.95f);
-			Vector2 inner = ProfileVector(Projectile.oldRot[i], Projectile.velocity.Length() * (glowScale - width + width * i / 40f) * depthScale);
+			float width = MathHelper.Clamp(Projectile.localAI[0] * widthScale * crescent, 0.01f, 0.95f);
+			float innerTaper = 0.25f + 0.75f * crescent;
+			Vector2 inner = ProfileVector(Projectile.oldRot[i], Projectile.velocity.Length() * (glowScale - width + width * i / 40f * innerTaper) * depthScale);
 			inner = inner.RotatedBy(Projectile.ai[1]);
 			Vector2 offset = ProfileScreenOffset(outer, _usesVisualProfile ? _profileNearEdgeOffsetPixels * nearAmount * 0.55f : 0f);
 
@@ -211,8 +213,9 @@ public class SlashArcGlowProjectile : ModProjectile
 				break;
 			}
 
-			float alpha = _usesVisualProfile ? _profileGlowAlpha * (0.65f + nearAmount * 0.35f + _profilePeakFlareAlpha * hitPeak * 0.3f) : 1f;
-			Color color = _color * blink * factor * alpha;
+			float alpha = _usesVisualProfile ? _profileGlowAlpha * (0.42f + nearAmount * 0.24f + _profilePeakFlareAlpha * hitPeak * 0.18f) : 1f;
+			float crescentAlpha = _usesVisualProfile ? GlowCrescentAlphaFactor(crescent) : 1f;
+			Color color = _color * blink * factor * alpha * crescentAlpha;
 			_vertices[_vertexCount++] = new SlashVertex(ownerCenter + outer + offset, new Vector3(factor, 0f, 1f), color);
 			_vertices[_vertexCount++] = new SlashVertex(ownerCenter + inner + offset, new Vector3(factor, 1f, 1f), color);
 		}
@@ -228,6 +231,21 @@ public class SlashArcGlowProjectile : ModProjectile
 
 		direction.Y *= Projectile.localAI[1];
 		return direction * radius;
+	}
+
+	private static float GlowCrescentWidthFactor(int trailIndex, float trailLength)
+	{
+		float position = MathHelper.Clamp(trailIndex / System.Math.Max(1f, trailLength - 1f), 0f, 1f);
+		float centerWeight = System.MathF.Sin(position * MathHelper.Pi);
+		float leadingTip = Smooth01(MathHelper.Clamp(position / 0.18f, 0f, 1f));
+		float trailingTip = Smooth01(MathHelper.Clamp((1f - position) / 0.28f, 0f, 1f));
+		float tipWeight = System.Math.Min(leadingTip, trailingTip);
+		return MathHelper.Clamp(0.18f + centerWeight * 0.82f * tipWeight, 0.12f, 1f);
+	}
+
+	private static float GlowCrescentAlphaFactor(float crescent)
+	{
+		return MathHelper.Lerp(0.24f, 0.86f, System.MathF.Sqrt(MathHelper.Clamp(crescent, 0f, 1f)));
 	}
 
 	private Vector2 ProfileScreenOffset(Vector2 outer, float offsetPixels)
