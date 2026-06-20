@@ -1,12 +1,10 @@
 using Terraria;
 using Terraria.ModLoader;
 
-namespace MeleeWeaponEffects;
+namespace WeaponEffects;
 
-public class MeleeEffectsPlayer : ModPlayer
+public class WeaponEffectsPlayer : ModPlayer
 {
-	private const int ComboResetDelay = 45;
-
 	public int ScreenShakeTimer;
 	public int SlashComboStepIndex;
 	private int _slashComboResetTimer;
@@ -15,7 +13,7 @@ public class MeleeEffectsPlayer : ModPlayer
 	{
 		int index = SlashComboStepIndex;
 		SlashComboStepIndex = (SlashComboStepIndex + 1) % Compact3DComboSchemeA.Count;
-		_slashComboResetTimer = ComboResetDelay;
+		_slashComboResetTimer = ModContent.GetInstance<WeaponEffectsGameplayConfig>().ComboResetDelay;
 		return index;
 	}
 
@@ -26,7 +24,12 @@ public class MeleeEffectsPlayer : ModPlayer
 			return;
 		}
 
-		Main.screenPosition += Main.rand.NextVector2Circular(15f, 15f);
+		float strength = 15f * MeleeEffectAssets.ScreenShakeStrengthMultiplier;
+		if (strength > 0f)
+		{
+			Main.screenPosition += Main.rand.NextVector2Circular(strength, strength);
+		}
+
 		ScreenShakeTimer--;
 	}
 

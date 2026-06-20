@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
 
-namespace MeleeWeaponEffects;
+namespace WeaponEffects;
 
 public static class SlashProfileResolver
 {

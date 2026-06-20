@@ -1,4 +1,4 @@
-namespace MeleeWeaponEffects;
+namespace WeaponEffects;
 
 public readonly struct SlashShapeProfile
 {

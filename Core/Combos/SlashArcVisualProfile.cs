@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 
-namespace MeleeWeaponEffects;
+namespace WeaponEffects;
 
 public readonly struct SlashArcVisualProfile
 {

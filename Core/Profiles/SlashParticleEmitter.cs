@@ -2,7 +2,7 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 
-namespace MeleeWeaponEffects;
+namespace WeaponEffects;
 
 public static class SlashParticleEmitter
 {
@@ -30,7 +30,7 @@ public static class SlashParticleEmitter
 			float side = Main.rand.NextFloat(-0.28f, 0.28f) * length * yScale;
 			Vector2 position = center + forward * outerRadius * along + normal * side;
 			Vector2 velocity = forward.RotatedBy(Main.rand.NextFloat(-particles.SpreadRadians, particles.SpreadRadians)) * Main.rand.NextFloat(1.2f, 4.2f) * particles.VelocityScale;
-			if (UsesDrawnStarParticles(in profile))
+			if (particles.VisualStyle == SlashParticleVisualStyle.DrawnStar)
 			{
 				SpawnDrawnStar(position, velocity, in particles, cluster: Main.rand.NextFloat() < 0.25f);
 				continue;
@@ -61,7 +61,7 @@ public static class SlashParticleEmitter
 			Vector2 velocity = tangentDirection.RotatedBy(Main.rand.NextFloat(-particles.SpreadRadians * 0.45f, particles.SpreadRadians * 0.45f)) * Main.rand.NextFloat(0.8f, 2.8f) * particles.VelocityScale;
 			velocity += outwardDirection * Main.rand.NextFloat(0.15f, 1.15f) * particles.VelocityScale;
 			Vector2 spawnPosition = position + Main.rand.NextVector2Circular(4f, 4f);
-			if (UsesDrawnStarParticles(in profile))
+			if (particles.VisualStyle == SlashParticleVisualStyle.DrawnStar)
 			{
 				SpawnDrawnStar(spawnPosition, velocity, in particles, cluster: Main.rand.NextFloat() < 0.18f);
 				continue;
@@ -91,7 +91,7 @@ public static class SlashParticleEmitter
 			Vector2 velocity = forward.RotatedBy(Main.rand.NextFloat(-particles.SpreadRadians, particles.SpreadRadians)) * Main.rand.NextFloat(1.6f, 6.5f) * particles.VelocityScale;
 			velocity += Main.rand.NextVector2Circular(1.2f, 1.2f);
 			Vector2 spawnPosition = position + Main.rand.NextVector2Circular(8f, 8f);
-			if (UsesDrawnStarParticles(in profile))
+			if (particles.VisualStyle == SlashParticleVisualStyle.DrawnStar)
 			{
 				SpawnDrawnStar(spawnPosition, velocity * 0.72f, in particles, cluster: Main.rand.NextFloat() < 0.65f);
 				continue;
@@ -103,22 +103,20 @@ public static class SlashParticleEmitter
 
 	private static int ScaledCount(int baseCount, float strength)
 	{
-		return (int)System.MathF.Round(MathHelper.Max(0f, baseCount * strength));
+		return MeleeEffectAssets.ScaleParticleCount(baseCount, strength);
 	}
 
 	private static void SpawnDust(Vector2 position, Vector2 velocity, in SlashParticleProfile particles)
 	{
+		int dustType = particles.AlternateDustType >= 0 && Main.rand.NextBool()
+			? particles.AlternateDustType
+			: particles.DustType;
 		Color color = particles.AlternateDustColor != default && Main.rand.NextBool()
 			? particles.AlternateDustColor
 			: particles.DustColor;
-		Dust dust = Dust.NewDustDirect(position, 1, 1, particles.DustType, velocity.X, velocity.Y, 0, color, Main.rand.NextFloat(particles.MinScale, particles.MaxScale));
-		dust.noGravity = particles.NoGravity || particles.DustType == DustID.Torch;
-		dust.fadeIn = particles.DustType == DustID.Torch ? 0.8f : 0f;
-	}
-
-	private static bool UsesDrawnStarParticles(in WeaponSlashProfile profile)
-	{
-		return profile.Id == SlashProfileId.Starfury;
+		Dust dust = Dust.NewDustDirect(position, 1, 1, dustType, velocity.X, velocity.Y, 0, color, Main.rand.NextFloat(particles.MinScale, particles.MaxScale));
+		dust.noGravity = particles.NoGravity || dustType == DustID.Torch;
+		dust.fadeIn = dustType == DustID.Torch ? 0.8f : 0f;
 	}
 
 	private static void SpawnDrawnStar(Vector2 position, Vector2 velocity, in SlashParticleProfile particles, bool cluster)

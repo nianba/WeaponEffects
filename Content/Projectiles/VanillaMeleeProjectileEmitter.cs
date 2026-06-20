@@ -3,7 +3,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace MeleeWeaponEffects;
+namespace WeaponEffects;
 
 public static class VanillaMeleeProjectileEmitter
 {
@@ -16,6 +16,11 @@ public static class VanillaMeleeProjectileEmitter
 	public static void Emit(ModProjectile sourceProjectile, bool charged, int itemType, Player player, Vector2 targetWorld)
 	{
 		if (player.whoAmI != Main.myPlayer)
+		{
+			return;
+		}
+
+		if (!ModContent.GetInstance<WeaponEffectsGameplayConfig>().EmitVanillaSwordProjectiles)
 		{
 			return;
 		}

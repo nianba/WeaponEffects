@@ -7,7 +7,7 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace MeleeWeaponEffects;
+namespace WeaponEffects;
 
 public class SlashArcGlowProjectile : ModProjectile
 {
@@ -138,7 +138,7 @@ public class SlashArcGlowProjectile : ModProjectile
 
 	public override bool PreDraw(ref Color lightColor)
 	{
-		if (ModContent.GetInstance<MeleeWeaponEffectsVisualConfig>().SlashStyle != 1)
+		if (ModContent.GetInstance<WeaponEffectsVisualConfig>().SlashStyle != 1)
 		{
 			return false;
 		}
@@ -181,7 +181,7 @@ public class SlashArcGlowProjectile : ModProjectile
 	private void BuildVertices(Vector2 ownerCenter)
 	{
 		_vertexCount = 0;
-		float blink = ModContent.GetInstance<MeleeWeaponEffectsVisualConfig>().SlashBlink;
+		float blink = ModContent.GetInstance<WeaponEffectsVisualConfig>().SlashBlink;
 		int activeTrailCount = _usesVisualProfile ? CountActiveTrailSamples() : Projectile.oldPos.Length;
 		if (_usesVisualProfile && activeTrailCount < 2)
 		{

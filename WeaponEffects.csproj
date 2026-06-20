@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="$([System.Environment]::GetFolderPath(SpecialFolder.UserProfile))\Documents\My Games\Terraria\tModLoader\ModSources\tModLoader.targets" />
   <PropertyGroup>
-    <AssemblyName>MeleeWeaponEffects</AssemblyName>
-    <RootNamespace>MeleeWeaponEffects</RootNamespace>
+    <AssemblyName>WeaponEffects</AssemblyName>
+    <RootNamespace>WeaponEffects</RootNamespace>
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>

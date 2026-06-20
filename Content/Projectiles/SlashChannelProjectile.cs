@@ -8,7 +8,7 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace MeleeWeaponEffects;
+namespace WeaponEffects;
 
 public class SlashChannelProjectile : ModProjectile
 {
@@ -73,14 +73,15 @@ public class SlashChannelProjectile : ModProjectile
 
 		Projectile.ai[1] += 1f;
 		int useAnimation = Math.Max(1, _useAnimation);
+		int slashInterval = NormalSlashInterval;
 
 		if (Projectile.owner == Main.myPlayer)
 		{
 			UpdateLocalAim(player);
 		}
 
-		player.itemAnimation = useAnimation;
-		player.itemTime = useAnimation;
+		player.itemAnimation = Math.Max(useAnimation, slashInterval);
+		player.itemTime = Math.Max(useAnimation, slashInterval);
 		player.heldProj = Projectile.whoAmI;
 		Projectile.rotation = Projectile.ai[0] + _aimRotation;
 
@@ -97,7 +98,7 @@ public class SlashChannelProjectile : ModProjectile
 		Projectile.velocity = Vector2.Zero;
 		Projectile.Center = player.Center;
 
-		if (Projectile.ai[1] % useAnimation == 2f && Projectile.owner == Main.myPlayer)
+		if (Projectile.owner == Main.myPlayer && ShouldFireSlashThisFrame(useAnimation, slashInterval))
 		{
 			FireSlash(player, useAnimation);
 		}
@@ -134,7 +135,8 @@ public class SlashChannelProjectile : ModProjectile
 	{
 		VanillaMeleeProjectileEmitter.Emit(this, charged: false, player.HeldItem.type, player, _targetWorld);
 
-		SoundEngine.PlaySound(new SoundStyle("MeleeWeaponEffects/Sounds/S2") { Volume = 0.36f }, player.Center);
+		SoundStyle swingSound = new("WeaponEffects/Sounds/S2") { Volume = 0.36f };
+		MeleeEffectAssets.PlaySound(in swingSound, player.Center);
 		float randomizedRotation = _aimRotation + Main.rand.NextFloat(-0.5f, 0.5f);
 		float length = Main.rand.Next(160, 220) / 110f * _weaponLength;
 		float thicknessScale = 1f;
@@ -151,8 +153,8 @@ public class SlashChannelProjectile : ModProjectile
 			thickness: thicknessScale,
 			yScale: yScale,
 			extraUpdates: Main.rand.Next(4, 6),
-			damage: Projectile.damage,
-			knockback: Projectile.knockBack,
+			damage: NormalSlashDamage,
+			knockback: SlashKnockback,
 			owner: player.whoAmI,
 			color: Color.White,
 			weaponItemType: _weaponItemType,
@@ -164,9 +166,10 @@ public class SlashChannelProjectile : ModProjectile
 	{
 		VanillaMeleeProjectileEmitter.Emit(this, charged: false, player.HeldItem.type, player, _targetWorld);
 
-		int comboStepIndex = player.GetModPlayer<MeleeEffectsPlayer>().ConsumeNextSlashComboStep();
+		int comboStepIndex = player.GetModPlayer<WeaponEffectsPlayer>().ConsumeNextSlashComboStep();
 		ref readonly SlashComboStep step = ref Compact3DComboSchemeA.GetStep(comboStepIndex);
-		SoundEngine.PlaySound(new SoundStyle("MeleeWeaponEffects/Sounds/S2") { Volume = 0.36f }, player.Center);
+		SoundStyle swingSound = new("WeaponEffects/Sounds/S2") { Volume = 0.36f };
+		MeleeEffectAssets.PlaySound(in swingSound, player.Center);
 
 		float hitAngle = MathHelper.ToRadians(step.HitAngleDegrees);
 		float baseRotation = _aimRotation - hitAngle;
@@ -185,8 +188,8 @@ public class SlashChannelProjectile : ModProjectile
 			thicknessScale: thicknessScale,
 			yScale: yScale,
 			extraUpdates: step.ExtraUpdates,
-			damage: Projectile.damage,
-			knockback: Projectile.knockBack,
+			damage: NormalSlashDamage,
+			knockback: SlashKnockback,
 			owner: player.whoAmI,
 			ownerNPC: 0,
 			weaponItemType: _weaponItemType,
@@ -196,6 +199,36 @@ public class SlashChannelProjectile : ModProjectile
 
 		Projectile.netUpdate = true;
 	}
+
+	private int NormalSlashInterval
+	{
+		get
+		{
+			float multiplier = MathHelper.Clamp(ModContent.GetInstance<WeaponEffectsGameplayConfig>().NormalSlashIntervalMultiplier, 0.25f, 3f);
+			return Math.Max(1, (int)MathF.Round(Math.Max(1, _useAnimation) * multiplier));
+		}
+	}
+
+	private bool ShouldFireSlashThisFrame(int useAnimation, int slashInterval)
+	{
+		if (slashInterval == useAnimation)
+		{
+			return Projectile.ai[1] % useAnimation == 2f;
+		}
+
+		return Projectile.ai[1] % slashInterval == Math.Min(2, slashInterval - 1);
+	}
+
+	private int NormalSlashDamage
+	{
+		get
+		{
+			float multiplier = MathHelper.Clamp(ModContent.GetInstance<WeaponEffectsGameplayConfig>().NormalSlashDamageMultiplier, 0.1f, 3f);
+			return Math.Max(1, (int)MathF.Round(Projectile.damage * multiplier));
+		}
+	}
+
+	private float SlashKnockback => Projectile.knockBack * MathHelper.Clamp(ModContent.GetInstance<WeaponEffectsGameplayConfig>().SlashKnockbackMultiplier, 0f, 3f);
 
 	private static float RuntimeYScaleForStep(in SlashComboStep step)
 	{

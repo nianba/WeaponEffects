@@ -1,4 +1,4 @@
-MeleeEffects(近战特效修改) is a toy mod that modifies all the melee weapons.
+WeaponEffects(近战特效修改) is a toy mod that modifies all the melee weapons.
 Just for cool slashing.After all I have not finished some specialization yet.
 
 

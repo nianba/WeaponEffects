@@ -1,8 +1,8 @@
-# Melee Weapon Effects 架构文档
+# WeaponEffects 架构文档
 
 ## 项目定位
 
-`MeleeWeaponEffects` 是一个 tModLoader 模组，用全局物品逻辑接管符合条件的近战武器使用方式，将原版挥砍替换为自定义剑气、蓄力斩、命中特效、屏幕震动和部分原版弹幕兼容逻辑。
+`WeaponEffects` 是一个 tModLoader 模组，用全局物品逻辑接管符合条件的近战武器使用方式，将原版挥砍替换为自定义剑气、蓄力斩、命中特效、屏幕震动和部分原版弹幕兼容逻辑。
 
 当前工程的核心设计是：
 
@@ -16,9 +16,9 @@
 
 | 路径 | 职责 | 主要内容 |
 | --- | --- | --- |
-| `MeleeWeaponEffects.cs` | 模组入口 | tModLoader `Mod` 类型，当前仅作为注册入口。 |
-| `Common/Configs` | 配置定义 | `MeleeWeaponEffectsGameplayConfig` 是服务端玩法配置，`MeleeWeaponEffectsVisualConfig` 是客户端视觉配置。 |
-| `Common/Players` | 玩家局部状态 | `MeleeEffectsPlayer` 负责本地屏幕震动。 |
+| `WeaponEffects.cs` | 模组入口 | tModLoader `Mod` 类型，当前仅作为注册入口。 |
+| `Common/Configs` | 配置定义 | `WeaponEffectsGameplayConfig` 是服务端玩法配置，`WeaponEffectsVisualConfig` 是客户端视觉配置。 |
+| `Common/Players` | 玩家局部状态 | `WeaponEffectsPlayer` 负责本地屏幕震动。 |
 | `Content/Items` | 物品全局改写 | `SlashGlobalItem` 筛选近战武器并替换使用行为。 |
 | `Content/Projectiles` | 投射物与战斗流程 | 普通挥砍控制、蓄力控制、剑气本体、剑气光效、命中特效、原版弹幕兼容。 |
 | `Content/Dusts` | 自定义粒子 | `CommonSpark` 和 `DarkSpark` 定义火花粒子的更新和绘制。 |
@@ -95,8 +95,8 @@
 | --- | --- | --- |
 | 鼠标瞄准点 | 只有 `Projectile.owner == Main.myPlayer` 时读取 `Main.MouseWorld` | 远端客户端没有其他玩家的鼠标状态。 |
 | 控制器状态 | 武器类型、动画时长、武器长度、目标点、瞄准角、连段索引通过 `SendExtraAI` 同步 | 其他客户端需要复现持剑朝向和视觉。 |
-| 视觉配置 | `MeleeWeaponEffectsVisualConfig` 使用 `ClientSide` | 每个客户端可独立选择剑气样式和闪光强度。 |
-| 玩法配置 | `MeleeWeaponEffectsGameplayConfig` 使用 `ServerSide` | 伤害倍率、剑气尺寸和是否格挡弹幕属于玩法规则。 |
+| 视觉配置 | `WeaponEffectsVisualConfig` 使用 `ClientSide` | 每个客户端可独立选择剑气样式和闪光强度。 |
+| 玩法配置 | `WeaponEffectsGameplayConfig` 使用 `ServerSide` | 伤害倍率、剑气尺寸和是否格挡弹幕属于玩法规则。 |
 | 武器贴图 | 同步 `weaponItemType`，本地从 `TextureAssets.Item` 取贴图 | 避免同步不可序列化的 `Texture2D`。 |
 | 原版弹幕发射 | `VanillaMeleeProjectileEmitter.Emit` 内部限制本地玩家执行 | 避免多人下重复创建弹幕。 |
 
@@ -148,7 +148,7 @@
 - 玩家或配置这类通用 tModLoader 类型放在 `Common/*`。
 - 新增贴图优先放在 `Assets/Textures`，并通过 `MeleeEffectAssets` 暴露路径。
 - 新增音效放在 `Sounds`。
-- 新增本地化文本同步更新 `Localization/en-US_Mods.MeleeWeaponEffects.hjson` 和 `Localization/zh-Hans_Mods.MeleeWeaponEffects.hjson`。
+- 新增本地化文本同步更新 `Localization/en-US_Mods.WeaponEffects.hjson` 和 `Localization/zh-Hans_Mods.WeaponEffects.hjson`。
 
 ## 修改风险清单
 
@@ -166,7 +166,7 @@
 常规构建命令：
 
 ```powershell
-dotnet build .\MeleeWeaponEffects.csproj
+dotnet build .\WeaponEffects.csproj
 ```
 
 推荐验证顺序：

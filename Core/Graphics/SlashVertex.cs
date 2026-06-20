@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace MeleeWeaponEffects;
+namespace WeaponEffects;
 
 public struct SlashVertex : IVertexType
 {

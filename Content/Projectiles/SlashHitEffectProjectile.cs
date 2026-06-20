@@ -4,7 +4,7 @@ using Terraria;
 using Terraria.GameContent;
 using Terraria.ModLoader;
 
-namespace MeleeWeaponEffects;
+namespace WeaponEffects;
 
 public class SlashHitEffectProjectile : ModProjectile
 {

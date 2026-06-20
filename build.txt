@@ -1,5 +1,5 @@
 author = QI
-displayName = Melee Weapon Effects
+displayName = WeaponEffects
 homepage = 
 hideCode = false
 hideResources = false

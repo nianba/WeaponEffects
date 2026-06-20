@@ -7,7 +7,7 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace MeleeWeaponEffects;
+namespace WeaponEffects;
 
 public class SlashGlobalItem : GlobalItem
 {
@@ -38,7 +38,7 @@ public class SlashGlobalItem : GlobalItem
 
 	public override bool AltFunctionUse(Item item, Player player)
 	{
-		return _usesSlashAction && ModContent.GetInstance<MeleeWeaponEffectsGameplayConfig>().CanCharge;
+		return _usesSlashAction && ModContent.GetInstance<WeaponEffectsGameplayConfig>().CanCharge;
 	}
 
 	public override bool Shoot(Item item, Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
@@ -60,9 +60,10 @@ public class SlashGlobalItem : GlobalItem
 			? ModContent.ProjectileType<ChargedSlashProjectile>()
 			: ModContent.ProjectileType<SlashChannelProjectile>();
 
-		if (player.altFunctionUse == 2 && ModContent.GetInstance<MeleeWeaponEffectsGameplayConfig>().CanCharge)
+		if (player.altFunctionUse == 2 && ModContent.GetInstance<WeaponEffectsGameplayConfig>().CanCharge)
 		{
-			SoundEngine.PlaySound(new SoundStyle("MeleeWeaponEffects/Sounds/Xuli") { Volume = 0.25f }, player.Center);
+			SoundStyle chargeSound = new("WeaponEffects/Sounds/Xuli") { Volume = 0.25f };
+			MeleeEffectAssets.PlaySound(in chargeSound, player.Center);
 		}
 		else if (player.altFunctionUse == 2)
 		{
@@ -99,6 +100,11 @@ public class SlashGlobalItem : GlobalItem
 
 	private static bool ShouldUseSlashAction(Item item)
 	{
+		if (!ModContent.GetInstance<WeaponEffectsGameplayConfig>().EnableSlashRework)
+		{
+			return false;
+		}
+
 		if (item.damage <= 0 || item.type == ItemID.Sickle || item.accessory || item.axe > 0 || item.pick > 0 || item.hammer > 0)
 		{
 			return false;

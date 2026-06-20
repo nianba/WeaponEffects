@@ -11,12 +11,12 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace MeleeWeaponEffects;
+namespace WeaponEffects;
 
 public class SlashArcProjectile : ModProjectile
 {
 	private readonly SlashVertex[] _vertices = new SlashVertex[96];
-	private readonly Effect _slashEffect = ModContent.Request<Effect>("MeleeWeaponEffects/Effects/Mhd", AssetRequestMode.ImmediateLoad).Value;
+	private readonly Effect _slashEffect = ModContent.Request<Effect>("WeaponEffects/Effects/Mhd", AssetRequestMode.ImmediateLoad).Value;
 	private int _vertexCount;
 
 	private bool _reverse;
@@ -63,7 +63,7 @@ public class SlashArcProjectile : ModProjectile
 		float knockbackRotation = 0f,
 		float weaponScale = 1f)
 	{
-		float configuredThickness = ModContent.GetInstance<MeleeWeaponEffectsGameplayConfig>().SlashScale * Math.Max(0.1f, thickness);
+		float configuredThickness = ModContent.GetInstance<WeaponEffectsGameplayConfig>().SlashScale * Math.Max(0.1f, thickness);
 		Vector2 velocity = knockbackRotation.ToRotationVector2() * length;
 		Vector2 position = isPlayerOwned ? Main.player[owner].Center : Main.npc[ownerNPC].Center;
 		int projectileOwner = isPlayerOwned ? owner : Main.myPlayer;
@@ -94,7 +94,7 @@ public class SlashArcProjectile : ModProjectile
 		in SlashArcVisualProfile visual,
 		float hitProgress)
 	{
-		float configuredThickness = ModContent.GetInstance<MeleeWeaponEffectsGameplayConfig>().SlashScale * Math.Max(0.1f, thicknessScale);
+		float configuredThickness = ModContent.GetInstance<WeaponEffectsGameplayConfig>().SlashScale * Math.Max(0.1f, thicknessScale);
 		Vector2 velocity = knockbackRotation.ToRotationVector2() * length;
 		Vector2 position = isPlayerOwned ? Main.player[owner].Center : Main.npc[ownerNPC].Center;
 		int projectileOwner = isPlayerOwned ? owner : Main.myPlayer;
@@ -260,13 +260,13 @@ public class SlashArcProjectile : ModProjectile
 		SoundStyle? targetHitSound = target.HitSound;
 		if (targetHitSound.HasValue && targetHitSound.Value == SoundID.NPCHit4)
 		{
-			SoundStyle blockSound = new("MeleeWeaponEffects/Sounds/Block") { Volume = 0.25f };
+			SoundStyle blockSound = new("WeaponEffects/Sounds/Block") { Volume = 0.25f };
 			MeleeEffectAssets.PlaySound(in blockSound, target.Center);
 			SpawnHitDust(target, DustID.Torch, 22, 1.2f, 3f);
 		}
 		else
 		{
-			SoundStyle hitSound = new("MeleeWeaponEffects/Sounds/Onhit")
+			SoundStyle hitSound = new("WeaponEffects/Sounds/Onhit")
 			{
 				Volume = 0.45f,
 				Pitch = Main.rand.NextFloat(-0.15f, 0.15f)
@@ -325,7 +325,7 @@ public class SlashArcProjectile : ModProjectile
 	{
 		Vector2 ownerCenter = OwnerCenterWorld() - Main.screenPosition;
 		float weaponRotation = CurrentWeaponRotation();
-		int style = ModContent.GetInstance<MeleeWeaponEffectsVisualConfig>().SlashStyle;
+		int style = ModContent.GetInstance<WeaponEffectsVisualConfig>().SlashStyle;
 
 		if (_usesVisualProfile)
 		{
@@ -347,7 +347,11 @@ public class SlashArcProjectile : ModProjectile
 			}
 		}
 
-		DrawWeapon(ownerCenter, weaponRotation);
+		if (ModContent.GetInstance<WeaponEffectsVisualConfig>().DrawHeldWeapon)
+		{
+			DrawWeapon(ownerCenter, weaponRotation);
+		}
+
 		return false;
 	}
 
@@ -421,7 +425,7 @@ public class SlashArcProjectile : ModProjectile
 	private void BuildVertices(Vector2 ownerCenter)
 	{
 		_vertexCount = 0;
-		int style = ModContent.GetInstance<MeleeWeaponEffectsVisualConfig>().SlashStyle;
+		int style = ModContent.GetInstance<WeaponEffectsVisualConfig>().SlashStyle;
 
 		for (int i = 0; i < Projectile.oldPos.Length; i++)
 		{
@@ -828,7 +832,7 @@ public class SlashArcProjectile : ModProjectile
 
 	private void HandleProjectileBlocking()
 	{
-		if (!ModContent.GetInstance<MeleeWeaponEffectsGameplayConfig>().SlashCanKillProjectiles)
+		if (!ModContent.GetInstance<WeaponEffectsGameplayConfig>().SlashCanKillProjectiles)
 		{
 			return;
 		}
@@ -848,7 +852,7 @@ public class SlashArcProjectile : ModProjectile
 
 		if (blocked)
 		{
-			SoundStyle style = new("MeleeWeaponEffects/Sounds/Block") { Volume = 0.4f };
+			SoundStyle style = new("WeaponEffects/Sounds/Block") { Volume = 0.4f };
 			MeleeEffectAssets.PlaySound(in style, Projectile.Center);
 		}
 	}
@@ -868,7 +872,8 @@ public class SlashArcProjectile : ModProjectile
 
 	private void SpawnHitDust(NPC target, int dustType, int count, float minScale, float maxScale)
 	{
-		for (int i = 0; i < count; i++)
+		int scaledCount = MeleeEffectAssets.ScaleParticleCount(count);
+		for (int i = 0; i < scaledCount; i++)
 		{
 			Dust dust = Dust.NewDustDirect(target.position, target.width, target.height, dustType, 0f, 0f, 0, default, Main.rand.NextFloat(minScale, maxScale));
 			dust.velocity = (Projectile.ai[1] + Main.rand.NextFloat(-0.45f, 0.45f)).ToRotationVector2() * Main.rand.NextFloat(0.4f, 10f);

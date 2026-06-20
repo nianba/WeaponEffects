@@ -4,16 +4,36 @@ Projectiles: {
 	SlashArcProjectile.DisplayName: 斩击弧光
 	SlashArcGlowProjectile.DisplayName: 斩击边光
 	SlashHitEffectProjectile.DisplayName: 斩击命中特效
-	// StarSlashSparkleProjectile.DisplayName: Star Slash Sparkle Projectile
+	StarSlashSparkleProjectile.DisplayName: 星光斩击火花
 }
 
 Configs: {
-	MeleeWeaponEffectsGameplayConfig: {
+	WeaponEffectsGameplayConfig: {
 		DisplayName: 近战武器特效 - 玩法
+
+		EnableSlashRework: {
+			Label: 启用斩击重制
+			Tooltip: 将支持的近战武器替换为本模组的斩击操作。
+		}
 
 		SlashScale: {
 			Label: 斩击宽度
 			Tooltip: 斩击宽度（0~1）：调整斩击判定和特效宽度。
+		}
+
+		NormalSlashDamageMultiplier: {
+			Label: 普通斩击伤害
+			Tooltip: 左键普通斩击的伤害倍率。
+		}
+
+		NormalSlashIntervalMultiplier: {
+			Label: 普通斩击间隔
+			Tooltip: 左键普通斩击的攻击间隔倍率。数值越低，挥砍越快。
+		}
+
+		SlashKnockbackMultiplier: {
+			Label: 斩击击退倍率
+			Tooltip: 普通斩击和蓄力斩击的击退倍率。
 		}
 
 		ChargeDamage: {
@@ -45,9 +65,19 @@ Configs: {
 			Label: 允许蓄力
 			Tooltip: 决定是否允许右键蓄力斩击。
 		}
+
+		EmitVanillaSwordProjectiles: {
+			Label: 发射原版剑气
+			Tooltip: 保留兼容原版武器的剑气、光束和落星等弹幕。
+		}
+
+		ComboResetDelay: {
+			Label: 连段重置延迟
+			Tooltip: 普通斩击连段回到第一段前等待的帧数。
+		}
 	}
 
-	MeleeWeaponEffectsVisualConfig: {
+	WeaponEffectsVisualConfig: {
 		DisplayName: 近战武器特效 - 视觉
 
 		SlashBlink: {
@@ -63,6 +93,26 @@ Configs: {
 		ShowChargeBar: {
 			Label: 显示蓄力条
 			Tooltip: 显示右键蓄力进度条。
+		}
+
+		DrawHeldWeapon: {
+			Label: 绘制手持武器
+			Tooltip: 在斩击和蓄力视觉中绘制武器贴图。
+		}
+
+		ParticleDensity: {
+			Label: 粒子密度
+			Tooltip: 斩击拖尾、命中和蓄力特效的全局粒子数量倍率。
+		}
+
+		ScreenShakeStrength: {
+			Label: 屏幕震动强度
+			Tooltip: 蓄力斩击释放时的屏幕震动倍率。
+		}
+
+		EffectVolume: {
+			Label: 特效音量
+			Tooltip: 本模组斩击、蓄力、命中和格挡音效的音量倍率。
 		}
 	}
 }

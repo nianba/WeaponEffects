@@ -8,12 +8,32 @@ Projectiles: {
 }
 
 Configs: {
-	MeleeWeaponEffectsGameplayConfig: {
-		DisplayName: Melee Weapon Effects Gameplay
+	WeaponEffectsGameplayConfig: {
+		DisplayName: WeaponEffects Gameplay
+
+		EnableSlashRework: {
+			Label: Enable Slash Rework
+			Tooltip: Replaces supported melee weapons with this mod's slash controls.
+		}
 
 		SlashScale: {
 			Label: Slash Scale
 			Tooltip: Slash Scale (0~1): modifies the slash width.
+		}
+
+		NormalSlashDamageMultiplier: {
+			Label: Normal Slash Damage
+			Tooltip: Damage multiplier for regular left-click slashes.
+		}
+
+		NormalSlashIntervalMultiplier: {
+			Label: Normal Slash Interval
+			Tooltip: Attack interval multiplier for regular left-click slashes. Lower values swing faster.
+		}
+
+		SlashKnockbackMultiplier: {
+			Label: Slash Knockback
+			Tooltip: Knockback multiplier for normal and charged slashes.
 		}
 
 		ChargeDamage: {
@@ -45,10 +65,20 @@ Configs: {
 			Label: Can Charge
 			Tooltip: Determines whether right click can charge a slash.
 		}
+
+		EmitVanillaSwordProjectiles: {
+			Label: Emit Vanilla Sword Projectiles
+			Tooltip: Keeps compatible vanilla sword projectiles such as beams and falling stars.
+		}
+
+		ComboResetDelay: {
+			Label: Combo Reset Delay
+			Tooltip: Frames before the normal slash combo returns to its first step.
+		}
 	}
 
-	MeleeWeaponEffectsVisualConfig: {
-		DisplayName: Melee Weapon Effects Visuals
+	WeaponEffectsVisualConfig: {
+		DisplayName: WeaponEffects Visuals
 
 		SlashBlink: {
 			Label: Slash Blink
@@ -63,6 +93,26 @@ Configs: {
 		ShowChargeBar: {
 			Label: Show Charge Bar
 			Tooltip: Shows the right-click charge progress bar.
+		}
+
+		DrawHeldWeapon: {
+			Label: Draw Held Weapon
+			Tooltip: Draws the weapon sprite during slash and charge visuals.
+		}
+
+		ParticleDensity: {
+			Label: Particle Density
+			Tooltip: Global particle amount multiplier for slash trails, hits, and charge effects.
+		}
+
+		ScreenShakeStrength: {
+			Label: Screen Shake Strength
+			Tooltip: Screen shake multiplier for charged slash release.
+		}
+
+		EffectVolume: {
+			Label: Effect Volume
+			Tooltip: Volume multiplier for this mod's slash, charge, hit, and block sounds.
 		}
 	}
 }

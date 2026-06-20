@@ -160,7 +160,7 @@ SlashProfileId.TargetWeapon => SlashProfiles.TargetWeapon,
 - 自然/草系可用参考项目的 `DustGrassLeaf = 107`；但 Blade of Grass 当前回退为更大、更亮的 `DustID.Grass`，这是一次实测观感优先的例外。
 - 冰系可用 `DustIceShard = 135`。
 - 金属/圣光可用 `DustMetalSpark = 15`。
-- 星辰类可使用参考项目的 `DustSoftStar = 278`，并使用粉金随机色：`new Color(255, 98, 206)` 或 `new Color(255, 218, 82)`。Starfury 当前是例外：它改用 `StarSlashSparkleProjectile` 纯几何绘制四角星芒，不新增贴图。
+- 星辰类如果需要明确的星形轮廓，不要只依赖 `DustSoftStar = 278`。Starfury 和 Star Wrath 当前使用 `SlashParticleVisualStyle.DrawnStar`，由 `StarSlashSparkleProjectile` 纯几何绘制四角星芒，不新增贴图。
 - 相位剑/光剑可用对应宝石尘：`DustID.GemSapphire/GemRuby/GemEmerald/GemAmethyst/GemDiamond/GemTopaz/GemAmber`。
 - 火星科技可用 `DustID.Electric` 和 `DustID.MartianHit`。
 - 彩虹/节日类可用 `DustID.RainbowMk2`、`DustID.FireworksRGB`、`DustID.Confetti*`。
@@ -253,7 +253,7 @@ thicknessScale: 1.55f
 1. 运行：
 
 ```powershell
-dotnet build .\MeleeWeaponEffects.csproj
+dotnet build .\WeaponEffects.csproj
 ```
 
 2. 如果构建失败且报 `.tmod` 被占用，先关闭 tModLoader 或禁用该 mod，再重新构建。
@@ -297,6 +297,6 @@ dotnet build .\MeleeWeaponEffects.csproj
 
 ### Q: 粒子看起来像白色拖带，不像目标主题
 
-优先检查 `DustType`。如果主题需要点状、叶片、碎屑、星光或元素尘，不要使用基于 `Dusts/Spark.png` 的线状自定义 dust。Starfury 的经验是：用线状 dust 会出现白色带状火花，应该使用 `DustSoftStar = 278`，并随机粉色/金色。
+优先检查 `DustType`。如果主题需要点状、叶片、碎屑、星光或元素尘，不要使用基于 `Dusts/Spark.png` 的线状自定义 dust。Starfury 的经验是：用线状 dust 会出现白色带状火花；如果武器需要明确星形轮廓，应直接使用 `SlashParticleVisualStyle.DrawnStar`，而不是继续堆普通 dust。
 
-如果 `DustSoftStar = 278` 看起来仍然只是小团，不像星星，可以像 Starfury 一样改用纯绘制 projectile：`StarSlashSparkleProjectile` 用 `VertexPositionColor`/`BasicEffect` 画四角星和小伴星，不依赖任何新增星形贴图。
+如果 `DustSoftStar = 278` 看起来仍然只是小团，不像星星，可以改用 `SlashParticleVisualStyle.DrawnStar`：`StarSlashSparkleProjectile` 用 `VertexPositionColor`/`BasicEffect` 画四角星和小伴星，不依赖任何新增星形贴图。

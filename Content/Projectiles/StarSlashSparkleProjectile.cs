@@ -6,7 +6,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace MeleeWeaponEffects;
+namespace WeaponEffects;
 
 public class StarSlashSparkleProjectile : ModProjectile
 {
@@ -31,7 +31,7 @@ public class StarSlashSparkleProjectile : ModProjectile
 		}
 
 		Projectile projectile = Projectile.NewProjectileDirect(
-			new Terraria.DataStructures.EntitySource_Misc("MeleeWeaponEffects:StarSlashSparkle"),
+			new Terraria.DataStructures.EntitySource_Misc("WeaponEffects:StarSlashSparkle"),
 			position,
 			velocity,
 			ModContent.ProjectileType<StarSlashSparkleProjectile>(),

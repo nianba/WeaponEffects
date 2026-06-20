@@ -139,7 +139,7 @@ finalThickness =
 | 暗影类 | Night's Edge 系 | 紫黑火星 | 深色爆点 | 长度 1.05-1.2，宽度 0.85-1.05 |
 | 血色/猩红类 | Blood Butcherer、Bladetongue | 暗红粒子 | 红色喷射 | 长度 1.0-1.1，宽度 1.0-1.2 |
 | 神圣/圣光类 | Excalibur 系 | 金白光点 | 亮色爆点 | 长度 1.05-1.2，宽度 1.1-1.3 |
-| 星辰类 | Starfury、Star Wrath | 白蓝星点 | 亮色短爆闪 | 长度 1.1-1.25，宽度 0.8-1.0 |
+| 星辰类 | Starfury、Star Wrath | 无贴图绘制星芒 | 亮色星芒簇爆闪 | 长度 1.1-1.25，宽度 0.8-1.0 |
 
 ## 8. 当前已适配武器
 
@@ -161,8 +161,8 @@ finalThickness =
 | Bee Keeper | `ItemID.BeeKeeper` | 蜂蜜/深棕粒子 | 蜂群/蜂蜜命中点 | 0.98 / 0.95 |
 | Enchanted Sword | `ItemID.EnchantedSword` | 金粉/粉光 | 金粉爆点 | 1.04 / 0.78 |
 | Volcano / Fiery Greatsword | `ItemID.FieryGreatsword` | 橙红余烬 | 大型火焰爆点 | 1.18 / 1.55 |
-| Night's Edge | `ItemID.NightsEdge` | 紫/亮紫 `DustSoftStar = 278` | 紫/深紫爆点 | 1.08 / 0.95 |
-| True Night's Edge | `ItemID.TrueNightsEdge` | 亮紫/粉紫 `DustSoftStar = 278` | 强紫/深紫爆点 | 1.15 / 1.05 |
+| Night's Edge | `ItemID.NightsEdge` | 暗紫 `Shadowflame` / `Demonite` 随机 dust | 紫黑爆点，避免白色带状星尘 | 1.08 / 0.95 |
+| True Night's Edge | `ItemID.TrueNightsEdge` | 亮紫 `Shadowflame` / `Demonite` 随机 dust | 强紫/深紫爆点，避免白色带状星尘 | 1.15 / 1.05 |
 | Excalibur | `ItemID.Excalibur` | 金白金属尘 | 金白/亮金爆点 | 1.08 / 1.18 |
 | True Excalibur | `ItemID.TrueExcalibur` | 金白/亮白金属尘 | 明亮金白爆点 | 1.15 / 1.25 |
 | Blade of Grass | `ItemID.BladeofGrass` | 更大、更亮的 `DustID.Grass` 草尘 | `DustID.Grass` 草绿色命中碎屑 | 1.08 / 1.10 |
@@ -185,7 +185,7 @@ finalThickness =
 | Christmas Tree Sword | `ItemID.ChristmasTreeSword` | 红绿彩灯/纸屑 | 彩灯爆点 | 1.15 / 1.05 |
 | Seedler | `ItemID.Seedler` | 绿叶/粉色种荚感 | 叶绿/粉色命中点 | 1.08 / 0.98 |
 | Influx Waver | `ItemID.InfluxWaver` | 青绿电弧 | 火星科技命中点 | 1.12 / 0.90 |
-| Star Wrath | `ItemID.StarWrath` | 蓝/金星光 | 蓝金星光爆点 | 1.20 / 0.85 |
+| Star Wrath | `ItemID.StarWrath` | 蓝/金绘制星芒，不使用星形贴图 | 蓝金星芒簇爆点 | 1.20 / 0.85 |
 | Meowmere | `ItemID.Meowmere` | 彩虹/粉青粒子 | 粉金彩虹爆点 | 1.12 / 0.90 |
 | Psycho Knife | `ItemID.PsychoKnife` | 紫色暗影焰 | 短促紫色命中点 | 0.78 / 0.55 |
 | Brand of the Inferno | `ItemID.DD2SquireDemonSword` | 红橙火尘 | 火焰爆点 | 1.18 / 1.25 |
@@ -197,7 +197,7 @@ finalThickness =
 
 每新增一把武器 profile，至少验证：
 
-- `dotnet build .\MeleeWeaponEffects.csproj` 通过。
+- `dotnet build .\WeaponEffects.csproj` 通过。
 - 该武器挥舞时粒子贴住刀光，不是从玩家或鼠标方向独立喷出。
 - 命中粒子只在命中 NPC 时出现。
 - 刀光长度/宽度变化可见，但不遮挡角色和敌人。

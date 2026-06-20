@@ -3,11 +3,11 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace MeleeWeaponEffects;
+namespace WeaponEffects;
 
 public class StarSpark : ModDust
 {
-	public override string Texture => "MeleeWeaponEffects/Dusts/Spark";
+	public override string Texture => "WeaponEffects/Dusts/Spark";
 
 	public override bool Update(Dust dust)
 	{

@@ -8,7 +8,7 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace MeleeWeaponEffects;
+namespace WeaponEffects;
 
 public class ChargedSlashProjectile : ModProjectile
 {
@@ -132,8 +132,12 @@ public class ChargedSlashProjectile : ModProjectile
 			return false;
 		}
 
-		DrawHeldWeapon(weaponTexture);
-		if (ModContent.GetInstance<MeleeWeaponEffectsVisualConfig>().ShowChargeBar)
+		if (ModContent.GetInstance<WeaponEffectsVisualConfig>().DrawHeldWeapon)
+		{
+			DrawHeldWeapon(weaponTexture);
+		}
+
+		if (ModContent.GetInstance<WeaponEffectsVisualConfig>().ShowChargeBar)
 		{
 			DrawChargeBar(player);
 		}
@@ -141,15 +145,15 @@ public class ChargedSlashProjectile : ModProjectile
 		return false;
 	}
 
-	private int MinChargeFrame => Math.Max(1, _useAnimation) * Math.Max(1, ModContent.GetInstance<MeleeWeaponEffectsGameplayConfig>().ChargeMinDurationMultiplier);
+	private int MinChargeFrame => Math.Max(1, _useAnimation) * Math.Max(1, ModContent.GetInstance<WeaponEffectsGameplayConfig>().ChargeMinDurationMultiplier);
 
-	private int ChargeReadyFrame => Math.Max(MinChargeFrame, Math.Max(1, _useAnimation) * Math.Max(1, ModContent.GetInstance<MeleeWeaponEffectsGameplayConfig>().ChargeMaxDurationMultiplier));
+	private int ChargeReadyFrame => Math.Max(MinChargeFrame, Math.Max(1, _useAnimation) * Math.Max(1, ModContent.GetInstance<WeaponEffectsGameplayConfig>().ChargeMaxDurationMultiplier));
 
 	private float ChargeProgress => MathHelper.Clamp(Projectile.ai[1] / ChargeReadyFrame, 0f, 1f);
 
-	private float CurrentLengthScale => MathHelper.Lerp(1f, MathHelper.Clamp(ModContent.GetInstance<MeleeWeaponEffectsGameplayConfig>().ChargeLengthScale, 1f, 4f), ChargeProgress);
+	private float CurrentLengthScale => MathHelper.Lerp(1f, MathHelper.Clamp(ModContent.GetInstance<WeaponEffectsGameplayConfig>().ChargeLengthScale, 1f, 4f), ChargeProgress);
 
-	private float CurrentDamageScale => MathHelper.Lerp(1f, Math.Min(MaxChargeDamageScale, ModContent.GetInstance<MeleeWeaponEffectsGameplayConfig>().ChargeDamage), ChargeProgress);
+	private float CurrentDamageScale => MathHelper.Lerp(1f, Math.Min(MaxChargeDamageScale, ModContent.GetInstance<WeaponEffectsGameplayConfig>().ChargeDamage), ChargeProgress);
 
 	private bool IsHoldingCharge()
 	{
@@ -246,26 +250,27 @@ public class ChargedSlashProjectile : ModProjectile
 		WeaponSlashProfile profile = GetChargeProfile(player);
 		Color color = profile.SlashColor;
 
-		SoundEngine.PlaySound(new SoundStyle("MeleeWeaponEffects/Sounds/Slashing") { Volume = 0.8f }, player.Center);
+		SoundStyle releaseSound = new("WeaponEffects/Sounds/Slashing") { Volume = 0.8f };
+		MeleeEffectAssets.PlaySound(in releaseSound, player.Center);
 		VanillaMeleeProjectileEmitter.Emit(this, charged: true, player.HeldItem.type, player, _targetWorld);
 		SlashArcProjectile.CreateSlash(
 			isPlayerOwned: true,
 			source: Projectile.GetSource_FromAI(),
 			rotation: _aimRotation,
 			startingRotation: Projectile.ai[0],
-			length: _weaponLength * 3f * lengthScale,
+			length: _weaponLength * lengthScale,
 			thickness: 0.45f,
 			yScale: 0.35f,
 			extraUpdates: 5,
 			damage: damage,
-			knockback: 5f,
+			knockback: 5f * MathHelper.Clamp(ModContent.GetInstance<WeaponEffectsGameplayConfig>().SlashKnockbackMultiplier, 0f, 3f),
 			owner: player.whoAmI,
 			color: color,
 			weaponItemType: _weaponItemType,
 			knockbackRotation: Projectile.rotation - Projectile.ai[0],
 			weaponScale: _weaponLength);
 
-		player.GetModPlayer<MeleeEffectsPlayer>().ScreenShakeTimer = 15;
+		player.GetModPlayer<WeaponEffectsPlayer>().ScreenShakeTimer = 15;
 	}
 
 	private void EmitChargedReadyVisuals(Player player)
@@ -287,7 +292,7 @@ public class ChargedSlashProjectile : ModProjectile
 
 	private void EmitChargingDust(Player player)
 	{
-		if (Main.dedServ || Projectile.ai[1] % 4f != 0f)
+		if (Main.dedServ || Projectile.ai[1] % 4f != 0f || MeleeEffectAssets.ParticleDensityMultiplier <= 0f)
 		{
 			return;
 		}
@@ -312,7 +317,7 @@ public class ChargedSlashProjectile : ModProjectile
 		}
 
 		SlashParticleProfile particles = profile.SwingParticles;
-		int flashCount = Math.Max(16, particles.Count * 3);
+		int flashCount = MeleeEffectAssets.ScaleParticleCount(Math.Max(16, particles.Count * 3));
 		for (int i = 0; i < flashCount; i++)
 		{
 			Vector2 direction = Main.rand.NextVector2CircularEdge(1f, 1f);
@@ -324,7 +329,7 @@ public class ChargedSlashProjectile : ModProjectile
 			dust.fadeIn = particles.DustType == DustID.Torch ? 1f : 0.4f;
 		}
 
-		int burstCount = Math.Max(64, particles.Count * 9);
+		int burstCount = MeleeEffectAssets.ScaleParticleCount(Math.Max(64, particles.Count * 9));
 		for (int i = 0; i < burstCount; i++)
 		{
 			Vector2 direction = Main.rand.NextVector2CircularEdge(1f, 1f);
@@ -336,7 +341,7 @@ public class ChargedSlashProjectile : ModProjectile
 			dust.fadeIn = particles.DustType == DustID.Torch ? 1.1f : 0.25f;
 		}
 
-		int sparkCount = Math.Max(14, particles.Count * 2);
+		int sparkCount = MeleeEffectAssets.ScaleParticleCount(Math.Max(14, particles.Count * 2));
 		for (int i = 0; i < sparkCount; i++)
 		{
 			Vector2 direction = Main.rand.NextVector2CircularEdge(1f, 1f);

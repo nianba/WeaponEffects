@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 
-namespace MeleeWeaponEffects;
+namespace WeaponEffects;
 
 public readonly struct SlashParticleProfile
 {
@@ -13,6 +13,8 @@ public readonly struct SlashParticleProfile
 	public readonly float VelocityScale;
 	public readonly float SpreadRadians;
 	public readonly bool NoGravity;
+	public readonly int AlternateDustType;
+	public readonly SlashParticleVisualStyle VisualStyle;
 
 	public SlashParticleProfile(
 		int dustType,
@@ -23,7 +25,9 @@ public readonly struct SlashParticleProfile
 		float velocityScale,
 		float spreadRadians,
 		Color alternateDustColor = default,
-		bool noGravity = false)
+		bool noGravity = false,
+		int alternateDustType = -1,
+		SlashParticleVisualStyle visualStyle = SlashParticleVisualStyle.Dust)
 	{
 		DustType = dustType;
 		DustColor = dustColor;
@@ -34,5 +38,7 @@ public readonly struct SlashParticleProfile
 		VelocityScale = velocityScale;
 		SpreadRadians = spreadRadians;
 		NoGravity = noGravity;
+		AlternateDustType = alternateDustType;
+		VisualStyle = visualStyle;
 	}
 }

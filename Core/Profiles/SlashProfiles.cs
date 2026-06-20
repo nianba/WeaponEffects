@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Terraria.ID;
 
-namespace MeleeWeaponEffects;
+namespace WeaponEffects;
 
 public static class SlashProfiles
 {
@@ -77,25 +77,27 @@ public static class SlashProfiles
 		SlashProfileId.NightsEdge,
 		new Color(118, 68, 178),
 		new SlashParticleProfile(
-			DustSoftStar,
-			new Color(112, 54, 188),
+			DustID.Shadowflame,
+			new Color(96, 38, 156),
 			count: 7,
-			minScale: 0.5f,
-			maxScale: 0.82f,
-			velocityScale: 1.15f,
+			minScale: 0.55f,
+			maxScale: 0.92f,
+			velocityScale: 1.1f,
 			spreadRadians: 0.42f,
-			alternateDustColor: new Color(186, 60, 224),
-			noGravity: true),
+			alternateDustColor: new Color(178, 52, 218),
+			noGravity: true,
+			alternateDustType: DustID.Demonite),
 		new SlashParticleProfile(
-			DustSoftStar,
-			new Color(150, 60, 230),
+			DustID.Shadowflame,
+			new Color(154, 42, 222),
 			count: 20,
-			minScale: 0.62f,
-			maxScale: 1.05f,
+			minScale: 0.72f,
+			maxScale: 1.22f,
 			velocityScale: 1.45f,
-			spreadRadians: 0.72f,
-			alternateDustColor: new Color(56, 38, 108),
-			noGravity: true),
+			spreadRadians: 0.76f,
+			alternateDustColor: new Color(46, 24, 92),
+			noGravity: true,
+			alternateDustType: DustID.Demonite),
 		new SlashShapeProfile(
 			lengthScale: 1.08f,
 			thicknessScale: 0.95f,
@@ -108,25 +110,27 @@ public static class SlashProfiles
 		SlashProfileId.TrueNightsEdge,
 		new Color(152, 82, 232),
 		new SlashParticleProfile(
-			DustSoftStar,
-			new Color(154, 70, 238),
+			DustID.Shadowflame,
+			new Color(182, 64, 255),
 			count: 9,
-			minScale: 0.58f,
-			maxScale: 0.95f,
+			minScale: 0.65f,
+			maxScale: 1.08f,
 			velocityScale: 1.25f,
 			spreadRadians: 0.46f,
-			alternateDustColor: new Color(224, 82, 255),
-			noGravity: true),
+			alternateDustColor: new Color(92, 44, 174),
+			noGravity: true,
+			alternateDustType: DustID.Demonite),
 		new SlashParticleProfile(
-			DustSoftStar,
-			new Color(205, 92, 255),
+			DustID.Shadowflame,
+			new Color(210, 76, 255),
 			count: 26,
-			minScale: 0.72f,
-			maxScale: 1.2f,
+			minScale: 0.82f,
+			maxScale: 1.35f,
 			velocityScale: 1.6f,
-			spreadRadians: 0.82f,
-			alternateDustColor: new Color(72, 42, 132),
-			noGravity: true),
+			spreadRadians: 0.86f,
+			alternateDustColor: new Color(64, 30, 128),
+			noGravity: true,
+			alternateDustType: DustID.Demonite),
 		new SlashShapeProfile(
 			lengthScale: 1.15f,
 			thicknessScale: 1.05f,
@@ -329,7 +333,8 @@ public static class SlashProfiles
 			velocityScale: 0.85f,
 			spreadRadians: 0.32f,
 			alternateDustColor: new Color(255, 218, 82),
-			noGravity: true),
+			noGravity: true,
+			visualStyle: SlashParticleVisualStyle.DrawnStar),
 		new SlashParticleProfile(
 			DustSoftStar,
 			new Color(255, 98, 206),
@@ -339,7 +344,8 @@ public static class SlashProfiles
 			velocityScale: 1.15f,
 			spreadRadians: 0.68f,
 			alternateDustColor: new Color(255, 218, 82),
-			noGravity: true),
+			noGravity: true,
+			visualStyle: SlashParticleVisualStyle.DrawnStar),
 		new SlashShapeProfile(
 			lengthScale: 1.12f,
 			thicknessScale: 0.85f,
@@ -955,7 +961,8 @@ public static class SlashProfiles
 		1.15f,
 		0.65f,
 		lengthScale: 1.2f,
-		thicknessScale: 0.85f);
+		thicknessScale: 0.85f,
+		particleVisualStyle: SlashParticleVisualStyle.DrawnStar);
 
 	public static WeaponSlashProfile Meowmere => Profile(
 		SlashProfileId.Meowmere,
@@ -1142,7 +1149,8 @@ public static class SlashProfiles
 		float lengthScale,
 		float thicknessScale,
 		bool swingNoGravity = true,
-		bool hitNoGravity = true)
+		bool hitNoGravity = true,
+		SlashParticleVisualStyle particleVisualStyle = SlashParticleVisualStyle.Dust)
 	{
 		return new WeaponSlashProfile(
 			id,
@@ -1156,7 +1164,8 @@ public static class SlashProfiles
 				swingVelocityScale,
 				swingSpreadRadians,
 				swingAlternateColor,
-				swingNoGravity),
+				swingNoGravity,
+				visualStyle: particleVisualStyle),
 			new SlashParticleProfile(
 				hitDustType,
 				hitColor,
@@ -1166,7 +1175,8 @@ public static class SlashProfiles
 				hitVelocityScale,
 				hitSpreadRadians,
 				hitAlternateColor,
-				hitNoGravity),
+				hitNoGravity,
+				visualStyle: particleVisualStyle),
 			new SlashShapeProfile(
 				lengthScale,
 				thicknessScale,

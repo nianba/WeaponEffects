@@ -6,11 +6,11 @@ using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
 
-namespace MeleeWeaponEffects;
+namespace WeaponEffects;
 
 public static class MeleeEffectAssets
 {
-	public const string TextureRoot = "MeleeWeaponEffects/Assets/Textures";
+	public const string TextureRoot = "WeaponEffects/Assets/Textures";
 	public const string ChargeBar = TextureRoot + "/Bar";
 	public const string ChargeBarFill = TextureRoot + "/BarInside";
 	public const string SlashTexture = TextureRoot + "/SlashTex";
@@ -21,9 +21,29 @@ public static class MeleeEffectAssets
 		return ModContent.Request<Texture2D>(path, AssetRequestMode.ImmediateLoad).Value;
 	}
 
+	public static float ParticleDensityMultiplier => MathHelper.Clamp(ModContent.GetInstance<WeaponEffectsVisualConfig>().ParticleDensity, 0f, 3f);
+
+	public static float ScreenShakeStrengthMultiplier => MathHelper.Clamp(ModContent.GetInstance<WeaponEffectsVisualConfig>().ScreenShakeStrength, 0f, 2f);
+
+	public static float EffectVolumeMultiplier => MathHelper.Clamp(ModContent.GetInstance<WeaponEffectsVisualConfig>().EffectVolume, 0f, 2f);
+
+	public static int ScaleParticleCount(int baseCount, float strength = 1f)
+	{
+		float scaledCount = MathHelper.Max(0f, baseCount * strength * ParticleDensityMultiplier);
+		return (int)System.MathF.Round(scaledCount);
+	}
+
 	public static void PlaySound(in SoundStyle style, Vector2? position = null)
 	{
-		SoundEngine.PlaySound(style, position);
+		float volumeMultiplier = EffectVolumeMultiplier;
+		if (volumeMultiplier <= 0f)
+		{
+			return;
+		}
+
+		SoundStyle scaledStyle = style;
+		scaledStyle.Volume *= volumeMultiplier;
+		SoundEngine.PlaySound(scaledStyle, position);
 	}
 
 	public static int NewProjectile(IEntitySource source, Vector2 position, Vector2 velocity, int type, int damage, float knockBack, int owner = 0, float ai0 = 0f, float ai1 = 0f)
