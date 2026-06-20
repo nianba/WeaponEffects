@@ -12,11 +12,15 @@ namespace MeleeWeaponEffects;
 
 public class SlashChannelProjectile : ModProjectile
 {
+	private const float LegacyAverageLengthScale = 190f / 110f;
+	private static readonly SlashEmissionMode EmissionMode = SlashEmissionMode.Compact3DComboSchemeA;
+
 	private int _weaponItemType;
 	private int _useAnimation;
 	private float _weaponLength;
 	private Vector2 _targetWorld;
 	private float _aimRotation;
+	private int _comboStepIndex;
 
 	public override string Texture => "Terraria/Images/Item_" + ItemID.TerraBlade;
 
@@ -27,6 +31,7 @@ public class SlashChannelProjectile : ModProjectile
 		_weaponLength = Math.Max(1f, weaponLength);
 		_targetWorld = targetWorld;
 		_aimRotation = (targetWorld - Projectile.Center).SafeNormalize(Vector2.UnitX * Math.Sign(Projectile.ai[0])).ToRotation();
+		_comboStepIndex = 0;
 		Projectile.netUpdate = true;
 	}
 
@@ -48,6 +53,7 @@ public class SlashChannelProjectile : ModProjectile
 		writer.Write(_targetWorld.X);
 		writer.Write(_targetWorld.Y);
 		writer.Write(_aimRotation);
+		writer.Write(_comboStepIndex);
 	}
 
 	public override void ReceiveExtraAI(BinaryReader reader)
@@ -57,6 +63,7 @@ public class SlashChannelProjectile : ModProjectile
 		_weaponLength = reader.ReadSingle();
 		_targetWorld = new Vector2(reader.ReadSingle(), reader.ReadSingle());
 		_aimRotation = reader.ReadSingle();
+		_comboStepIndex = reader.ReadInt32();
 	}
 
 	public override void AI()
@@ -96,7 +103,7 @@ public class SlashChannelProjectile : ModProjectile
 
 		if (Projectile.ai[1] % useAnimation == 2f && Projectile.owner == Main.myPlayer)
 		{
-			FireSlash(player);
+			FireSlash(player, useAnimation);
 		}
 	}
 
@@ -114,7 +121,20 @@ public class SlashChannelProjectile : ModProjectile
 		Projectile.netUpdate = true;
 	}
 
-	private void FireSlash(Player player)
+	private void FireSlash(Player player, int useAnimation)
+	{
+		switch (EmissionMode)
+		{
+			case SlashEmissionMode.LegacyRandom:
+				FireRandomSlash(player);
+				break;
+			case SlashEmissionMode.Compact3DComboSchemeA:
+				FireComboSchemeASlash(player, useAnimation);
+				break;
+		}
+	}
+
+	private void FireRandomSlash(Player player)
 	{
 		VanillaMeleeProjectileEmitter.Emit(this, charged: false, player.HeldItem.type, player, _targetWorld);
 
@@ -139,5 +159,50 @@ public class SlashChannelProjectile : ModProjectile
 			weaponItemType: _weaponItemType,
 			knockbackRotation: Projectile.rotation - Projectile.ai[0],
 			weaponScale: _weaponLength);
+	}
+
+	private void FireComboSchemeASlash(Player player, int useAnimation)
+	{
+		VanillaMeleeProjectileEmitter.Emit(this, charged: false, player.HeldItem.type, player, _targetWorld);
+
+		ref readonly SlashComboStep step = ref Compact3DComboSchemeA.GetStep(_comboStepIndex);
+		SoundEngine.PlaySound(new SoundStyle("MeleeWeaponEffects/Sounds/S2") { Volume = 0.36f }, player.Center);
+
+		float hitAngle = MathHelper.ToRadians(step.HitAngleDegrees);
+		float baseRotation = _aimRotation - hitAngle;
+		float startingRotation = MathHelper.ToRadians(step.StartAngleDegrees);
+		float length = _weaponLength * LegacyAverageLengthScale * step.LengthScale;
+		float yScale = RuntimeYScaleForStep(in step);
+
+		SlashArcProjectile.CreateSlash(
+			isPlayerOwned: true,
+			source: Projectile.GetSource_FromAI(),
+			rotation: baseRotation,
+			startingRotation: startingRotation,
+			length: length,
+			thickness: 0.5f * step.ThicknessScale,
+			yScale: yScale,
+			extraUpdates: step.ExtraUpdates,
+			damage: Projectile.damage,
+			knockback: Projectile.knockBack,
+			owner: player.whoAmI,
+			color: step.Visual.Tint,
+			weaponItemType: _weaponItemType,
+			knockbackRotation: _aimRotation,
+			weaponScale: _weaponLength);
+
+		_comboStepIndex = (_comboStepIndex + 1) % Compact3DComboSchemeA.Count;
+		Projectile.netUpdate = true;
+	}
+
+	private static float RuntimeYScaleForStep(in SlashComboStep step)
+	{
+		return MathHelper.Clamp(step.Visual.YScale * 0.65f, 0.36f, 0.8f);
+	}
+
+	private enum SlashEmissionMode
+	{
+		LegacyRandom,
+		Compact3DComboSchemeA
 	}
 }
