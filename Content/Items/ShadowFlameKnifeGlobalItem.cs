@@ -42,7 +42,7 @@ public class ShadowFlameKnifeGlobalItem : GlobalItem
 		{
 			if (player.whoAmI == Main.myPlayer)
 			{
-				ShadowFlameKnifeHelper.RecallAll(player, source, damage, knockback);
+				ShadowFlameKnifeHelper.RecallAll(player, source, knockback);
 			}
 
 			return false;

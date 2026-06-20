@@ -61,7 +61,7 @@ public class ShadowFlamePierceKnifeProjectile : ModProjectile
 			PlaceStuckKnife(stuckPosition, direction);
 		}
 
-		target.AddBuff(BuffID.ShadowFlame, 120);
+		target.AddBuff(BuffID.ShadowFlame, ShadowFlameKnifeTuning.ShadowFlameDebuffTicks);
 		EmitHitFeedback(target, direction);
 		Projectile.Kill();
 	}
@@ -100,6 +100,11 @@ public class ShadowFlamePierceKnifeProjectile : ModProjectile
 		};
 		MeleeEffectAssets.PlaySound(in hitSound, target.Center);
 
+		ShadowFlameKnifeHelper.EmitSlashHitEffect(
+			Projectile.GetSource_FromAI(),
+			target.Center,
+			Projectile.owner,
+			Main.rand.NextFloat(-MathHelper.Pi, MathHelper.Pi));
 		ShadowFlameKnifeHelper.EmitShadowFlameImpactParticles(target.Center, direction, 20, 1.2f);
 	}
 
@@ -125,6 +130,7 @@ public class ShadowFlamePierceKnifeProjectile : ModProjectile
 			Projectile.GetSource_FromAI(),
 			position,
 			direction,
-			Projectile.owner);
+			Projectile.owner,
+			Projectile.damage);
 	}
 }

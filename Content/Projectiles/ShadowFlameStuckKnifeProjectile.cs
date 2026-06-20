@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -8,6 +9,8 @@ namespace WeaponEffects;
 
 public class ShadowFlameStuckKnifeProjectile : ModProjectile
 {
+	public int SourceDamage => Projectile.damage;
+
 	public override string Texture => "Terraria/Images/Projectile_" + ProjectileID.ShadowFlameKnife;
 
 	public override void SetDefaults()
@@ -27,18 +30,21 @@ public class ShadowFlameStuckKnifeProjectile : ModProjectile
 	{
 		writer.Write(Projectile.ai[0]);
 		writer.Write(Projectile.rotation);
+		writer.Write(Projectile.damage);
 	}
 
 	public override void ReceiveExtraAI(BinaryReader reader)
 	{
 		Projectile.ai[0] = reader.ReadSingle();
 		Projectile.rotation = reader.ReadSingle();
+		Projectile.damage = reader.ReadInt32();
 	}
 
-	public void Initialize(Vector2 direction)
+	public void Initialize(Vector2 direction, int sourceDamage)
 	{
 		Vector2 normalizedDirection = direction.SafeNormalize(Vector2.UnitX);
 		Projectile.velocity = Vector2.Zero;
+		Projectile.damage = Math.Max(1, sourceDamage);
 		Projectile.ai[0] = normalizedDirection.ToRotation();
 		Projectile.rotation = ShadowFlameKnifeHelper.KnifeDrawRotation(normalizedDirection);
 		Projectile.netUpdate = true;
@@ -86,8 +92,8 @@ public class ShadowFlameStuckKnifeProjectile : ModProjectile
 	public override bool PreDraw(ref Color lightColor)
 	{
 		float opacity = Projectile.timeLeft > ShadowFlameKnifeTuning.FadeStartTicks
-			? 0.48f
-			: MathHelper.Clamp(Projectile.timeLeft / (float)ShadowFlameKnifeTuning.FadeStartTicks, 0f, 1f) * 0.48f;
+			? 0.95f
+			: MathHelper.Clamp(Projectile.timeLeft / (float)ShadowFlameKnifeTuning.FadeStartTicks, 0f, 1f) * 0.95f;
 		ShadowFlameKnifeHelper.DrawShadowKnife(Projectile, lightColor, opacity);
 		return false;
 	}

@@ -12,9 +12,10 @@ internal static class ShadowFlameKnifeTuning
 	public const float RecallSpeed = 52f;
 	public const int RecallLifetimeTicks = 60;
 
-	public const float RecallDamageMultiplier = 0.6f;
+	public const float RecallDamageMultiplier = 0.8f;
 	public const float ExplosionDamageMultiplier = 2.1f;
 	public const int ExplosionRadius = 96;
+	public const int ShadowFlameDebuffTicks = 120;
 
 	public const int ExplosionRequiredHits = 4;
 	public const int ExplosionWindowTicks = 12;

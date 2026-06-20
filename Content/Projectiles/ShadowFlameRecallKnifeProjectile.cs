@@ -92,6 +92,8 @@ public class ShadowFlameRecallKnifeProjectile : ModProjectile
 
 	public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
 	{
+		target.AddBuff(BuffID.ShadowFlame, ShadowFlameKnifeTuning.ShadowFlameDebuffTicks);
+
 		if (Projectile.owner >= 0 && Projectile.owner < Main.maxPlayers && Projectile.owner == Main.myPlayer)
 		{
 			Main.player[Projectile.owner]
@@ -99,12 +101,17 @@ public class ShadowFlameRecallKnifeProjectile : ModProjectile
 				.RegisterShadowFlameRecallHit(target, Projectile, _explosionDamage);
 		}
 
+		ShadowFlameKnifeHelper.EmitSlashHitEffect(
+			Projectile.GetSource_FromAI(),
+			target.Center,
+			Projectile.owner,
+			Main.rand.NextFloat(-MathHelper.Pi, MathHelper.Pi));
 		ShadowFlameKnifeHelper.EmitShadowFlameImpactParticles(target.Center, Projectile.velocity, 14, 1f);
 	}
 
 	public override bool PreDraw(ref Color lightColor)
 	{
-		ShadowFlameKnifeHelper.DrawShadowKnife(Projectile, lightColor, 0.86f);
+		ShadowFlameKnifeHelper.DrawShadowKnife(Projectile, lightColor, 0.96f);
 		return false;
 	}
 }

@@ -24,7 +24,7 @@ internal static class ShadowFlameKnifeHelper
 	public static void DrawShadowKnife(Projectile projectile, Color lightColor, float opacity = 1f)
 	{
 		Texture2D texture = TextureAssets.Projectile[projectile.type].Value;
-		Color drawColor = Color.Lerp(new Color(70, 34, 112), lightColor, 0.32f) * opacity;
+		Color drawColor = Color.Lerp(lightColor, Color.White, 0.25f) * opacity;
 
 		Main.EntitySpriteDraw(
 			texture,
@@ -38,7 +38,7 @@ internal static class ShadowFlameKnifeHelper
 			0f);
 	}
 
-	public static void SpawnStuckKnife(IEntitySource source, Vector2 position, Vector2 direction, int owner)
+	public static void SpawnStuckKnife(IEntitySource source, Vector2 position, Vector2 direction, int owner, int sourceDamage)
 	{
 		Vector2 normalizedDirection = direction.SafeNormalize(Vector2.UnitX);
 		KillOldestIfAtLimit(owner);
@@ -55,7 +55,7 @@ internal static class ShadowFlameKnifeHelper
 
 		if (projectile.ModProjectile is ShadowFlameStuckKnifeProjectile stuck)
 		{
-			stuck.Initialize(normalizedDirection);
+			stuck.Initialize(normalizedDirection, sourceDamage);
 		}
 	}
 
@@ -110,6 +110,19 @@ internal static class ShadowFlameKnifeHelper
 		}
 	}
 
+	public static void EmitSlashHitEffect(IEntitySource source, Vector2 center, int owner, float rotation)
+	{
+		MeleeEffectAssets.NewProjectileDirect(
+			source,
+			center,
+			Vector2.Zero,
+			ModContent.ProjectileType<SlashHitEffectProjectile>(),
+			0,
+			0f,
+			owner,
+			rotation);
+	}
+
 	public static void EmitShadowFlameTrailParticle(Vector2 center, Vector2 direction, float speedScale = 1f)
 	{
 		if (Main.dedServ)
@@ -141,7 +154,7 @@ internal static class ShadowFlameKnifeHelper
 		}
 	}
 
-	public static void RecallAll(Player player, IEntitySource source, int baseDamage, float knockback)
+	public static void RecallAll(Player player, IEntitySource source, float knockback)
 	{
 		List<Projectile> stuckKnives = new();
 		int stuckType = ModContent.ProjectileType<ShadowFlameStuckKnifeProjectile>();
@@ -164,11 +177,18 @@ internal static class ShadowFlameKnifeHelper
 		player.GetModPlayer<WeaponEffectsPlayer>().StartShadowFlameRecallSession();
 
 		Vector2 recallTarget = player.Center;
-		int recallDamage = Math.Max(1, (int)MathF.Round(baseDamage * ShadowFlameKnifeTuning.RecallDamageMultiplier));
-		int explosionDamage = Math.Max(1, (int)MathF.Round(baseDamage * ShadowFlameKnifeTuning.ExplosionDamageMultiplier));
 
 		foreach (Projectile stuck in stuckKnives)
 		{
+			int sourceDamage = Math.Max(1, stuck.damage);
+			if (stuck.ModProjectile is ShadowFlameStuckKnifeProjectile stuckKnife)
+			{
+				sourceDamage = Math.Max(1, stuckKnife.SourceDamage);
+			}
+
+			int recallDamage = Math.Max(1, (int)MathF.Round(sourceDamage * ShadowFlameKnifeTuning.RecallDamageMultiplier));
+			int explosionDamage = Math.Max(1, (int)MathF.Round(sourceDamage * ShadowFlameKnifeTuning.ExplosionDamageMultiplier));
+
 			ShadowFlameRecallKnifeProjectile.Spawn(
 				source,
 				stuck.Center,
@@ -183,7 +203,7 @@ internal static class ShadowFlameKnifeHelper
 
 		SoundStyle recallSound = new("WeaponEffects/Sounds/Slashing")
 		{
-			Volume = 0.275f,
+			Volume = 0.10f,
 			Pitch = -0.2f
 		};
 		MeleeEffectAssets.PlaySound(in recallSound, player.Center);
