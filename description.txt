@@ -1,0 +1,20 @@
+MeleeEffects(近战特效修改) is a toy mod that modifies all the melee weapons.
+Just for cool slashing.After all I have not finished some specialization yet.
+
+
+近战特效修改是一款修改所有近战武器的娱乐模组。
+仅仅是有斩击效果而已。毕竟我还没有完成一些特化。
+
+
+ALL sounds are from the game "DNF".
+音效均来自游戏DNF。
+
+v0.1.6:Fixed the knockback direction bug and item consuming bug.
+v0.2.0:The effects have been redone.Now you can modify the effects by the modconfig.
+(0.2版本改动：重置刀光效果，配置文件可自定义刀光的宽度和边缘亮度)
+v0.2.1:Fixed the bug that hammers and the shield of cthulhu can slash.And some other problems.
+v0.3:Now you can determine whether the charge function is enable,and the charge damage also can be motiplied.
+(I want to fix the vanilla shooting and onhitnpc effects next version.)
+(0.3版本改动：新增配置文件可开关右键模式，以及伤害倍率自定义)
+v0.3.1:fixed the damage problem.
+v0.3.2:fixed the wrong arm rotation when the player is facing left.

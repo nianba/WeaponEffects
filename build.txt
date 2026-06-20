@@ -1,0 +1,8 @@
+author = QI
+displayName = Melee Weapon Effects
+homepage = 
+hideCode = false
+hideResources = false
+includeSource = true
+buildIgnore = *.csproj, *.user, *.md, obj\*, bin\*, .vs\*, .git\*, .planning\*, .local-artifacts\*, Properties\*
+version = 1.0.0

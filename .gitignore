@@ -1,0 +1,19 @@
+# Build output
+bin/
+obj/
+.vs/
+
+# User/local IDE files
+*.user
+*.suo
+Properties/
+
+# Local planning notes
+.planning/
+.local-artifacts/
+
+# tModLoader packaged artifacts
+*.tmod
+publish/
+*.rawimg
+TMOD_MANIFEST.txt

@@ -1,0 +1,50 @@
+Items: {
+	SlashTest: {
+		DisplayName: Slash Test
+		Tooltip: ""
+	}
+}
+
+Projectiles: {
+	ExampleSlash.DisplayName: Example Slash
+	ExampleSlashingEffect.DisplayName: Example Slashing Effect
+	ExampleSlashWeapon.DisplayName: Example Slash Weapon
+	HeroSlash2.DisplayName: Hero Slash2
+	HeroSlashMethod.DisplayName: Hero Slash Method
+}
+
+Configs: {
+	Mconfig: {
+		DisplayName: ��ս��Ч�޸�-����
+
+		SlashScale: {
+			Label: ն������
+			// Tooltip: Slash Scale (0~1):This config can modify the effect's width
+		}
+
+		SlashBlink: {
+			Label: ն�������Ƿ񷢹�
+			// Tooltip: Slash Blink (0~1):This config can modify the effect's edge's glow
+		}
+
+		ChargeDamage: {
+			Label: �����˺�����
+			// Tooltip: Charge (2~10 times):This config can modify the charged damage
+		}
+
+		SlashCanKillProjectiles: {
+			Label: ն���Ƿ���Է��Ƶ�Ļ
+			// Tooltip: Determine whether your slash can destroy hostile projectiles
+		}
+
+		CanCharge: {
+			Label: �Ƿ�����Ҽ�����
+			// Tooltip: Determine whether the function that 'Right click to charge' is enable.
+		}
+
+		Style: {
+			Label: ���
+			Tooltip: ������Ӱ���Ӿ�Ч��
+		}
+	}
+}
