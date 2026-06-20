@@ -88,8 +88,11 @@ public static class SlashParticleEmitter
 
 	private static void SpawnDust(Vector2 position, Vector2 velocity, in SlashParticleProfile particles)
 	{
-		Dust dust = Dust.NewDustDirect(position, 1, 1, particles.DustType, velocity.X, velocity.Y, 0, particles.DustColor, Main.rand.NextFloat(particles.MinScale, particles.MaxScale));
-		dust.noGravity = particles.DustType == DustID.Torch;
+		Color color = particles.AlternateDustColor != default && Main.rand.NextBool()
+			? particles.AlternateDustColor
+			: particles.DustColor;
+		Dust dust = Dust.NewDustDirect(position, 1, 1, particles.DustType, velocity.X, velocity.Y, 0, color, Main.rand.NextFloat(particles.MinScale, particles.MaxScale));
+		dust.noGravity = particles.NoGravity || particles.DustType == DustID.Torch;
 		dust.fadeIn = particles.DustType == DustID.Torch ? 0.8f : 0f;
 	}
 }

@@ -146,15 +146,15 @@ finalThickness =
 | 武器 | 挥舞粒子 | 命中粒子 | 长宽建议 | 备注 |
 | --- | --- | --- | --- | --- |
 | Volcano / Fiery Greatsword | 橙红余烬 | 大型火焰爆点 | 长度 1.18，宽度 1.55 | 已实现 |
-| Night's Edge | 紫黑 `DarkSpark` | 深紫命中爆点 | 长度 1.08，宽度 0.95 | 可直接复用已有 `DarkSpark` |
-| True Night's Edge | 更亮紫黑粒子 | 更强深色爆点 | 长度 1.15，宽度 1.05 | 注意保留原版弹幕 |
-| Excalibur | 金白光点 | 金白爆点 | 长度 1.08，宽度 1.18 | 先做粒子和宽度即可 |
-| True Excalibur | 金白光点更多 | 明亮爆点 | 长度 1.15，宽度 1.25 | 注意保留原版弹幕 |
-| Blade of Grass | 草绿色叶片/草屑 | 草绿色命中碎屑 | 长度 1.08，宽度 1.10 | 必须加入 exact profile，否则不会有主题粒子 |
-| Muramasa | 蓝白细火星 | 小型蓝白爆点 | 长度 1.0，宽度 0.7 | 适合展示窄快刀光 |
-| Ice Blade | 浅蓝碎屑 | 冰晶爆点 | 长度 1.0，宽度 0.8 | 第一版可用 vanilla Dust |
-| Frostbrand | 更亮蓝白碎屑 | 冰裂爆点 | 长度 1.12，宽度 0.9 | 比 Ice Blade 稍强 |
-| Starfury | `StarSpark` 白蓝星点 | 小型星光爆点 | 长度 1.12，宽度 0.85 | 不要用 `CommonSpark`，否则会像白色拖带；粒子数量克制，避免叠原版落星 |
+| Night's Edge | 紫/亮紫随机 `DustSoftStar = 278` | 紫/深紫随机爆点 | 长度 1.08，宽度 0.95 | 不再使用 `DarkSpark`，避免白带 |
+| True Night's Edge | 亮紫/粉紫随机 `DustSoftStar = 278` | 强紫/深紫随机爆点 | 长度 1.15，宽度 1.05 | 注意保留原版弹幕 |
+| Excalibur | 金白随机 `DustMetalSpark = 15` | 金白/亮金爆点 | 长度 1.08，宽度 1.18 | 使用原生金属尘，避免线状白带 |
+| True Excalibur | 金白/亮白随机 `DustMetalSpark = 15` | 明亮金白/金色爆点 | 长度 1.15，宽度 1.25 | 注意保留原版弹幕 |
+| Blade of Grass | 草绿/黄绿随机 `DustGrassLeaf = 107` | 草绿色命中碎屑 | 长度 1.08，宽度 1.10 | 必须加入 exact profile，否则不会有主题粒子 |
+| Muramasa | 蓝/青蓝随机 `DustIceShard = 135` | 小型蓝白爆点 | 长度 1.0，宽度 0.7 | 适合展示窄快刀光 |
+| Ice Blade | 浅蓝/冰白随机 `DustIceShard = 135` | 冰晶爆点 | 长度 1.0，宽度 0.8 | 使用原生冰尘 |
+| Frostbrand | 亮蓝/冰白随机 `DustIceShard = 135` | 更强冰裂爆点 | 长度 1.12，宽度 0.9 | 比 Ice Blade 稍强 |
+| Starfury | 粉色/金色随机 `DustSoftStar = 278` | 粉金星光爆点 | 长度 1.12，宽度 0.85 | 参考项目粉金色，noGravity，避免叠原版落星 |
 | Bladetongue | 红黄粒子 | 红黄命中喷射 | 长度 1.05，宽度 1.05 | 已有 Ichor projectile，命中粒子别过量 |
 
 ## 9. 验证标准

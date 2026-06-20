@@ -141,13 +141,15 @@ SlashProfileId.TargetWeapon => SlashProfiles.TargetWeapon,
 | 标准剑 | 5-8 | 0.8-1.5 | 1.0-1.3 | 0.35-0.55 |
 | 重剑/火焰类 | 7-12 | 1.0-1.8 | 1.1-1.5 | 0.4-0.65 |
 
-粒子类型必须符合武器主题，不能机械复用 `CommonSpark`：
+粒子类型必须符合武器主题，不能机械复用线状自定义 dust：
 
-- `CommonSpark` 是线状火花，适合金属、圣光、能量碎光，但不适合表现星点。
-- `DarkSpark` 适合暗影、腐化、Night's Edge 系列。
+- `CommonSpark`、`DarkSpark`、`StarSpark` 都基于 `Dusts/Spark.png` 短线贴图，容易在挥砍中形成白带/色带。当前 active profile 不应再使用这些 dust。
 - 火焰类优先用 `DustID.Torch`。
-- 自然/草系可以先用 `DustID.Grass`。
-- 星辰类如果需要星点，不要用 `CommonSpark`。当前 Starfury 使用专用 `StarSpark`，它用短十字闪光表现星光，避免出现白色拖带。
+- 自然/草系可用参考项目的 `DustGrassLeaf = 107`。
+- 冰系可用 `DustIceShard = 135`。
+- 金属/圣光可用 `DustMetalSpark = 15`。
+- 星辰类使用参考项目的 `DustSoftStar = 278`，并使用粉金随机色：`new Color(255, 98, 206)` 或 `new Color(255, 218, 82)`。
+- 需要随机色时使用 `SlashParticleProfile` 的 `alternateDustColor`；需要漂浮感时设置 `noGravity: true`。
 
 ### 5.2 命中粒子
 
@@ -266,4 +268,4 @@ dotnet build .\MeleeWeaponEffects.csproj
 
 ### Q: 粒子看起来像白色拖带，不像目标主题
 
-优先检查 `DustType`。如果主题需要点状或星形粒子，不要使用线状 `CommonSpark`。Starfury 的经验是：用 `CommonSpark` 会出现白色带状火花，应该改用更接近星光的 dust，例如当前的 `StarSpark`。
+优先检查 `DustType`。如果主题需要点状、叶片、碎屑、星光或元素尘，不要使用基于 `Dusts/Spark.png` 的线状自定义 dust。Starfury 的经验是：用线状 dust 会出现白色带状火花，应该使用 `DustSoftStar = 278`，并随机粉色/金色。
