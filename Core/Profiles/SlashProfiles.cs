@@ -46,18 +46,17 @@ public static class SlashProfiles
 			spreadRadians: 0.45f),
 		new SlashParticleProfile(
 			DustID.Torch,
-			new Color(255, 150, 54),
-			count: 22,
-			minScale: 1.2f,
-			maxScale: 1.9f,
-			velocityScale: 1.45f,
-			spreadRadians: 0.75f),
+			new Color(255, 170, 64),
+			count: 34,
+			minScale: 1.35f,
+			maxScale: 2.35f,
+			velocityScale: 1.75f,
+			spreadRadians: 0.95f),
 		new SlashShapeProfile(
 			lengthScale: 1.18f,
-			thicknessScale: 1.3f,
+			thicknessScale: 1.55f,
 			minYScale: 0.75f,
 			maxYScale: 0.9f,
 			angleRandomness: 0.34f,
 			extraUpdates: 4));
 }
-

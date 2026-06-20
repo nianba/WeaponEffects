@@ -63,7 +63,7 @@ public class SlashArcProjectile : ModProjectile
 		float knockbackRotation = 0f,
 		float weaponScale = 1f)
 	{
-		float configuredThickness = ModContent.GetInstance<MeleeWeaponEffectsGameplayConfig>().SlashScale;
+		float configuredThickness = ModContent.GetInstance<MeleeWeaponEffectsGameplayConfig>().SlashScale * Math.Max(0.1f, thickness);
 		Vector2 velocity = knockbackRotation.ToRotationVector2() * length;
 		Vector2 position = isPlayerOwned ? Main.player[owner].Center : Main.npc[ownerNPC].Center;
 		int projectileOwner = isPlayerOwned ? owner : Main.myPlayer;
@@ -461,8 +461,13 @@ public class SlashArcProjectile : ModProjectile
 	private void BuildProfileVertices(Vector2 ownerCenter, int style, ProfileVisualPass pass, float angleOffset)
 	{
 		_vertexCount = 0;
-		float trailLength = Projectile.oldPos.Length;
+		int activeTrailCount = CountActiveTrailSamples();
+		if (activeTrailCount < 2)
+		{
+			return;
+		}
 
+		int activeIndex = 0;
 		for (int i = 0; i < Projectile.oldPos.Length; i++)
 		{
 			if (Projectile.oldRot[i] == 0f)
@@ -470,30 +475,36 @@ public class SlashArcProjectile : ModProjectile
 				continue;
 			}
 
-			float trailFactor = 1f - i / trailLength;
+			float trailPosition = activeIndex / Math.Max(1f, activeTrailCount - 1f);
+			float trailFactor = 1f - trailPosition;
 			float progress = ProfileProgressAtTrailIndex(i);
 			float depth = EvaluateProfileDepth(progress);
 			float nearAmount = MathHelper.Clamp((depth + 0.9f) / 2.4f, 0f, 1f);
 			float farAmount = 1f - nearAmount;
 			float hitPeak = EvaluateHitPeak(progress);
-			float crescent = CrescentWidthFactor(i, trailLength);
+			float crescent = CrescentWidthFactor(trailPosition);
+			float tipVisibility = TipVisibilityFactor(trailPosition);
 
 			GetProfilePassSettings(pass, nearAmount, farAmount, hitPeak, out float alpha, out float outerScale, out float widthScale, out float offsetPixels, out Color passColor);
 			if (alpha <= 0f)
 			{
+				activeIndex++;
 				continue;
 			}
 
-			float rotation = Projectile.oldRot[i] + angleOffset;
+			float tipConvergence = 1f - tipVisibility;
+			float rotation = Projectile.oldRot[i] + angleOffset * tipConvergence;
 			float depthScale = 1f + MathHelper.Clamp(depth, -1.2f, 1.5f) * 0.08f;
 			float length = Projectile.velocity.Length();
+			outerScale = MathHelper.Lerp(1f, outerScale, tipConvergence);
+			offsetPixels *= tipConvergence;
 			float outerRadius = length * outerScale * depthScale;
 			float innerRadius;
 			if (style == 1)
 			{
-				float width = MathHelper.Clamp(Projectile.localAI[0] * widthScale * crescent, 0.01f, 0.95f);
+				float width = MathHelper.Clamp(Projectile.localAI[0] * widthScale * crescent, 0f, 0.95f);
 				float innerTaper = 0.18f + 0.82f * crescent;
-				innerRadius = length * (outerScale - width + width * i / trailLength * innerTaper) * depthScale;
+				innerRadius = length * (outerScale - width + width * trailPosition * innerTaper) * depthScale;
 			}
 			else
 			{
@@ -504,15 +515,19 @@ public class SlashArcProjectile : ModProjectile
 			Vector2 inner = ProfileVector(rotation, innerRadius);
 			Vector2 offset = ProfileScreenOffset(outer, offsetPixels);
 			float depthAlpha = 1f + MathHelper.Clamp(depth, -1f, 1.4f) * 0.1f;
-			Color color = passColor * alpha * trailFactor * depthAlpha * CrescentAlphaFactor(crescent);
+			float tipAlpha = MathHelper.Lerp(0.58f, CrescentAlphaFactor(crescent), tipConvergence);
+			float trailAlpha = MathHelper.Lerp(0.32f, trailFactor, tipConvergence);
+			Color color = passColor * alpha * trailAlpha * depthAlpha * tipAlpha;
 
 			if (_vertexCount + 2 > _vertices.Length)
 			{
 				break;
 			}
 
-			_vertices[_vertexCount++] = new SlashVertex(ownerCenter + outer + offset, new Vector3(trailFactor, 0f, 1f), color);
-			_vertices[_vertexCount++] = new SlashVertex(ownerCenter + inner + offset, new Vector3(trailFactor, 1f, 1f), color);
+			float texX = MathHelper.Clamp(trailFactor, 0.08f, 0.92f);
+			_vertices[_vertexCount++] = new SlashVertex(ownerCenter + outer + offset, new Vector3(texX, 0f, 1f), color);
+			_vertices[_vertexCount++] = new SlashVertex(ownerCenter + inner + offset, new Vector3(texX, 1f, 1f), color);
+			activeIndex++;
 		}
 	}
 
@@ -524,19 +539,39 @@ public class SlashArcProjectile : ModProjectile
 		return (direction * radius).RotatedBy(Projectile.ai[1]);
 	}
 
-	private static float CrescentWidthFactor(int trailIndex, float trailLength)
+	private int CountActiveTrailSamples()
 	{
-		float position = MathHelper.Clamp(trailIndex / Math.Max(1f, trailLength - 1f), 0f, 1f);
+		int count = 0;
+		for (int i = 0; i < Projectile.oldRot.Length; i++)
+		{
+			if (Projectile.oldRot[i] != 0f)
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	private static float CrescentWidthFactor(float position)
+	{
+		position = MathHelper.Clamp(position, 0f, 1f);
 		float centerWeight = MathF.Sin(position * MathHelper.Pi);
-		float leadingTip = Smooth01(MathHelper.Clamp(position / 0.14f, 0f, 1f));
-		float trailingTip = Smooth01(MathHelper.Clamp((1f - position) / 0.22f, 0f, 1f));
+		float leadingTip = Smooth01(MathHelper.Clamp(position / 0.18f, 0f, 1f));
+		float trailingTip = Smooth01(MathHelper.Clamp((1f - position) / 0.24f, 0f, 1f));
 		float tipWeight = Math.Min(leadingTip, trailingTip);
-		return MathHelper.Clamp(0.08f + centerWeight * 0.92f * tipWeight, 0.04f, 1f);
+		return MathHelper.Clamp(centerWeight * tipWeight, 0f, 1f);
 	}
 
 	private static float CrescentAlphaFactor(float crescent)
 	{
 		return MathHelper.Lerp(0.18f, 1f, MathF.Sqrt(MathHelper.Clamp(crescent, 0f, 1f)));
+	}
+
+	private static float TipVisibilityFactor(float position)
+	{
+		float edgeDistance = Math.Min(position, 1f - position);
+		return 1f - Smooth01(MathHelper.Clamp(edgeDistance / 0.12f, 0f, 1f));
 	}
 
 	private Vector2 ProfileScreenOffset(Vector2 outer, float offsetPixels)

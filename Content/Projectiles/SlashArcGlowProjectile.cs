@@ -182,7 +182,13 @@ public class SlashArcGlowProjectile : ModProjectile
 	{
 		_vertexCount = 0;
 		float blink = ModContent.GetInstance<MeleeWeaponEffectsVisualConfig>().SlashBlink;
+		int activeTrailCount = _usesVisualProfile ? CountActiveTrailSamples() : Projectile.oldPos.Length;
+		if (_usesVisualProfile && activeTrailCount < 2)
+		{
+			return;
+		}
 
+		int activeIndex = 0;
 		for (int i = 0; i < Projectile.oldPos.Length; i++)
 		{
 			if (Projectile.oldRot[i] == 0f)
@@ -190,7 +196,8 @@ public class SlashArcGlowProjectile : ModProjectile
 				continue;
 			}
 
-			float factor = 1f - i / 40f;
+			float trailPosition = _usesVisualProfile ? activeIndex / System.Math.Max(1f, activeTrailCount - 1f) : i / 40f;
+			float factor = 1f - trailPosition;
 			float progress = ProfileProgressAtTrailIndex(i);
 			float depth = _usesVisualProfile ? EvaluateProfileDepth(progress) : 0f;
 			float hitPeak = _usesVisualProfile ? EvaluateHitPeak(progress) : 0f;
@@ -198,15 +205,18 @@ public class SlashArcGlowProjectile : ModProjectile
 			float depthScale = _usesVisualProfile ? 1f + MathHelper.Clamp(depth, -1.2f, 1.5f) * 0.1f : 1f;
 			float glowScale = _usesVisualProfile ? 1.04f + nearAmount * 0.08f + hitPeak * 0.05f : 1f;
 			float widthScale = _usesVisualProfile ? 1.08f + nearAmount * 0.16f : 1f;
-			float crescent = _usesVisualProfile ? GlowCrescentWidthFactor(i, Projectile.oldPos.Length) : 1f;
+			float crescent = _usesVisualProfile ? GlowCrescentWidthFactor(trailPosition) : 1f;
+			float tipVisibility = _usesVisualProfile ? TipVisibilityFactor(trailPosition) : 0f;
+			float tipConvergence = 1f - tipVisibility;
+			glowScale = MathHelper.Lerp(1f, glowScale, tipConvergence);
 			Vector2 outer = ProfileVector(Projectile.oldRot[i], Projectile.velocity.Length() * glowScale * depthScale);
 			outer = outer.RotatedBy(Projectile.ai[1]);
 
-			float width = MathHelper.Clamp(Projectile.localAI[0] * widthScale * crescent, 0.01f, 0.95f);
+			float width = MathHelper.Clamp(Projectile.localAI[0] * widthScale * crescent, 0f, 0.95f);
 			float innerTaper = 0.25f + 0.75f * crescent;
-			Vector2 inner = ProfileVector(Projectile.oldRot[i], Projectile.velocity.Length() * (glowScale - width + width * i / 40f * innerTaper) * depthScale);
+			Vector2 inner = ProfileVector(Projectile.oldRot[i], Projectile.velocity.Length() * (glowScale - width + width * trailPosition * innerTaper) * depthScale);
 			inner = inner.RotatedBy(Projectile.ai[1]);
-			Vector2 offset = ProfileScreenOffset(outer, _usesVisualProfile ? _profileNearEdgeOffsetPixels * nearAmount * 0.55f : 0f);
+			Vector2 offset = ProfileScreenOffset(outer, _usesVisualProfile ? _profileNearEdgeOffsetPixels * nearAmount * 0.55f * tipConvergence : 0f);
 
 			if (_vertexCount + 2 > _vertices.Length)
 			{
@@ -214,10 +224,13 @@ public class SlashArcGlowProjectile : ModProjectile
 			}
 
 			float alpha = _usesVisualProfile ? _profileGlowAlpha * (0.42f + nearAmount * 0.24f + _profilePeakFlareAlpha * hitPeak * 0.18f) : 1f;
-			float crescentAlpha = _usesVisualProfile ? GlowCrescentAlphaFactor(crescent) : 1f;
-			Color color = _color * blink * factor * alpha * crescentAlpha;
-			_vertices[_vertexCount++] = new SlashVertex(ownerCenter + outer + offset, new Vector3(factor, 0f, 1f), color);
-			_vertices[_vertexCount++] = new SlashVertex(ownerCenter + inner + offset, new Vector3(factor, 1f, 1f), color);
+			float crescentAlpha = _usesVisualProfile ? MathHelper.Lerp(0.16f, GlowCrescentAlphaFactor(crescent), tipConvergence) : 1f;
+			float trailAlpha = _usesVisualProfile ? MathHelper.Lerp(0.18f, factor, tipConvergence) : factor;
+			Color color = _color * blink * trailAlpha * alpha * crescentAlpha;
+			float texX = _usesVisualProfile ? MathHelper.Clamp(factor, 0.08f, 0.92f) : factor;
+			_vertices[_vertexCount++] = new SlashVertex(ownerCenter + outer + offset, new Vector3(texX, 0f, 1f), color);
+			_vertices[_vertexCount++] = new SlashVertex(ownerCenter + inner + offset, new Vector3(texX, 1f, 1f), color);
+			activeIndex++;
 		}
 	}
 
@@ -233,19 +246,39 @@ public class SlashArcGlowProjectile : ModProjectile
 		return direction * radius;
 	}
 
-	private static float GlowCrescentWidthFactor(int trailIndex, float trailLength)
+	private int CountActiveTrailSamples()
 	{
-		float position = MathHelper.Clamp(trailIndex / System.Math.Max(1f, trailLength - 1f), 0f, 1f);
+		int count = 0;
+		for (int i = 0; i < Projectile.oldRot.Length; i++)
+		{
+			if (Projectile.oldRot[i] != 0f)
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	private static float GlowCrescentWidthFactor(float position)
+	{
+		position = MathHelper.Clamp(position, 0f, 1f);
 		float centerWeight = System.MathF.Sin(position * MathHelper.Pi);
-		float leadingTip = Smooth01(MathHelper.Clamp(position / 0.18f, 0f, 1f));
-		float trailingTip = Smooth01(MathHelper.Clamp((1f - position) / 0.28f, 0f, 1f));
+		float leadingTip = Smooth01(MathHelper.Clamp(position / 0.24f, 0f, 1f));
+		float trailingTip = Smooth01(MathHelper.Clamp((1f - position) / 0.32f, 0f, 1f));
 		float tipWeight = System.Math.Min(leadingTip, trailingTip);
-		return MathHelper.Clamp(0.18f + centerWeight * 0.82f * tipWeight, 0.12f, 1f);
+		return MathHelper.Clamp(0.08f + centerWeight * 0.92f * tipWeight, 0f, 1f);
 	}
 
 	private static float GlowCrescentAlphaFactor(float crescent)
 	{
 		return MathHelper.Lerp(0.24f, 0.86f, System.MathF.Sqrt(MathHelper.Clamp(crescent, 0f, 1f)));
+	}
+
+	private static float TipVisibilityFactor(float position)
+	{
+		float edgeDistance = System.Math.Min(position, 1f - position);
+		return 1f - Smooth01(MathHelper.Clamp(edgeDistance / 0.14f, 0f, 1f));
 	}
 
 	private Vector2 ProfileScreenOffset(Vector2 outer, float offsetPixels)

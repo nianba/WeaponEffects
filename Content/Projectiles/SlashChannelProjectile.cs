@@ -137,8 +137,10 @@ public class SlashChannelProjectile : ModProjectile
 		SoundEngine.PlaySound(new SoundStyle("MeleeWeaponEffects/Sounds/S2") { Volume = 0.36f }, player.Center);
 		float randomizedRotation = _aimRotation + Main.rand.NextFloat(-0.5f, 0.5f);
 		float length = Main.rand.Next(160, 220) / 110f * _weaponLength;
+		float thicknessScale = 1f;
 		float yScale = Main.rand.NextFloat(0.36f, 0.8f);
 		int startRotation = Main.rand.NextBool() ? -2 : 2;
+		ApplyExactProfileLengthAndWidth(ref length, ref thicknessScale);
 
 		SlashArcProjectile.CreateSlash(
 			isPlayerOwned: true,
@@ -146,7 +148,7 @@ public class SlashChannelProjectile : ModProjectile
 			rotation: randomizedRotation,
 			startingRotation: startRotation,
 			length: length,
-			thickness: 0.5f,
+			thickness: thicknessScale,
 			yScale: yScale,
 			extraUpdates: Main.rand.Next(4, 6),
 			damage: Projectile.damage,
@@ -170,7 +172,9 @@ public class SlashChannelProjectile : ModProjectile
 		float baseRotation = _aimRotation - hitAngle;
 		float startingRotation = MathHelper.ToRadians(step.StartAngleDegrees);
 		float length = _weaponLength * LegacyAverageLengthScale * step.LengthScale;
+		float thicknessScale = step.ThicknessScale;
 		float yScale = RuntimeYScaleForStep(in step);
+		ApplyExactProfileLengthAndWidth(ref length, ref thicknessScale);
 
 		SlashArcProjectile.CreateProfiledSlash(
 			isPlayerOwned: true,
@@ -178,7 +182,7 @@ public class SlashChannelProjectile : ModProjectile
 			rotation: baseRotation,
 			startingRotation: startingRotation,
 			length: length,
-			thicknessScale: step.ThicknessScale,
+			thicknessScale: thicknessScale,
 			yScale: yScale,
 			extraUpdates: step.ExtraUpdates,
 			damage: Projectile.damage,
@@ -196,6 +200,17 @@ public class SlashChannelProjectile : ModProjectile
 	private static float RuntimeYScaleForStep(in SlashComboStep step)
 	{
 		return MathHelper.Clamp(step.Visual.YScale * 0.65f, 0.36f, 0.8f);
+	}
+
+	private void ApplyExactProfileLengthAndWidth(ref float length, ref float thicknessScale)
+	{
+		if (!SlashProfileResolver.TryGetExactProfile(_weaponItemType, out WeaponSlashProfile profile))
+		{
+			return;
+		}
+
+		length *= profile.Shape.LengthScale;
+		thicknessScale *= profile.Shape.ThicknessScale;
 	}
 
 	private enum SlashEmissionMode
