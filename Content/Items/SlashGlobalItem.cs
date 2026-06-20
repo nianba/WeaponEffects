@@ -138,6 +138,11 @@ public class SlashGlobalItem : GlobalItem
 			return false;
 		}
 
+		if (item != null && item.type == ItemID.ShadowFlameKnife)
+		{
+			return false;
+		}
+
 		if (item == null || item.IsAir || item.damage <= 0 || item.type == ItemID.Sickle || item.accessory || item.axe > 0 || item.pick > 0 || item.hammer > 0)
 		{
 			return false;
