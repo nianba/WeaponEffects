@@ -18,27 +18,55 @@ public class TestSlashGlobalItem : GlobalItem
 	{
 		//IL_0149: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00db: Unknown result type (might be due to invalid IL or missing references)
-		if (item.damage > 0 && item.type != 1786 && (item.DamageType == DamageClass.Melee || item.DamageType == DamageClass.MeleeNoSpeed) && !item.accessory && (!item.noMelee || item.shoot == 0 || item.shoot == 997) && (!item.channel || (item.channel && item.shoot == 0) || item.shoot == 997) && item.axe <= 0 && item.pick <= 0 && item.hammer <= 0)
+		if (ShouldUseSlashAction(item))
 		{
 			s1 = true;
 			item.noUseGraphic = true;
 			item.noMelee = true;
 			item.channel = true;
 			item.shootSpeed = 40f;
-			item.useStyle = 13;
+			item.useStyle = ItemUseStyleID.Rapier;
 			item.UseSound = SoundID.Item1;
+
+			if (ShouldClearOriginalShoot(item.shoot))
+			{
+				item.shoot = ProjectileID.None;
+			}
 		}
-		else if (item.shoot == 973 || item.shoot == 983 || item.shoot == 985)
+	}
+
+	private static bool ShouldUseSlashAction(Item item)
+	{
+		if (item.damage <= 0 || item.type == ItemID.Sickle || item.accessory || item.axe > 0 || item.pick > 0 || item.hammer > 0)
 		{
-			s1 = true;
-			item.noUseGraphic = true;
-			item.noMelee = true;
-			item.channel = true;
-			item.shoot = 0;
-			item.shootSpeed = 40f;
-			item.useStyle = 13;
-			item.UseSound = SoundID.Item1;
+			return false;
 		}
+
+		if (item.DamageType != DamageClass.Melee && item.DamageType != DamageClass.MeleeNoSpeed)
+		{
+			return false;
+		}
+
+		bool supportedShoot = item.shoot == ProjectileID.None || IsVanillaSwordSlashProjectile(item.shoot);
+		return (!item.noMelee || supportedShoot) && (!item.channel || supportedShoot);
+	}
+
+	private static bool IsVanillaSwordSlashProjectile(int projectileType)
+	{
+		return projectileType == ProjectileID.NightsEdge
+			|| projectileType == ProjectileID.Excalibur
+			|| projectileType == ProjectileID.TrueExcalibur
+			|| projectileType == ProjectileID.TrueNightsEdge
+			|| projectileType == ProjectileID.TerraBlade2
+			|| projectileType == ProjectileID.TerraBlade2Shot
+			|| projectileType == ProjectileID.TheHorsemansBlade;
+	}
+
+	private static bool ShouldClearOriginalShoot(int projectileType)
+	{
+		return projectileType == ProjectileID.TrueNightsEdge
+			|| projectileType == ProjectileID.TrueExcalibur
+			|| projectileType == ProjectileID.TerraBlade2Shot;
 	}
 
 	public override bool AltFunctionUse(Item item, Player player)
