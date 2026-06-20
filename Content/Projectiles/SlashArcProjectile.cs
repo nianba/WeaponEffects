@@ -15,7 +15,7 @@ namespace MeleeWeaponEffects;
 
 public class SlashArcProjectile : ModProjectile
 {
-	private readonly SlashVertex[] _vertices = new SlashVertex[80];
+	private readonly SlashVertex[] _vertices = new SlashVertex[96];
 	private readonly Effect _slashEffect = ModContent.Request<Effect>("MeleeWeaponEffects/Effects/Mhd", AssetRequestMode.ImmediateLoad).Value;
 	private int _vertexCount;
 
@@ -467,6 +467,8 @@ public class SlashArcProjectile : ModProjectile
 			return;
 		}
 
+		AddProfileFrontTip(ownerCenter, pass);
+
 		int activeIndex = 0;
 		for (int i = 0; i < Projectile.oldPos.Length; i++)
 		{
@@ -475,15 +477,16 @@ public class SlashArcProjectile : ModProjectile
 				continue;
 			}
 
-			float trailPosition = activeIndex / Math.Max(1f, activeTrailCount - 1f);
-			float trailFactor = 1f - trailPosition;
+			float rawTrailPosition = (activeIndex + 1f) / activeTrailCount;
+			float trailPosition = FrontOpenedTrailPosition(rawTrailPosition);
+			float trailFactor = 1f - rawTrailPosition;
 			float progress = ProfileProgressAtTrailIndex(i);
 			float depth = EvaluateProfileDepth(progress);
 			float nearAmount = MathHelper.Clamp((depth + 0.9f) / 2.4f, 0f, 1f);
 			float farAmount = 1f - nearAmount;
 			float hitPeak = EvaluateHitPeak(progress);
 			float crescent = CrescentWidthFactor(trailPosition);
-			float tipVisibility = TipVisibilityFactor(trailPosition);
+			float tipVisibility = TipVisibilityFactor(rawTrailPosition);
 
 			GetProfilePassSettings(pass, nearAmount, farAmount, hitPeak, out float alpha, out float outerScale, out float widthScale, out float offsetPixels, out Color passColor);
 			if (alpha <= 0f)
@@ -514,10 +517,11 @@ public class SlashArcProjectile : ModProjectile
 			Vector2 outer = ProfileVector(rotation, outerRadius);
 			Vector2 inner = ProfileVector(rotation, innerRadius);
 			Vector2 offset = ProfileScreenOffset(outer, offsetPixels);
+
 			float depthAlpha = 1f + MathHelper.Clamp(depth, -1f, 1.4f) * 0.1f;
 			float tipAlpha = MathHelper.Lerp(0.58f, CrescentAlphaFactor(crescent), tipConvergence);
 			float trailAlpha = MathHelper.Lerp(0.32f, trailFactor, tipConvergence);
-			Color color = passColor * alpha * trailAlpha * depthAlpha * tipAlpha;
+			Color color = passColor * alpha * trailAlpha * depthAlpha * tipAlpha * FrontLayerAlphaFactor(pass, rawTrailPosition);
 
 			if (_vertexCount + 2 > _vertices.Length)
 			{
@@ -529,6 +533,104 @@ public class SlashArcProjectile : ModProjectile
 			_vertices[_vertexCount++] = new SlashVertex(ownerCenter + inner + offset, new Vector3(texX, 1f, 1f), color);
 			activeIndex++;
 		}
+	}
+
+	private void AddProfileFrontTip(Vector2 ownerCenter, ProfileVisualPass pass)
+	{
+		GetProfilePassSettings(pass, 0f, 0f, 0f, out float alpha, out _, out _, out _, out Color passColor);
+		float layerAlpha = FrontLayerAlphaFactor(pass, 0f);
+		if (alpha <= 0f || layerAlpha <= 0f || _vertexCount + 2 > _vertices.Length)
+		{
+			return;
+		}
+
+		float progress = ProfileProgressAtTrailIndex(0);
+		float depth = EvaluateProfileDepth(progress);
+		float nearAmount = MathHelper.Clamp((depth + 0.9f) / 2.4f, 0f, 1f);
+		float farAmount = 1f - nearAmount;
+		float hitPeak = EvaluateHitPeak(progress);
+		GetProfilePassSettings(pass, nearAmount, farAmount, hitPeak, out alpha, out _, out _, out _, out passColor);
+		if (alpha <= 0f)
+		{
+			return;
+		}
+
+		float length = Projectile.velocity.Length();
+		float depthScale = 1f + MathHelper.Clamp(depth, -1.2f, 1.5f) * 0.08f;
+		float outerRadius = length * depthScale;
+		Vector2 tip = ProfileVector(Projectile.rotation, outerRadius);
+		if (TryGetCurrentFrontTipDirection(Projectile.rotation, outerRadius, out Vector2 frontTipDirection))
+		{
+			tip += frontTipDirection * length * FrontTipExtensionScale(pass);
+		}
+
+		float depthAlpha = 1f + MathHelper.Clamp(depth, -1f, 1.4f) * 0.1f;
+		Color color = passColor * alpha * 0.46f * depthAlpha * 0.72f * layerAlpha;
+		_vertices[_vertexCount++] = new SlashVertex(ownerCenter + tip, new Vector3(0.92f, 0f, 1f), color);
+		_vertices[_vertexCount++] = new SlashVertex(ownerCenter + tip, new Vector3(0.92f, 1f, 1f), color);
+	}
+
+	private bool TryGetCurrentFrontTipDirection(float currentRotation, float currentRadius, out Vector2 direction)
+	{
+		Vector2 current = ProfileVector(currentRotation, currentRadius);
+		for (int i = 0; i < Projectile.oldRot.Length; i++)
+		{
+			if (Projectile.oldRot[i] == 0f)
+			{
+				continue;
+			}
+
+			Vector2 next = ProfileVector(Projectile.oldRot[i], currentRadius);
+			direction = current - next;
+			if (direction.LengthSquared() > 0.001f)
+			{
+				direction.Normalize();
+				return true;
+			}
+		}
+
+		direction = new Vector2(-current.Y, current.X);
+		if (_reverse)
+		{
+			direction *= -1f;
+		}
+
+		if (direction.LengthSquared() <= 0.001f)
+		{
+			return false;
+		}
+
+		direction.Normalize();
+		return true;
+	}
+
+	private static float FrontOpenedTrailPosition(float rawPosition)
+	{
+		rawPosition = MathHelper.Clamp(rawPosition, 0f, 1f);
+		return MathHelper.Clamp(0.12f + rawPosition * 0.88f, 0f, 1f);
+	}
+
+	private static float FrontTipExtensionScale(ProfileVisualPass pass)
+	{
+		return pass switch
+		{
+			ProfileVisualPass.FarRim => 0.035f,
+			ProfileVisualPass.TrailEcho => 0.025f,
+			ProfileVisualPass.Core => 0.11f,
+			ProfileVisualPass.PeakFlare => 0.085f,
+			ProfileVisualPass.NearEdge => 0.12f,
+			_ => 0.1f
+		};
+	}
+
+	private static float FrontLayerAlphaFactor(ProfileVisualPass pass, float trailPosition)
+	{
+		if (pass != ProfileVisualPass.FarRim && pass != ProfileVisualPass.TrailEcho)
+		{
+			return 1f;
+		}
+
+		return Smooth01(MathHelper.Clamp(trailPosition / 0.18f, 0f, 1f));
 	}
 
 	private Vector2 ProfileVector(float rotation, float radius)

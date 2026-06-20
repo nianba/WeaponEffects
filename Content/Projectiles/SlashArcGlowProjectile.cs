@@ -11,7 +11,7 @@ namespace MeleeWeaponEffects;
 
 public class SlashArcGlowProjectile : ModProjectile
 {
-	private readonly SlashVertex[] _vertices = new SlashVertex[80];
+	private readonly SlashVertex[] _vertices = new SlashVertex[96];
 	private int _vertexCount;
 
 	private bool _reverse;
@@ -188,6 +188,8 @@ public class SlashArcGlowProjectile : ModProjectile
 			return;
 		}
 
+		AddFrontTip(ownerCenter, blink);
+
 		int activeIndex = 0;
 		for (int i = 0; i < Projectile.oldPos.Length; i++)
 		{
@@ -196,8 +198,9 @@ public class SlashArcGlowProjectile : ModProjectile
 				continue;
 			}
 
-			float trailPosition = _usesVisualProfile ? activeIndex / System.Math.Max(1f, activeTrailCount - 1f) : i / 40f;
-			float factor = 1f - trailPosition;
+			float rawTrailPosition = _usesVisualProfile ? (activeIndex + 1f) / activeTrailCount : i / 40f;
+			float trailPosition = _usesVisualProfile ? FrontOpenedTrailPosition(rawTrailPosition) : rawTrailPosition;
+			float factor = 1f - rawTrailPosition;
 			float progress = ProfileProgressAtTrailIndex(i);
 			float depth = _usesVisualProfile ? EvaluateProfileDepth(progress) : 0f;
 			float hitPeak = _usesVisualProfile ? EvaluateHitPeak(progress) : 0f;
@@ -226,12 +229,78 @@ public class SlashArcGlowProjectile : ModProjectile
 			float alpha = _usesVisualProfile ? _profileGlowAlpha * (0.42f + nearAmount * 0.24f + _profilePeakFlareAlpha * hitPeak * 0.18f) : 1f;
 			float crescentAlpha = _usesVisualProfile ? MathHelper.Lerp(0.16f, GlowCrescentAlphaFactor(crescent), tipConvergence) : 1f;
 			float trailAlpha = _usesVisualProfile ? MathHelper.Lerp(0.18f, factor, tipConvergence) : factor;
-			Color color = _color * blink * trailAlpha * alpha * crescentAlpha;
+			float frontAlpha = _usesVisualProfile ? Smooth01(MathHelper.Clamp(rawTrailPosition / 0.16f, 0f, 1f)) : 1f;
+			Color color = _color * blink * trailAlpha * alpha * crescentAlpha * frontAlpha;
 			float texX = _usesVisualProfile ? MathHelper.Clamp(factor, 0.08f, 0.92f) : factor;
 			_vertices[_vertexCount++] = new SlashVertex(ownerCenter + outer + offset, new Vector3(texX, 0f, 1f), color);
 			_vertices[_vertexCount++] = new SlashVertex(ownerCenter + inner + offset, new Vector3(texX, 1f, 1f), color);
 			activeIndex++;
 		}
+	}
+
+	private void AddFrontTip(Vector2 ownerCenter, float blink)
+	{
+		if (!_usesVisualProfile || _profileGlowAlpha <= 0f || _vertexCount + 2 > _vertices.Length)
+		{
+			return;
+		}
+
+		float progress = ProfileProgressAtTrailIndex(0);
+		float depth = EvaluateProfileDepth(progress);
+		float nearAmount = MathHelper.Clamp((depth + 0.9f) / 2.4f, 0f, 1f);
+		float hitPeak = EvaluateHitPeak(progress);
+		float depthScale = 1f + MathHelper.Clamp(depth, -1.2f, 1.5f) * 0.1f;
+		float glowScale = 1.04f + nearAmount * 0.08f + hitPeak * 0.05f;
+		Vector2 tip = ProfileVector(Projectile.rotation, Projectile.velocity.Length() * glowScale * depthScale).RotatedBy(Projectile.ai[1]);
+		if (TryGetCurrentFrontTipDirection(Projectile.rotation, Projectile.velocity.Length() * glowScale * depthScale, out Vector2 frontTipDirection))
+		{
+			tip += frontTipDirection * Projectile.velocity.Length() * 0.045f;
+		}
+
+		float alpha = _profileGlowAlpha * (0.34f + nearAmount * 0.18f + _profilePeakFlareAlpha * hitPeak * 0.12f);
+		Color color = _color * blink * alpha * 0.28f;
+		_vertices[_vertexCount++] = new SlashVertex(ownerCenter + tip, new Vector3(0.92f, 0f, 1f), color);
+		_vertices[_vertexCount++] = new SlashVertex(ownerCenter + tip, new Vector3(0.92f, 1f, 1f), color);
+	}
+
+	private bool TryGetCurrentFrontTipDirection(float currentRotation, float currentRadius, out Vector2 direction)
+	{
+		Vector2 current = ProfileVector(currentRotation, currentRadius).RotatedBy(Projectile.ai[1]);
+		for (int i = 0; i < Projectile.oldRot.Length; i++)
+		{
+			if (Projectile.oldRot[i] == 0f)
+			{
+				continue;
+			}
+
+			Vector2 next = ProfileVector(Projectile.oldRot[i], currentRadius).RotatedBy(Projectile.ai[1]);
+			direction = current - next;
+			if (direction.LengthSquared() > 0.001f)
+			{
+				direction.Normalize();
+				return true;
+			}
+		}
+
+		direction = new Vector2(-current.Y, current.X);
+		if (_reverse)
+		{
+			direction *= -1f;
+		}
+
+		if (direction.LengthSquared() <= 0.001f)
+		{
+			return false;
+		}
+
+		direction.Normalize();
+		return true;
+	}
+
+	private static float FrontOpenedTrailPosition(float rawPosition)
+	{
+		rawPosition = MathHelper.Clamp(rawPosition, 0f, 1f);
+		return MathHelper.Clamp(0.12f + rawPosition * 0.88f, 0f, 1f);
 	}
 
 	private Vector2 ProfileVector(float rotation, float radius)
@@ -267,7 +336,7 @@ public class SlashArcGlowProjectile : ModProjectile
 		float leadingTip = Smooth01(MathHelper.Clamp(position / 0.24f, 0f, 1f));
 		float trailingTip = Smooth01(MathHelper.Clamp((1f - position) / 0.32f, 0f, 1f));
 		float tipWeight = System.Math.Min(leadingTip, trailingTip);
-		return MathHelper.Clamp(0.08f + centerWeight * 0.92f * tipWeight, 0f, 1f);
+		return MathHelper.Clamp(centerWeight * tipWeight, 0f, 1f);
 	}
 
 	private static float GlowCrescentAlphaFactor(float crescent)

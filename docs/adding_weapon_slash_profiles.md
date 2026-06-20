@@ -24,6 +24,7 @@
 - 目标武器是否已经有 exact profile。
 - 当前 tModLoader 版本里的 `ItemID` 常量名是否和游戏显示名一致。例如 Volcano 当前使用 `ItemID.FieryGreatsword`。
 - 目标武器是否已有原版弹幕逻辑，需要避免视觉过量。
+- 不要只实现设计表里的少数样例后就假设同类武器都有特效。当前系统只对 `ExactProfiles` 里显式映射的武器生效，漏掉映射就等于完全没有主题粒子。
 
 ## 2. 当前正确扩展点
 
@@ -140,6 +141,14 @@ SlashProfileId.TargetWeapon => SlashProfiles.TargetWeapon,
 | 标准剑 | 5-8 | 0.8-1.5 | 1.0-1.3 | 0.35-0.55 |
 | 重剑/火焰类 | 7-12 | 1.0-1.8 | 1.1-1.5 | 0.4-0.65 |
 
+粒子类型必须符合武器主题，不能机械复用 `CommonSpark`：
+
+- `CommonSpark` 是线状火花，适合金属、圣光、能量碎光，但不适合表现星点。
+- `DarkSpark` 适合暗影、腐化、Night's Edge 系列。
+- 火焰类优先用 `DustID.Torch`。
+- 自然/草系可以先用 `DustID.Grass`。
+- 星辰类如果需要星点，不要用 `CommonSpark`。当前 Starfury 使用专用 `StarSpark`，它用短十字闪光表现星光，避免出现白色拖带。
+
 ### 5.2 命中粒子
 
 命中粒子是短时反馈，可以比挥舞粒子更强。
@@ -253,3 +262,8 @@ dotnet build .\MeleeWeaponEffects.csproj
 
 检查 `ItemID` 常量。游戏显示名和 tModLoader 常量名可能不同。
 
+还要检查 `SlashProfileResolver.ExactProfiles` 是否真的有这把武器。当前阶段没有启用 fallback 批量效果，所以没有 exact 映射的武器不会有主题粒子和长宽差异。Blade of Grass 的经验就是：代码常量 `ItemID.BladeofGrass` 没有加入 resolver 前，游戏里看起来就是完全没有草系粒子。
+
+### Q: 粒子看起来像白色拖带，不像目标主题
+
+优先检查 `DustType`。如果主题需要点状或星形粒子，不要使用线状 `CommonSpark`。Starfury 的经验是：用 `CommonSpark` 会出现白色带状火花，应该改用更接近星光的 dust，例如当前的 `StarSpark`。
