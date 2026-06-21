@@ -11,6 +11,8 @@ namespace WeaponEffects;
 
 public class SlashArcGlowProjectile : ModProjectile
 {
+	private const float ProfileVisualWidthBoost = 1.18f;
+
 	private readonly SlashVertex[] _vertices = new SlashVertex[96];
 	private int _vertexCount;
 
@@ -223,7 +225,7 @@ public class SlashArcGlowProjectile : ModProjectile
 			Vector2 outer = ProfileVector(Projectile.oldRot[i], Projectile.velocity.Length() * glowScale * depthScale);
 			outer = outer.RotatedBy(Projectile.ai[1]);
 
-			float width = MathHelper.Clamp(Projectile.localAI[0] * widthScale * crescent, 0f, 0.95f);
+			float width = MathHelper.Clamp(Projectile.localAI[0] * ProfileVisualWidthBoost * widthScale * crescent, 0f, 0.95f);
 			float innerTaper = 0.25f + 0.75f * crescent;
 			Vector2 inner = ProfileVector(Projectile.oldRot[i], Projectile.velocity.Length() * (glowScale - width + width * trailPosition * innerTaper) * depthScale);
 			inner = inner.RotatedBy(Projectile.ai[1]);

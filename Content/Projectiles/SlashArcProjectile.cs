@@ -16,6 +16,7 @@ namespace WeaponEffects;
 public class SlashArcProjectile : ModProjectile
 {
 	private const int MaxCollisionSamples = 16;
+	private const float ProfileVisualWidthBoost = 1.18f;
 
 	private readonly SlashVertex[] _vertices = new SlashVertex[96];
 	private static Asset<Effect> _slashEffect;
@@ -646,7 +647,7 @@ public class SlashArcProjectile : ModProjectile
 			float innerRadius;
 			if (style == 1)
 			{
-				float width = MathHelper.Clamp(Projectile.localAI[0] * widthScale * crescent, 0f, 0.95f);
+				float width = MathHelper.Clamp(Projectile.localAI[0] * ProfileVisualWidthBoost * widthScale * crescent, 0f, 0.95f);
 				float innerTaper = 0.18f + 0.82f * crescent;
 				innerRadius = length * (outerScale - width + width * trailPosition * innerTaper) * depthScale;
 			}
