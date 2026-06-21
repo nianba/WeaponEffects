@@ -16,6 +16,7 @@ namespace WeaponEffects;
 public class SlashArcProjectile : ModProjectile
 {
 	private const int MaxCollisionSamples = 16;
+	private const int MaxSwingParticleTrailSamples = 22;
 	private const float ProfileVisualWidthBoost = 1.18f;
 
 	private readonly SlashVertex[] _vertices = new SlashVertex[96];
@@ -1030,20 +1031,75 @@ public class SlashArcProjectile : ModProjectile
 			return;
 		}
 
-		int maxTrailIndex = Math.Min(8, Projectile.oldRot.Length - 1);
-		int trailIndex = maxTrailIndex > 0 ? Main.rand.Next(maxTrailIndex + 1) : 0;
-		float rotation = Projectile.oldRot[trailIndex] == 0f ? Projectile.rotation : Projectile.oldRot[trailIndex];
-		float radius = Projectile.velocity.Length() * Main.rand.NextFloat(0.72f, 1.02f);
-		Vector2 offset = SlashOffsetForRotation(rotation, radius);
+		float strength = _usesVisualProfile ? MathHelper.Clamp(0.13f + _profilePeakFlareAlpha * 0.11f, 0.13f, 0.24f) : 0.16f;
+		int particleCount = SlashParticleEmitter.CountSwingTrailParticles(in profile, strength);
+		if (particleCount <= 0)
+		{
+			return;
+		}
+
+		int activeTrailSamples = CountActiveTrailSamples();
+		int maxTrailIndex = Math.Max(0, Math.Min(activeTrailSamples - 1, Projectile.oldRot.Length - 1));
+		maxTrailIndex = Math.Min(maxTrailIndex, MaxSwingParticleTrailSamples);
+
+		for (int i = 0; i < particleCount; i++)
+		{
+			float arcPosition = particleCount == 1
+				? Main.rand.NextFloat(0.08f, 0.92f)
+				: (i + Main.rand.NextFloat(0.2f, 0.8f)) / particleCount;
+			int trailIndex = maxTrailIndex <= 0 ? 0 : Math.Min(maxTrailIndex, Math.Max(0, (int)MathF.Round(arcPosition * maxTrailIndex)));
+			EmitSwingParticleAtTrailIndex(in profile, trailIndex, maxTrailIndex);
+		}
+	}
+
+	private void EmitSwingParticleAtTrailIndex(in WeaponSlashProfile profile, int trailIndex, int maxTrailIndex)
+	{
+		float length = Projectile.velocity.Length();
+		float radius = length * Main.rand.NextFloat(0.88f, 1.02f);
+		Vector2 offset = SlashOffsetForRotation(TrailRotationAt(trailIndex), radius);
+		Vector2 tangent = SwingParticleTangentAt(trailIndex, maxTrailIndex, radius, offset);
+		Vector2 tangentDirection = tangent.SafeNormalize(Vector2.UnitX);
 		Vector2 radial = offset.SafeNormalize(Vector2.UnitX);
-		Vector2 tangent = new(-radial.Y, radial.X);
+		float trackWidth = MathHelper.Clamp(length * Projectile.localAI[0] * 0.08f, 2f, 10f);
+		Vector2 spawnPosition = OwnerCenterWorld()
+			+ offset
+			+ tangentDirection * Main.rand.NextFloat(-3f, 3f)
+			+ radial * Main.rand.NextFloat(-trackWidth * 0.35f, trackWidth * 0.45f);
+
+		SlashParticleEmitter.EmitSwingTrailParticle(in profile, spawnPosition, tangent, radial);
+	}
+
+	private Vector2 SwingParticleTangentAt(int trailIndex, int maxTrailIndex, float radius, Vector2 offset)
+	{
+		Vector2 newerOffset = trailIndex <= 0
+			? SlashOffsetForRotation(Projectile.rotation, radius)
+			: SlashOffsetForRotation(TrailRotationAt(trailIndex - 1), radius);
+		Vector2 olderOffset = trailIndex >= maxTrailIndex
+			? offset
+			: SlashOffsetForRotation(TrailRotationAt(trailIndex + 1), radius);
+		Vector2 tangent = newerOffset - olderOffset;
+		if (tangent.LengthSquared() > 0.001f)
+		{
+			return tangent;
+		}
+
+		tangent = new Vector2(-offset.Y, offset.X);
 		if (_reverse)
 		{
 			tangent *= -1f;
 		}
 
-		float strength = _usesVisualProfile ? MathHelper.Clamp(0.13f + _profilePeakFlareAlpha * 0.11f, 0.13f, 0.24f) : 0.16f;
-		SlashParticleEmitter.EmitSwingTrailParticles(in profile, OwnerCenterWorld() + offset, tangent, radial, strength);
+		return tangent;
+	}
+
+	private float TrailRotationAt(int trailIndex)
+	{
+		if (trailIndex < 0 || trailIndex >= Projectile.oldRot.Length || Projectile.oldRot[trailIndex] == 0f)
+		{
+			return Projectile.rotation;
+		}
+
+		return Projectile.oldRot[trailIndex];
 	}
 
 	private Vector2 SlashOffsetForRotation(float rotation, float radius)
