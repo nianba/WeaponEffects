@@ -10,7 +10,7 @@ public class GaleSwordCharm : BladeAccessoryItem
 	{
 		player.GetModPlayer<WeaponEffectsPlayer>().RegisterBladeMomentum(
 			BladeMomentumGaleDuration,
-			attackSpeedPerStack: 0.03f,
+			attackSpeedPerStack: 0.04f,
 			attackSpeedMaxStacks: 8);
 	}
 

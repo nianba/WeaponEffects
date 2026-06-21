@@ -17,7 +17,7 @@ Items: {
 		Tooltip:
 			'''
 			Supported slashes gain Blade Momentum on hit
-			Each stack increases melee attack speed by 3%, up to 8 stacks
+			Each stack increases melee attack speed by 4%, up to 8 stacks
 			'''
 	}
 

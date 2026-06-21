@@ -9,6 +9,8 @@ public static class VanillaMeleeProjectileEmitter
 {
 	private const float TrueExcaliburShootSpeed = 11f;
 	private const float TrueNightsEdgeShootSpeed = 14f;
+	private const float TrueNightsEdgeProjectileLifetime = 32f;
+	private const int TrueNightsEdgeHiddenOpeningTicks = 14;
 
 	public static void Emit(ModProjectile sourceProjectile, bool charged, int itemType, Player player, Vector2 targetWorld)
 	{
@@ -67,7 +69,7 @@ public static class VanillaMeleeProjectileEmitter
 				Projectile.NewProjectile(source.GetSource_FromAI(), playerCenter, aimDirection * TrueExcaliburShootSpeed, ProjectileID.TrueExcalibur, source.damage, source.knockBack, source.owner);
 				return;
 			case ItemID.TrueNightsEdge:
-				Projectile.NewProjectile(source.GetSource_FromAI(), playerCenter, aimDirection * TrueNightsEdgeShootSpeed, ProjectileID.TrueNightsEdge, source.damage, source.knockBack, source.owner);
+				EmitTrueNightsEdgeProjectile(source, player, aimDirection, source.damage / 2, source.knockBack);
 				return;
 		}
 
@@ -104,7 +106,7 @@ public static class VanillaMeleeProjectileEmitter
 				EmitScaledSpread(source, playerCenter, aimDirection, ProjectileID.TrueExcalibur, TrueExcaliburShootSpeed);
 				return;
 			case ItemID.TrueNightsEdge:
-				EmitScaledSpread(source, playerCenter, aimDirection, ProjectileID.TrueNightsEdge, TrueNightsEdgeShootSpeed);
+				EmitTrueNightsEdgeSpread(source, player, aimDirection);
 				return;
 		}
 
@@ -127,6 +129,31 @@ public static class VanillaMeleeProjectileEmitter
 		{
 			Projectile.NewProjectile(source.GetSource_FromAI(), playerCenter, aimDirection.RotatedByRandom(0.25) * shootSpeed, projectileType, source.damage / 2, source.knockBack / 2f, source.owner);
 		}
+	}
+
+	private static void EmitTrueNightsEdgeSpread(Projectile source, Player player, Vector2 aimDirection)
+	{
+		for (int i = 1; i < 3; i++)
+		{
+			EmitTrueNightsEdgeProjectile(source, player, aimDirection.RotatedByRandom(0.25), source.damage / 2, source.knockBack / 2f);
+		}
+	}
+
+	private static void EmitTrueNightsEdgeProjectile(Projectile source, Player player, Vector2 aimDirection, int damage, float knockback)
+	{
+		Projectile projectile = Projectile.NewProjectileDirect(
+			source.GetSource_FromAI(),
+			player.MountedCenter,
+			ProjectileVelocity(player, aimDirection, TrueNightsEdgeShootSpeed),
+			ProjectileID.TrueNightsEdge,
+			AtLeastOne(damage),
+			knockback,
+			source.owner,
+			VanillaSwingDirection(player),
+			TrueNightsEdgeProjectileLifetime,
+			VanillaWeaponScale(player));
+
+		projectile.GetGlobalProjectile<VanillaSwordProjectileVisualGlobalProjectile>().HideTrueNightsEdgeOpening(TrueNightsEdgeHiddenOpeningTicks);
 	}
 
 	private static void EmitBladeLaunchedStarfury(Projectile source, Vector2 playerCenter, Vector2 aimDirection)
@@ -152,5 +179,27 @@ public static class VanillaMeleeProjectileEmitter
 		}
 
 		return (to - from).SafeNormalize(fallback);
+	}
+
+	private static Vector2 ProjectileVelocity(Player player, Vector2 aimDirection, float speed)
+	{
+		Vector2 fallback = new(player.direction == 0 ? 1f : player.direction, 0f);
+		return aimDirection.SafeNormalize(fallback) * speed;
+	}
+
+	private static float VanillaSwingDirection(Player player)
+	{
+		int direction = player.direction == 0 ? 1 : player.direction;
+		return direction * player.gravDir;
+	}
+
+	private static float VanillaWeaponScale(Player player)
+	{
+		return player.GetAdjustedItemScale(player.HeldItem);
+	}
+
+	private static int AtLeastOne(int damage)
+	{
+		return damage < 1 ? 1 : damage;
 	}
 }

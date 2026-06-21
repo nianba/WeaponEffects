@@ -46,7 +46,7 @@ public abstract class BladeAccessoryItem : ModItem
 	{
 		player.GetModPlayer<WeaponEffectsPlayer>().RegisterBladeMomentum(
 			BladeMomentumDefaultDuration,
-			attackSpeedPerStack: 0.03f,
+			attackSpeedPerStack: 0.04f,
 			attackSpeedMaxStacks: 8,
 			critPerStack: 2f,
 			critMaxStacks: 4,
