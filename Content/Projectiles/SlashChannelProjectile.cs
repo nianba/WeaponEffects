@@ -183,7 +183,8 @@ public class SlashChannelProjectile : ModProjectile
 	{
 		VanillaMeleeProjectileEmitter.Emit(this, charged: false, player.HeldItem.type, player, _targetWorld);
 
-		int comboStepIndex = player.GetModPlayer<WeaponEffectsPlayer>().ConsumeNextSlashComboStep();
+		WeaponEffectsPlayer effectsPlayer = player.GetModPlayer<WeaponEffectsPlayer>();
+		int comboStepIndex = effectsPlayer.ConsumeNextSlashComboStep();
 		ref readonly SlashComboStep step = ref Compact3DComboSchemeA.GetStep(comboStepIndex);
 		SoundStyle swingSound = new("WeaponEffects/Sounds/S2") { Volume = 0.36f };
 		MeleeEffectAssets.PlaySound(in swingSound, player.Center);
@@ -194,6 +195,14 @@ public class SlashChannelProjectile : ModProjectile
 		float length = _weaponLength * LegacyAverageLengthScale * step.LengthScale;
 		float thicknessScale = step.ThicknessScale;
 		float yScale = RuntimeYScaleForStep(in step);
+		int damage = NormalSlashDamage;
+
+		if (comboStepIndex == 3)
+		{
+			length *= effectsPlayer.FourthSlashLengthMultiplier;
+			damage = Math.Max(1, (int)MathF.Round(damage * effectsPlayer.FourthSlashDamageMultiplier));
+		}
+
 		ApplyExactProfileLengthAndWidth(ref length, ref thicknessScale);
 
 		SlashArcProjectile.CreateProfiledSlash(
@@ -205,7 +214,7 @@ public class SlashChannelProjectile : ModProjectile
 			thicknessScale: thicknessScale,
 			yScale: yScale,
 			extraUpdates: step.ExtraUpdates,
-			damage: NormalSlashDamage,
+			damage: damage,
 			knockback: SlashKnockback,
 			owner: player.whoAmI,
 			ownerNPC: 0,
@@ -222,7 +231,19 @@ public class SlashChannelProjectile : ModProjectile
 		get
 		{
 			float multiplier = MathHelper.Clamp(ModContent.GetInstance<WeaponEffectsGameplayConfig>().NormalSlashIntervalMultiplier, 0.25f, 3f);
-			return Math.Max(1, (int)MathF.Round(Math.Max(1, _useAnimation) * multiplier));
+			float interval = Math.Max(1, _useAnimation) * multiplier;
+
+			if (Projectile.owner >= 0 && Projectile.owner < Main.maxPlayers)
+			{
+				Player player = Main.player[Projectile.owner];
+				if (player.active)
+				{
+					float meleeSpeed = MathHelper.Clamp(player.GetAttackSpeed(DamageClass.Melee), 0.25f, 4f);
+					interval /= meleeSpeed;
+				}
+			}
+
+			return Math.Max(1, (int)MathF.Round(interval));
 		}
 	}
 

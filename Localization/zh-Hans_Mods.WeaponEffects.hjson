@@ -11,6 +11,93 @@ Projectiles: {
 	// ShadowFlameStuckKnifeProjectile.DisplayName: Shadow Flame Stuck Knife Projectile
 }
 
+Items: {
+	GaleSwordCharm: {
+		DisplayName: 疾风剑符
+		Tooltip: 增加 16% 近战攻击速度
+	}
+
+	ArmorBreakSwordCharm: {
+		DisplayName: 破甲剑符
+		Tooltip: 增加 8% 近战暴击率
+	}
+
+	SharpSwordCharm: {
+		DisplayName: 锐利剑符
+		Tooltip: 增加 10% 近战伤害
+	}
+
+	TriBladeMomentumBadge: {
+		DisplayName: 三刃势徽章
+		Tooltip:
+			'''
+			增加 16% 近战攻击速度
+			增加 8% 近战暴击率
+			增加 10% 近战伤害
+			'''
+	}
+
+	MountainBreakerPendant: {
+		DisplayName: 断岳坠饰
+		Tooltip: 第四段连击斩击造成 30% 额外伤害
+	}
+
+	ExtendedEdgePendant: {
+		DisplayName: 延锋坠饰
+		Tooltip: 第四段连击斩击距离增加 120%
+	}
+
+	CollapseEdgeBadge: {
+		DisplayName: 崩锋徽章
+		Tooltip:
+			'''
+			第四段连击斩击造成 35% 额外伤害
+			第四段连击斩击距离增加 120%
+			'''
+	}
+
+	CondensedMomentumHourglass: {
+		DisplayName: 凝势沙漏
+		Tooltip: 右键蓄力斩的满蓄时间缩短 1.5 秒
+	}
+
+	LongEdgeCrystalPendant: {
+		DisplayName: 长锋晶坠
+		Tooltip:
+			'''
+			右键蓄力斩距离随蓄力提高
+			半蓄距离增加 50%，满蓄距离增加 100%，剑气宽度增加 10%
+			'''
+	}
+
+	RiftMomentumSigil: {
+		DisplayName: 裂势印记
+		Tooltip:
+			'''
+			右键蓄力斩伤害随蓄力提高
+			半蓄伤害增加 10%，满蓄伤害增加 25%
+			'''
+	}
+
+	FocusedMomentumEmblem: {
+		DisplayName: 聚势纹章
+		Tooltip:
+			'''
+			综合凝势沙漏、长锋晶坠和裂势印记的能力
+			右键蓄力斩蓄满更快，并获得距离、宽度和伤害强化
+			'''
+	}
+
+	BladeHeart: {
+		DisplayName: 刃心
+		Tooltip:
+			'''
+			综合三刃势徽章、崩锋徽章和聚势纹章的能力
+			增强近战基础属性、第四段连击斩击和右键蓄力斩
+			'''
+	}
+}
+
 Configs: {
 	WeaponEffectsGameplayConfig: {
 		DisplayName: 近战武器特效 - 玩法

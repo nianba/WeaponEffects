@@ -11,6 +11,93 @@ Projectiles: {
 	ShadowFlameStuckKnifeProjectile.DisplayName: Shadow Flame Stuck Knife Projectile
 }
 
+Items: {
+	GaleSwordCharm: {
+		DisplayName: Gale Sword Charm
+		Tooltip: Increases melee attack speed by 16%
+	}
+
+	ArmorBreakSwordCharm: {
+		DisplayName: Armorbreak Sword Charm
+		Tooltip: Increases melee critical strike chance by 8%
+	}
+
+	SharpSwordCharm: {
+		DisplayName: Keen Sword Charm
+		Tooltip: Increases melee damage by 10%
+	}
+
+	TriBladeMomentumBadge: {
+		DisplayName: Tri-Blade Momentum Badge
+		Tooltip:
+			'''
+			Increases melee attack speed by 16%
+			Increases melee critical strike chance by 8%
+			Increases melee damage by 10%
+			'''
+	}
+
+	MountainBreakerPendant: {
+		DisplayName: Mountain Breaker Pendant
+		Tooltip: The fourth combo slash deals 30% extra damage
+	}
+
+	ExtendedEdgePendant: {
+		DisplayName: Extended Edge Pendant
+		Tooltip: The fourth combo slash has 120% more range
+	}
+
+	CollapseEdgeBadge: {
+		DisplayName: Collapse Edge Badge
+		Tooltip:
+			'''
+			The fourth combo slash deals 35% extra damage
+			The fourth combo slash has 120% more range
+			'''
+	}
+
+	CondensedMomentumHourglass: {
+		DisplayName: Condensed Momentum Hourglass
+		Tooltip: Right-click charged slashes reach full charge 1.5 seconds faster
+	}
+
+	LongEdgeCrystalPendant: {
+		DisplayName: Long Edge Crystal Pendant
+		Tooltip:
+			'''
+			Right-click charged slash range increases with charge
+			Half charge grants 50% range; full charge grants 100% range and 10% width
+			'''
+	}
+
+	RiftMomentumSigil: {
+		DisplayName: Rift Momentum Sigil
+		Tooltip:
+			'''
+			Right-click charged slash damage increases with charge
+			Half charge grants 10% damage; full charge grants 25% damage
+			'''
+	}
+
+	FocusedMomentumEmblem: {
+		DisplayName: Focused Momentum Emblem
+		Tooltip:
+			'''
+			Combines the powers of the Condensed Momentum Hourglass, Long Edge Crystal Pendant, and Rift Momentum Sigil
+			Right-click charged slashes charge faster and gain range, width, and damage
+			'''
+	}
+
+	BladeHeart: {
+		DisplayName: Blade Heart
+		Tooltip:
+			'''
+			Combines the powers of the Tri-Blade Momentum Badge, Collapse Edge Badge, and Focused Momentum Emblem
+			Enhances melee stats, the fourth combo slash, and right-click charged slashes
+			'''
+	}
+}
+
 Configs: {
 	WeaponEffectsGameplayConfig: {
 		DisplayName: WeaponEffects Gameplay

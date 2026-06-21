@@ -108,7 +108,7 @@ public class ChargedSlashProjectile : ModProjectile
 
 		EmitChargingDust(player);
 
-		if (Projectile.ai[1] >= ChargeReadyFrame)
+		if (Projectile.ai[1] >= EffectiveChargeReadyFrame)
 		{
 			EmitChargedReadyVisuals(player);
 		}
@@ -149,7 +149,27 @@ public class ChargedSlashProjectile : ModProjectile
 
 	private int ChargeReadyFrame => Math.Max(MinChargeFrame, Math.Max(1, _useAnimation) * Math.Max(1, ModContent.GetInstance<WeaponEffectsGameplayConfig>().ChargeMaxDurationMultiplier));
 
-	private float ChargeProgress => MathHelper.Clamp(Projectile.ai[1] / ChargeReadyFrame, 0f, 1f);
+	private int EffectiveChargeReadyFrame
+	{
+		get
+		{
+			if (Projectile.owner < 0 || Projectile.owner >= Main.maxPlayers)
+			{
+				return ChargeReadyFrame;
+			}
+
+			Player player = Main.player[Projectile.owner];
+			if (!player.active)
+			{
+				return ChargeReadyFrame;
+			}
+
+			WeaponEffectsPlayer effectsPlayer = player.GetModPlayer<WeaponEffectsPlayer>();
+			return Math.Max(MinChargeFrame, ChargeReadyFrame + effectsPlayer.ChargeReadyFrameOffset);
+		}
+	}
+
+	private float ChargeProgress => MathHelper.Clamp(Projectile.ai[1] / EffectiveChargeReadyFrame, 0f, 1f);
 
 	private float CurrentLengthScale => MathHelper.Lerp(1f, MathHelper.Clamp(ModContent.GetInstance<WeaponEffectsGameplayConfig>().ChargeLengthScale, 1f, 4f), ChargeProgress);
 
@@ -216,8 +236,9 @@ public class ChargedSlashProjectile : ModProjectile
 	{
 		Texture2D bar = MeleeEffectAssets.GetTexture(MeleeEffectAssets.ChargeBar);
 		Texture2D fill = MeleeEffectAssets.GetTexture(MeleeEffectAssets.ChargeBarFill);
-		float progress = Math.Min(Projectile.ai[1], ChargeReadyFrame);
-		float ratio = progress / ChargeReadyFrame;
+		int effectiveChargeReadyFrame = EffectiveChargeReadyFrame;
+		float progress = Math.Min(Projectile.ai[1], effectiveChargeReadyFrame);
+		float ratio = progress / effectiveChargeReadyFrame;
 		Vector2 position = player.Center + new Vector2(-bar.Width / 2f, -60f) - Main.screenPosition;
 
 		Main.EntitySpriteDraw(bar, position, null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
@@ -244,8 +265,14 @@ public class ChargedSlashProjectile : ModProjectile
 			return;
 		}
 
-		float lengthScale = CurrentLengthScale;
-		int damage = Math.Max(1, (int)MathF.Round(Projectile.damage * CurrentDamageScale));
+		WeaponEffectsPlayer effectsPlayer = player.GetModPlayer<WeaponEffectsPlayer>();
+		float progress = ChargeProgress;
+		float lengthBonus = EvaluateHalfFullBonus(progress, effectsPlayer.ChargeLengthBonusAtHalf, effectsPlayer.ChargeLengthBonusAtFull);
+		float damageBonus = EvaluateHalfFullBonus(progress, effectsPlayer.ChargeDamageBonusAtHalf, effectsPlayer.ChargeDamageBonusAtFull);
+		float widthBonus = effectsPlayer.ChargeWidthBonusAtFull * progress;
+		float lengthScale = CurrentLengthScale * (1f + lengthBonus);
+		int damage = Math.Max(1, (int)MathF.Round(Projectile.damage * CurrentDamageScale * (1f + damageBonus)));
+		float thickness = 0.45f * (1f + widthBonus);
 		Projectile.damage = damage;
 		WeaponSlashProfile profile = GetChargeProfile(player);
 		Color color = profile.SlashColor;
@@ -259,7 +286,7 @@ public class ChargedSlashProjectile : ModProjectile
 			rotation: _aimRotation,
 			startingRotation: Projectile.ai[0],
 			length: _weaponLength * lengthScale,
-			thickness: 0.45f,
+			thickness: thickness,
 			yScale: 0.35f,
 			extraUpdates: 5,
 			damage: damage,
@@ -271,6 +298,17 @@ public class ChargedSlashProjectile : ModProjectile
 			weaponScale: _weaponLength);
 
 		player.GetModPlayer<WeaponEffectsPlayer>().ScreenShakeTimer = 15;
+	}
+
+	private static float EvaluateHalfFullBonus(float progress, float halfBonus, float fullBonus)
+	{
+		progress = MathHelper.Clamp(progress, 0f, 1f);
+		if (progress <= 0.5f)
+		{
+			return MathHelper.Lerp(0f, halfBonus, progress / 0.5f);
+		}
+
+		return MathHelper.Lerp(halfBonus, fullBonus, (progress - 0.5f) / 0.5f);
 	}
 
 	private void EmitChargedReadyVisuals(Player player)

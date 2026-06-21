@@ -9,10 +9,30 @@ public class WeaponEffectsPlayer : ModPlayer
 {
 	public int ScreenShakeTimer;
 	public int SlashComboStepIndex;
+	public float FourthSlashDamageMultiplier = 1f;
+	public float FourthSlashLengthMultiplier = 1f;
+	public int ChargeReadyFrameOffset;
+	public float ChargeLengthBonusAtHalf;
+	public float ChargeLengthBonusAtFull;
+	public float ChargeDamageBonusAtHalf;
+	public float ChargeDamageBonusAtFull;
+	public float ChargeWidthBonusAtFull;
 	private int _slashComboResetTimer;
 	private readonly int[] _shadowFlameRecallHitCount = new int[Main.maxNPCs];
 	private readonly int[] _shadowFlameRecallWindowTimer = new int[Main.maxNPCs];
 	private readonly bool[] _shadowFlameExplodedThisRecall = new bool[Main.maxNPCs];
+
+	public override void ResetEffects()
+	{
+		FourthSlashDamageMultiplier = 1f;
+		FourthSlashLengthMultiplier = 1f;
+		ChargeReadyFrameOffset = 0;
+		ChargeLengthBonusAtHalf = 0f;
+		ChargeLengthBonusAtFull = 0f;
+		ChargeDamageBonusAtHalf = 0f;
+		ChargeDamageBonusAtFull = 0f;
+		ChargeWidthBonusAtFull = 0f;
+	}
 
 	public int ConsumeNextSlashComboStep()
 	{
@@ -27,6 +47,28 @@ public class WeaponEffectsPlayer : ModPlayer
 		Array.Clear(_shadowFlameRecallHitCount);
 		Array.Clear(_shadowFlameRecallWindowTimer);
 		Array.Clear(_shadowFlameExplodedThisRecall);
+	}
+
+	public void RegisterHeavySlash(float damageMultiplier, float lengthMultiplier)
+	{
+		FourthSlashDamageMultiplier = Math.Max(FourthSlashDamageMultiplier, damageMultiplier);
+		FourthSlashLengthMultiplier = Math.Max(FourthSlashLengthMultiplier, lengthMultiplier);
+	}
+
+	public void RegisterChargeAccessory(
+		int readyFrameOffset,
+		float lengthBonusAtHalf,
+		float lengthBonusAtFull,
+		float damageBonusAtHalf,
+		float damageBonusAtFull,
+		float widthBonusAtFull)
+	{
+		ChargeReadyFrameOffset = Math.Min(ChargeReadyFrameOffset, readyFrameOffset);
+		ChargeLengthBonusAtHalf = Math.Max(ChargeLengthBonusAtHalf, lengthBonusAtHalf);
+		ChargeLengthBonusAtFull = Math.Max(ChargeLengthBonusAtFull, lengthBonusAtFull);
+		ChargeDamageBonusAtHalf = Math.Max(ChargeDamageBonusAtHalf, damageBonusAtHalf);
+		ChargeDamageBonusAtFull = Math.Max(ChargeDamageBonusAtFull, damageBonusAtFull);
+		ChargeWidthBonusAtFull = Math.Max(ChargeWidthBonusAtFull, widthBonusAtFull);
 	}
 
 	public void RegisterShadowFlameRecallHit(NPC target, Projectile recallProjectile, int explosionDamage)
