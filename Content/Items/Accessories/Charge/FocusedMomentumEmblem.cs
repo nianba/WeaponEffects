@@ -15,7 +15,7 @@ public class FocusedMomentumEmblem : BladeAccessoryItem
 
 	public override void UpdateAccessory(Player player, bool hideVisual)
 	{
-		player.GetModPlayer<WeaponEffectsPlayer>().RegisterChargeAccessory(-90, 0.50f, 1.00f, 0.10f, 0.25f, 0.10f);
+		player.GetModPlayer<WeaponEffectsPlayer>().RegisterChargeAccessory(0.70f, 0.40f, 0.80f, 0.10f, 0.25f, 0.10f);
 	}
 
 	public override void AddRecipes()

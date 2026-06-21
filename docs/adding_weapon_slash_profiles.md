@@ -192,8 +192,8 @@ SlashProfileId.TargetWeapon => SlashProfiles.TargetWeapon,
 火山当前样板：
 
 ```csharp
-lengthScale: 1.18f,
-thicknessScale: 1.55f
+lengthScale: 1.2f,
+thicknessScale: 1.28f
 ```
 
 ## 6. 火山经验总结

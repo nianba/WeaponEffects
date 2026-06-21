@@ -55,7 +55,7 @@ Items: {
 
 	ExtendedEdgePendant: {
 		DisplayName: 延锋坠饰
-		Tooltip: 第四段连击斩击距离增加 120%
+		Tooltip: 第四段连击斩击距离增加 80%
 	}
 
 	CollapseEdgeBadge: {
@@ -63,13 +63,13 @@ Items: {
 		Tooltip:
 			'''
 			第四段连击斩击造成 35% 额外伤害
-			第四段连击斩击距离增加 120%
+			第四段连击斩击距离增加 80%
 			'''
 	}
 
 	CondensedMomentumHourglass: {
 		DisplayName: 凝势沙漏
-		Tooltip: 右键蓄力斩的满蓄时间缩短 1.5 秒
+		Tooltip: 右键蓄力斩的满蓄时间缩短 30%
 	}
 
 	LongEdgeCrystalPendant: {
@@ -77,7 +77,7 @@ Items: {
 		Tooltip:
 			'''
 			右键蓄力斩距离随蓄力提高
-			半蓄距离增加 50%，满蓄距离增加 100%，剑气宽度增加 10%
+			半蓄距离增加 40%，满蓄距离增加 80%，剑气宽度增加 10%
 			'''
 	}
 

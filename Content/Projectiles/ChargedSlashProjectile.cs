@@ -165,7 +165,7 @@ public class ChargedSlashProjectile : ModProjectile
 			}
 
 			WeaponEffectsPlayer effectsPlayer = player.GetModPlayer<WeaponEffectsPlayer>();
-			return Math.Max(MinChargeFrame, ChargeReadyFrame + effectsPlayer.ChargeReadyFrameOffset);
+			return Math.Max(MinChargeFrame, (int)MathF.Round(ChargeReadyFrame * effectsPlayer.ChargeReadyFrameMultiplier));
 		}
 	}
 

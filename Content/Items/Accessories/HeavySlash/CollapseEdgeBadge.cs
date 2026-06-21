@@ -15,7 +15,7 @@ public class CollapseEdgeBadge : BladeAccessoryItem
 
 	public override void UpdateAccessory(Player player, bool hideVisual)
 	{
-		player.GetModPlayer<WeaponEffectsPlayer>().RegisterHeavySlash(1.35f, 2.20f);
+		player.GetModPlayer<WeaponEffectsPlayer>().RegisterHeavySlash(1.35f, 1.80f);
 	}
 
 	public override void AddRecipes()

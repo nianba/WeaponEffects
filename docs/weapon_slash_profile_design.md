@@ -115,8 +115,8 @@ finalThickness =
 | `HitParticles.Count` | `34` | 命中爆发更明显 |
 | `HitParticles.MinScale/MaxScale` | `1.35-2.35` | 命中火星更大 |
 | `HitParticles.VelocityScale` | `1.75` | 命中喷发更有冲击 |
-| `Shape.LengthScale` | `1.18` | 火山比标准剑更长 |
-| `Shape.ThicknessScale` | `1.55` | 火山刀光更厚、更重 |
+| `Shape.LengthScale` | `1.20` | 火山比标准剑更长 |
+| `Shape.ThicknessScale` | `1.28` | 火山刀光更厚、更重 |
 
 火山的经验结论：
 
@@ -160,7 +160,7 @@ finalThickness =
 | Blood Butcherer | `ItemID.BloodButcherer` | 猩红粒子 | 血色命中爆点 | 1.06 / 1.16 |
 | Bee Keeper | `ItemID.BeeKeeper` | 蜂蜜/深棕粒子 | 蜂群/蜂蜜命中点 | 0.98 / 0.95 |
 | Enchanted Sword | `ItemID.EnchantedSword` | 金粉/粉光 | 金粉爆点 | 1.04 / 0.78 |
-| Volcano / Fiery Greatsword | `ItemID.FieryGreatsword` | 橙红余烬 | 大型火焰爆点 | 1.18 / 1.55 |
+| Volcano / Fiery Greatsword | `ItemID.FieryGreatsword` | 橙红余烬 | 大型火焰爆点 | 1.20 / 1.28 |
 | Night's Edge | `ItemID.NightsEdge` | 暗紫 `Shadowflame` / `Demonite` 随机 dust | 紫黑爆点，避免白色带状星尘 | 1.08 / 0.95 |
 | True Night's Edge | `ItemID.TrueNightsEdge` | 亮紫 `Shadowflame` / `Demonite` 随机 dust | 强紫/深紫爆点，避免白色带状星尘 | 1.15 / 1.05 |
 | Excalibur | `ItemID.Excalibur` | 金白金属尘 | 金白/亮金爆点 | 1.08 / 1.18 |

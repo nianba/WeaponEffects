@@ -16,7 +16,7 @@ public class WeaponEffectsPlayer : ModPlayer
 	public int BladeMomentumStacks;
 	public float FourthSlashDamageMultiplier = 1f;
 	public float FourthSlashLengthMultiplier = 1f;
-	public int ChargeReadyFrameOffset;
+	public float ChargeReadyFrameMultiplier = 1f;
 	public float ChargeLengthBonusAtHalf;
 	public float ChargeLengthBonusAtFull;
 	public float ChargeDamageBonusAtHalf;
@@ -42,7 +42,7 @@ public class WeaponEffectsPlayer : ModPlayer
 	{
 		FourthSlashDamageMultiplier = 1f;
 		FourthSlashLengthMultiplier = 1f;
-		ChargeReadyFrameOffset = 0;
+		ChargeReadyFrameMultiplier = 1f;
 		ChargeLengthBonusAtHalf = 0f;
 		ChargeLengthBonusAtFull = 0f;
 		ChargeDamageBonusAtHalf = 0f;
@@ -131,14 +131,14 @@ public class WeaponEffectsPlayer : ModPlayer
 	}
 
 	public void RegisterChargeAccessory(
-		int readyFrameOffset,
+		float readyFrameMultiplier,
 		float lengthBonusAtHalf,
 		float lengthBonusAtFull,
 		float damageBonusAtHalf,
 		float damageBonusAtFull,
 		float widthBonusAtFull)
 	{
-		ChargeReadyFrameOffset = Math.Min(ChargeReadyFrameOffset, readyFrameOffset);
+		ChargeReadyFrameMultiplier = Math.Min(ChargeReadyFrameMultiplier, Math.Clamp(readyFrameMultiplier, 0.01f, 1f));
 		ChargeLengthBonusAtHalf = Math.Max(ChargeLengthBonusAtHalf, lengthBonusAtHalf);
 		ChargeLengthBonusAtFull = Math.Max(ChargeLengthBonusAtFull, lengthBonusAtFull);
 		ChargeDamageBonusAtHalf = Math.Max(ChargeDamageBonusAtHalf, damageBonusAtHalf);

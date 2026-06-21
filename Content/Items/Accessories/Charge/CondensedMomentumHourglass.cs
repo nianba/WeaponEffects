@@ -8,7 +8,7 @@ public class CondensedMomentumHourglass : BladeAccessoryItem
 {
 	public override void UpdateAccessory(Player player, bool hideVisual)
 	{
-		player.GetModPlayer<WeaponEffectsPlayer>().RegisterChargeAccessory(-90, 0f, 0f, 0f, 0f, 0f);
+		player.GetModPlayer<WeaponEffectsPlayer>().RegisterChargeAccessory(0.70f, 0f, 0f, 0f, 0f, 0f);
 	}
 
 	public override void AddRecipes()

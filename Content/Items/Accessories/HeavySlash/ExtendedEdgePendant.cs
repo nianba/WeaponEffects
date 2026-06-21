@@ -8,7 +8,7 @@ public class ExtendedEdgePendant : BladeAccessoryItem
 {
 	public override void UpdateAccessory(Player player, bool hideVisual)
 	{
-		player.GetModPlayer<WeaponEffectsPlayer>().RegisterHeavySlash(1.00f, 2.20f);
+		player.GetModPlayer<WeaponEffectsPlayer>().RegisterHeavySlash(1.00f, 1.80f);
 	}
 
 	public override void AddRecipes()

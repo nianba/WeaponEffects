@@ -31,7 +31,7 @@
 | `ItemID.BloodButcherer` | `BloodButcherer` 血腥屠刀 | 1.06 / 1.16 | `DustID.Crimson`, 7, scale 0.62-1.08 | `DustID.Blood`, 24, scale 0.70-1.25 |
 | `ItemID.BeeKeeper` | `BeeKeeper` 养蜂人 | 0.98 / 0.95 | `DustID.Honey`, 5, scale 0.55-0.95 | `DustID.Bee`, 12, scale 0.65-1.10 |
 | `ItemID.EnchantedSword` | `EnchantedSword` 附魔剑 | 1.04 / 0.78 | `DustID.Enchanted_Gold`, 5, scale 0.50-0.90 | `DustID.Enchanted_Gold`, 12, scale 0.62-1.05 |
-| `ItemID.FieryGreatsword` | `Volcano` 火山 | 1.18 / 1.55 | `DustID.Torch`, 8, scale 1.10-1.65 | `DustID.Torch`, 34, scale 1.35-2.35 |
+| `ItemID.FieryGreatsword` | `Volcano` 火山 | 1.20 / 1.28 | `DustID.Torch`, 8, scale 1.10-1.65 | `DustID.Torch`, 34, scale 1.35-2.35 |
 | `ItemID.NightsEdge` | `NightsEdge` 永夜刃 | 1.08 / 0.95 | `DustID.Shadowflame` / `DustID.Demonite`, 7, scale 0.55-0.92 | `DustID.Shadowflame` / `DustID.Demonite`, 20, scale 0.72-1.22 |
 | `ItemID.TrueNightsEdge` | `TrueNightsEdge` 真永夜刃 | 1.15 / 1.05 | `DustID.Shadowflame` / `DustID.Demonite`, 9, scale 0.65-1.08 | `DustID.Shadowflame` / `DustID.Demonite`, 26, scale 0.82-1.35 |
 | `ItemID.Excalibur` | `Excalibur` 断钢剑 | 1.08 / 1.18 | `DustMetalSpark` 15, 7, scale 0.52-0.88 | `DustMetalSpark` 15, 22, scale 0.62-1.08 |

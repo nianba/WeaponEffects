@@ -66,8 +66,8 @@ public static class SlashProfiles
 			alternateDustColor: new Color(255, 104, 28),
 			noGravity: true),
 		new SlashShapeProfile(
-			lengthScale: 1.18f,
-			thicknessScale: 1.55f,
+			lengthScale: 1.2f,
+			thicknessScale: 1.28f,
 			minYScale: 0.75f,
 			maxYScale: 0.9f,
 			angleRandomness: 0.34f,

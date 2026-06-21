@@ -68,6 +68,23 @@ public class ShadowFlameRecallKnifeProjectile : ModProjectile
 		_explosionDamage = reader.ReadInt32();
 	}
 
+	public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
+	{
+		Vector2 start = Projectile.oldPosition + Projectile.Size / 2f;
+		Vector2 end = Projectile.Center;
+		Vector2 targetPosition = targetHitbox.TopLeft();
+		Vector2 targetSize = targetHitbox.Size();
+		float collisionPoint = 0f;
+
+		return Collision.CheckAABBvLineCollision(
+			targetPosition,
+			targetSize,
+			start,
+			end,
+			ShadowFlameKnifeTuning.RecallCollisionLineWidth,
+			ref collisionPoint);
+	}
+
 	public override void AI()
 	{
 		if (Projectile.owner < 0 || Projectile.owner >= Main.maxPlayers)

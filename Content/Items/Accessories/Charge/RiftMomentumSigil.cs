@@ -8,7 +8,7 @@ public class RiftMomentumSigil : BladeAccessoryItem
 {
 	public override void UpdateAccessory(Player player, bool hideVisual)
 	{
-		player.GetModPlayer<WeaponEffectsPlayer>().RegisterChargeAccessory(0, 0f, 0f, 0.10f, 0.25f, 0f);
+		player.GetModPlayer<WeaponEffectsPlayer>().RegisterChargeAccessory(1f, 0f, 0f, 0.10f, 0.25f, 0f);
 	}
 
 	public override void AddRecipes()

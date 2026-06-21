@@ -8,7 +8,7 @@ public class LongEdgeCrystalPendant : BladeAccessoryItem
 {
 	public override void UpdateAccessory(Player player, bool hideVisual)
 	{
-		player.GetModPlayer<WeaponEffectsPlayer>().RegisterChargeAccessory(0, 0.50f, 1.00f, 0f, 0f, 0.10f);
+		player.GetModPlayer<WeaponEffectsPlayer>().RegisterChargeAccessory(1f, 0.40f, 0.80f, 0f, 0f, 0.10f);
 	}
 
 	public override void AddRecipes()
