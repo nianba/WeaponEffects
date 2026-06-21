@@ -8,7 +8,10 @@ public class GaleSwordCharm : BladeAccessoryItem
 {
 	public override void UpdateAccessory(Player player, bool hideVisual)
 	{
-		player.GetAttackSpeed(DamageClass.Melee) += 0.16f;
+		player.GetModPlayer<WeaponEffectsPlayer>().RegisterBladeMomentum(
+			BladeMomentumGaleDuration,
+			attackSpeedPerStack: 0.03f,
+			attackSpeedMaxStacks: 8);
 	}
 
 	public override void AddRecipes()

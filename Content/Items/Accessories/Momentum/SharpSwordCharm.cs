@@ -8,7 +8,10 @@ public class SharpSwordCharm : BladeAccessoryItem
 {
 	public override void UpdateAccessory(Player player, bool hideVisual)
 	{
-		player.GetDamage(DamageClass.Melee) += 0.10f;
+		player.GetModPlayer<WeaponEffectsPlayer>().RegisterBladeMomentum(
+			BladeMomentumDefaultDuration,
+			damagePerStack: 0.02f,
+			damageMaxStacks: 5);
 	}
 
 	public override void AddRecipes()

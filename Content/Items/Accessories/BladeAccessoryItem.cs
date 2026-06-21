@@ -8,6 +8,8 @@ namespace WeaponEffects;
 public abstract class BladeAccessoryItem : ModItem
 {
 	private const string TextureRoot = "WeaponEffects/Content/Items/Accessories";
+	protected const int BladeMomentumGaleDuration = 120;
+	protected const int BladeMomentumDefaultDuration = 180;
 
 	public override string Texture => Type switch
 	{
@@ -42,9 +44,14 @@ public abstract class BladeAccessoryItem : ModItem
 
 	protected static void ApplyMomentumStats(Player player)
 	{
-		player.GetAttackSpeed(DamageClass.Melee) += 0.16f;
-		player.GetCritChance(DamageClass.Melee) += 8f;
-		player.GetDamage(DamageClass.Melee) += 0.10f;
+		player.GetModPlayer<WeaponEffectsPlayer>().RegisterBladeMomentum(
+			BladeMomentumDefaultDuration,
+			attackSpeedPerStack: 0.03f,
+			attackSpeedMaxStacks: 8,
+			critPerStack: 2f,
+			critMaxStacks: 4,
+			damagePerStack: 0.02f,
+			damageMaxStacks: 5);
 	}
 
 	protected static bool ConflictsWith(int firstItemType, int secondItemType)

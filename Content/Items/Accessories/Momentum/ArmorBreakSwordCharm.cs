@@ -8,7 +8,10 @@ public class ArmorBreakSwordCharm : BladeAccessoryItem
 {
 	public override void UpdateAccessory(Player player, bool hideVisual)
 	{
-		player.GetCritChance(DamageClass.Melee) += 8f;
+		player.GetModPlayer<WeaponEffectsPlayer>().RegisterBladeMomentum(
+			BladeMomentumDefaultDuration,
+			critPerStack: 2f,
+			critMaxStacks: 4);
 	}
 
 	public override void AddRecipes()

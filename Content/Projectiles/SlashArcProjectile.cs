@@ -43,6 +43,7 @@ public class SlashArcProjectile : ModProjectile
 	private float _profileNearEdgeOffsetPixels;
 	private float _profileFarRimOffsetPixels;
 	private float _profileTrailDelayRadians;
+	private bool _grantedBladeMomentum;
 
 	public override string Texture => "Terraria/Images/Extra_193";
 	private const int VolcanoOnFireDuration = 180;
@@ -208,6 +209,7 @@ public class SlashArcProjectile : ModProjectile
 		writer.Write(_profileNearEdgeOffsetPixels);
 		writer.Write(_profileFarRimOffsetPixels);
 		writer.Write(_profileTrailDelayRadians);
+		writer.Write(_grantedBladeMomentum);
 	}
 
 	public override void ReceiveExtraAI(BinaryReader reader)
@@ -238,6 +240,7 @@ public class SlashArcProjectile : ModProjectile
 		_profileNearEdgeOffsetPixels = reader.ReadSingle();
 		_profileFarRimOffsetPixels = reader.ReadSingle();
 		_profileTrailDelayRadians = reader.ReadSingle();
+		_grantedBladeMomentum = reader.ReadBoolean();
 	}
 
 	public override bool ShouldUpdatePosition()
@@ -350,6 +353,8 @@ public class SlashArcProjectile : ModProjectile
 	public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
 	{
 		Player player = Main.player[Projectile.owner];
+		TryGrantBladeMomentum(player, target);
+
 		if (!_npcOwned && player.active && TryGetHeldSourceWeapon(player, out Item sourceItem))
 		{
 			ItemLoader.OnHitNPC(sourceItem, player, target, in hit, damageDone);
@@ -378,6 +383,20 @@ public class SlashArcProjectile : ModProjectile
 		EmitExactProfileHitParticles(target);
 		ApplyWeaponOnHitBuffs(target);
 		EmitOnHitProjectiles(target);
+	}
+
+	private void TryGrantBladeMomentum(Player player, NPC target)
+	{
+		if (_npcOwned || _grantedBladeMomentum || !player.active)
+		{
+			return;
+		}
+
+		if (player.GetModPlayer<WeaponEffectsPlayer>().TryGainBladeMomentum(Projectile, target))
+		{
+			_grantedBladeMomentum = true;
+			Projectile.netUpdate = true;
+		}
 	}
 
 	public override void AI()

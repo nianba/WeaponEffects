@@ -14,26 +14,37 @@ Projectiles: {
 Items: {
 	GaleSwordCharm: {
 		DisplayName: Gale Sword Charm
-		Tooltip: Increases melee attack speed by 16%
+		Tooltip:
+			'''
+			Supported slashes gain Blade Momentum on hit
+			Each stack increases melee attack speed by 3%, up to 8 stacks
+			'''
 	}
 
 	ArmorBreakSwordCharm: {
 		DisplayName: Armorbreak Sword Charm
-		Tooltip: Increases melee critical strike chance by 8%
+		Tooltip:
+			'''
+			Supported slashes gain Blade Momentum on hit
+			Each stack increases melee critical strike chance by 2%, up to 4 stacks
+			'''
 	}
 
 	SharpSwordCharm: {
 		DisplayName: Keen Sword Charm
-		Tooltip: Increases melee damage by 10%
+		Tooltip:
+			'''
+			Supported slashes gain Blade Momentum on hit
+			Each stack increases melee damage by 2%, up to 5 stacks
+			'''
 	}
 
 	TriBladeMomentumBadge: {
 		DisplayName: Tri-Blade Momentum Badge
 		Tooltip:
 			'''
-			Increases melee attack speed by 16%
-			Increases melee critical strike chance by 8%
-			Increases melee damage by 10%
+			Supported slashes gain Blade Momentum on hit
+			Blade Momentum increases melee attack speed, critical strike chance, and damage
 			'''
 	}
 
@@ -93,7 +104,7 @@ Items: {
 		Tooltip:
 			'''
 			Combines the powers of the Tri-Blade Momentum Badge, Collapse Edge Badge, and Focused Momentum Emblem
-			Enhances melee stats, the fourth combo slash, and right-click charged slashes
+			Build Blade Momentum through hits, then enhance melee stats, the fourth combo slash, and right-click charged slashes
 			'''
 	}
 }
