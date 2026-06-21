@@ -176,8 +176,6 @@ internal static class ShadowFlameKnifeHelper
 
 		player.GetModPlayer<WeaponEffectsPlayer>().StartShadowFlameRecallSession();
 
-		Vector2 recallTarget = player.Center;
-
 		foreach (Projectile stuck in stuckKnives)
 		{
 			int sourceDamage = Math.Max(1, stuck.damage);
@@ -192,7 +190,6 @@ internal static class ShadowFlameKnifeHelper
 			ShadowFlameRecallKnifeProjectile.Spawn(
 				source,
 				stuck.Center,
-				recallTarget,
 				player.whoAmI,
 				recallDamage,
 				explosionDamage,

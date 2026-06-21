@@ -129,6 +129,8 @@ public class SlashGlobalItem : GlobalItem
 		{
 			chargedSlash.Initialize(item.type, item.useAnimation, weaponLength, targetWorld);
 		}
+
+		MeleeEffectAssets.SyncProjectile(projectile);
 	}
 
 	private static bool ShouldUseSlashAction(Item item)

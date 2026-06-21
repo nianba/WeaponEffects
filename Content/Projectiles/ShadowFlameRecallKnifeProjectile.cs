@@ -13,8 +13,11 @@ public class ShadowFlameRecallKnifeProjectile : ModProjectile
 
 	public override string Texture => "Terraria/Images/Projectile_" + ProjectileID.ShadowFlameKnife;
 
-	public static void Spawn(IEntitySource source, Vector2 start, Vector2 target, int owner, int damage, int explosionDamage, float knockback)
+	public static void Spawn(IEntitySource source, Vector2 start, int owner, int damage, int explosionDamage, float knockback)
 	{
+		Vector2 target = owner >= 0 && owner < Main.maxPlayers
+			? Main.player[owner].Center
+			: start + Vector2.UnitX;
 		Vector2 direction = (target - start).SafeNormalize(Vector2.UnitX);
 		Vector2 velocity = direction * ShadowFlameKnifeTuning.RecallSpeed;
 
@@ -25,9 +28,7 @@ public class ShadowFlameRecallKnifeProjectile : ModProjectile
 			ModContent.ProjectileType<ShadowFlameRecallKnifeProjectile>(),
 			damage,
 			knockback,
-			owner,
-			target.X,
-			target.Y);
+			owner);
 
 		if (projectile.ModProjectile is ShadowFlameRecallKnifeProjectile recall)
 		{
@@ -69,20 +70,32 @@ public class ShadowFlameRecallKnifeProjectile : ModProjectile
 
 	public override void AI()
 	{
-		Vector2 target = new(Projectile.ai[0], Projectile.ai[1]);
-
-		if (Projectile.velocity.LengthSquared() > 0.01f)
-		{
-			Projectile.rotation = ShadowFlameKnifeHelper.KnifeDrawRotation(Projectile.velocity);
-		}
-
-		Lighting.AddLight(Projectile.Center, 0.2f, 0.04f, 0.32f);
-
-		if (Vector2.DistanceSquared(Projectile.Center, target) < 28f * 28f)
+		if (Projectile.owner < 0 || Projectile.owner >= Main.maxPlayers)
 		{
 			Projectile.Kill();
 			return;
 		}
+
+		Player owner = Main.player[Projectile.owner];
+		if (!owner.active || owner.dead)
+		{
+			Projectile.Kill();
+			return;
+		}
+
+		Vector2 toOwner = owner.Center - Projectile.Center;
+		float distanceToOwner = toOwner.Length();
+		if (distanceToOwner <= 28f)
+		{
+			Projectile.Kill();
+			return;
+		}
+
+		float speed = MathHelper.Min(ShadowFlameKnifeTuning.RecallSpeed, distanceToOwner);
+		Projectile.velocity = toOwner / distanceToOwner * speed;
+		Projectile.rotation = ShadowFlameKnifeHelper.KnifeDrawRotation(Projectile.velocity);
+
+		Lighting.AddLight(Projectile.Center, 0.2f, 0.04f, 0.32f);
 
 		if (!Main.dedServ)
 		{

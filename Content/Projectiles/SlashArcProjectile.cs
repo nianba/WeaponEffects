@@ -74,9 +74,11 @@ public class SlashArcProjectile : ModProjectile
 
 		Projectile slash = Projectile.NewProjectileDirect(source, position, velocity, ModContent.ProjectileType<SlashArcProjectile>(), damage, knockback, projectileOwner, ai0, rotation);
 		InitializeSlash(slash, startingRotation, configuredThickness, yScale, extraUpdates, !isPlayerOwned, color, weaponItemType, nextSlashCount, knockbackRotation);
+		MeleeEffectAssets.SyncProjectile(slash);
 
 		Projectile glow = Projectile.NewProjectileDirect(source, position, velocity, ModContent.ProjectileType<SlashArcGlowProjectile>(), damage, knockback, projectileOwner, ai0, rotation);
 		SlashArcGlowProjectile.InitializeGlow(glow, startingRotation, configuredThickness, yScale, extraUpdates, !isPlayerOwned, color);
+		MeleeEffectAssets.SyncProjectile(glow);
 	}
 
 	public static void CreateProfiledSlash(
@@ -107,9 +109,11 @@ public class SlashArcProjectile : ModProjectile
 		Projectile slash = Projectile.NewProjectileDirect(source, position, velocity, ModContent.ProjectileType<SlashArcProjectile>(), damage, knockback, projectileOwner, ai0, rotation);
 		InitializeSlash(slash, startingRotation, configuredThickness, yScale, extraUpdates, !isPlayerOwned, color, weaponItemType, nextSlashCount: 0, knockbackRotation);
 		InitializeVisualProfile(slash, in visual, hitProgress);
+		MeleeEffectAssets.SyncProjectile(slash);
 
 		Projectile glow = Projectile.NewProjectileDirect(source, position, velocity, ModContent.ProjectileType<SlashArcGlowProjectile>(), damage, knockback, projectileOwner, ai0, rotation);
 		SlashArcGlowProjectile.InitializeProfiledGlow(glow, startingRotation, configuredThickness, yScale, extraUpdates, !isPlayerOwned, color, in visual, hitProgress);
+		MeleeEffectAssets.SyncProjectile(glow);
 	}
 
 	private static void InitializeSlash(Projectile projectile, float startingRotation, float thickness, float yScale, int extraUpdates, bool npcOwned, Color color, int weaponItemType, int nextSlashCount, float targetRotation)

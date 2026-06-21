@@ -59,7 +59,6 @@ public class ShadowFlameStuckKnifeProjectile : ModProjectile
 	{
 		Projectile.velocity = Vector2.Zero;
 		Projectile.rotation = ShadowFlameKnifeHelper.KnifeDrawRotation(Projectile.ai[0].ToRotationVector2());
-		Lighting.AddLight(Projectile.Center, 0.1f, 0.02f, 0.18f);
 
 		if (Projectile.owner < 0 || Projectile.owner >= Main.maxPlayers)
 		{
@@ -83,7 +82,12 @@ public class ShadowFlameStuckKnifeProjectile : ModProjectile
 			Projectile.timeLeft = 15;
 		}
 
-		if (!Main.dedServ && Main.rand.NextBool(4))
+		if (IsVisibleToLocalPlayer())
+		{
+			Lighting.AddLight(Projectile.Center, 0.1f, 0.02f, 0.18f);
+		}
+
+		if (IsVisibleToLocalPlayer() && Main.rand.NextBool(4))
 		{
 			ShadowFlameKnifeHelper.EmitShadowFlameTrailParticle(Projectile.Center, directionToPlayer, 0.55f);
 		}
@@ -91,10 +95,20 @@ public class ShadowFlameStuckKnifeProjectile : ModProjectile
 
 	public override bool PreDraw(ref Color lightColor)
 	{
+		if (!IsVisibleToLocalPlayer())
+		{
+			return false;
+		}
+
 		float opacity = Projectile.timeLeft > ShadowFlameKnifeTuning.FadeStartTicks
 			? 0.95f
 			: MathHelper.Clamp(Projectile.timeLeft / (float)ShadowFlameKnifeTuning.FadeStartTicks, 0f, 1f) * 0.95f;
 		ShadowFlameKnifeHelper.DrawShadowKnife(Projectile, lightColor, opacity);
 		return false;
+	}
+
+	private bool IsVisibleToLocalPlayer()
+	{
+		return !Main.dedServ && Projectile.owner == Main.myPlayer;
 	}
 }

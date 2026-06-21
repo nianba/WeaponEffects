@@ -4,6 +4,7 @@ using ReLogic.Content;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace WeaponEffects;
@@ -54,5 +55,15 @@ public static class MeleeEffectAssets
 	public static Projectile NewProjectileDirect(IEntitySource source, Vector2 position, Vector2 velocity, int type, int damage, float knockBack, int owner = 0, float ai0 = 0f, float ai1 = 0f)
 	{
 		return Projectile.NewProjectileDirect(source, position, velocity, type, damage, knockBack, owner, ai0, ai1);
+	}
+
+	public static void SyncProjectile(Projectile projectile)
+	{
+		if (Main.netMode == NetmodeID.SinglePlayer || projectile == null || !projectile.active)
+		{
+			return;
+		}
+
+		NetMessage.SendData(MessageID.SyncProjectile, -1, -1, null, projectile.whoAmI);
 	}
 }

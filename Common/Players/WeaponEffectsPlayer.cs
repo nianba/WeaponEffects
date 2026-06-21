@@ -1,5 +1,6 @@
 using System;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace WeaponEffects;
@@ -83,6 +84,7 @@ public class WeaponEffectsPlayer : ModPlayer
 	{
 		if (Player.whoAmI == Main.myPlayer)
 		{
+			TryRecallShadowFlameKnifeInterrupt();
 			SlashGlobalItem.TryStartChargeInterrupt(Player);
 		}
 
@@ -96,6 +98,47 @@ public class WeaponEffectsPlayer : ModPlayer
 		}
 
 		UpdateShadowFlameRecallWindows();
+	}
+
+	private bool TryRecallShadowFlameKnifeInterrupt()
+	{
+		if (!CanRecallShadowFlameKnifeFromInput())
+		{
+			return false;
+		}
+
+		Item item = Player.HeldItem;
+		ShadowFlameKnifeHelper.RecallAll(Player, Player.GetSource_ItemUse(item), Player.GetWeaponKnockback(item));
+		Main.mouseRightRelease = false;
+		Player.itemAnimation = 0;
+		Player.itemTime = 0;
+		return true;
+	}
+
+	private bool CanRecallShadowFlameKnifeFromInput()
+	{
+		if (!Main.mouseRight || !Main.mouseRightRelease)
+		{
+			return false;
+		}
+
+		if (!Player.active || Player.dead || Player.noItems || Player.CCed)
+		{
+			return false;
+		}
+
+		if (Player.mouseInterface || Main.playerInventory || Main.mapFullscreen || Main.drawingPlayerChat || Main.editSign || Main.editChest || Main.blockInput)
+		{
+			return false;
+		}
+
+		Item item = Player.HeldItem;
+		if (item == null || item.IsAir || item.type != ItemID.ShadowFlameKnife)
+		{
+			return false;
+		}
+
+		return Player.itemAnimation > 0 || Player.itemTime > 0;
 	}
 
 	private void UpdateShadowFlameRecallWindows()

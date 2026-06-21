@@ -9,7 +9,7 @@ internal static class ShadowFlameKnifeTuning
 	public const float PierceSpeed = 22f;
 	public const int PierceLifetimeTicks = 45;
 
-	public const float RecallSpeed = 52f;
+	public const float RecallSpeed = 104f;
 	public const int RecallLifetimeTicks = 60;
 
 	public const float RecallDamageMultiplier = 0.8f;

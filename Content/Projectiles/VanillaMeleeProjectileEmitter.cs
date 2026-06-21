@@ -7,11 +7,8 @@ namespace WeaponEffects;
 
 public static class VanillaMeleeProjectileEmitter
 {
-	private const int StarfuryItemType = 65;
-	private const int StarWrathItemType = 3065;
-	private const int ProjectileSwordItemTypeA = 674;
-	private const int ProjectileSwordItemTypeB = 675;
-	private const int ZenithItemType = 757;
+	private const float TrueExcaliburShootSpeed = 11f;
+	private const float TrueNightsEdgeShootSpeed = 14f;
 
 	public static void Emit(ModProjectile sourceProjectile, bool charged, int itemType, Player player, Vector2 targetWorld)
 	{
@@ -29,10 +26,10 @@ public static class VanillaMeleeProjectileEmitter
 		Vector2 playerCenter = player.Center;
 		Vector2 aimDirection = SafeDirection(playerCenter, targetWorld, source.ai[1]);
 
-		if (itemType == ZenithItemType)
+		if (itemType == ItemID.TerraBlade)
 		{
-			int zenithMode = charged ? 3 : 1;
-			Projectile.NewProjectile(source.GetSource_FromAI(), playerCenter, aimDirection * 48f, ProjectileID.TerraBlade2Shot, source.damage, source.knockBack / 2f, source.owner, player.direction * player.gravDir, 45f, zenithMode);
+			int terraBladeMode = charged ? 3 : 1;
+			Projectile.NewProjectile(source.GetSource_FromAI(), playerCenter, aimDirection * 48f, ProjectileID.TerraBlade2Shot, source.damage, source.knockBack / 2f, source.owner, player.direction * player.gravDir, 45f, terraBladeMode);
 			return;
 		}
 
@@ -47,13 +44,13 @@ public static class VanillaMeleeProjectileEmitter
 
 	private static void EmitNormal(Projectile source, int itemType, Player player, Vector2 targetWorld, Vector2 playerCenter, Vector2 aimDirection)
 	{
-		if (itemType == StarfuryItemType)
+		if (itemType == ItemID.Starfury)
 		{
 			EmitBladeLaunchedStarfury(source, playerCenter, aimDirection);
 			return;
 		}
 
-		if (itemType == StarWrathItemType)
+		if (itemType == ItemID.StarWrath)
 		{
 			for (int i = 0; i < 3; i++)
 			{
@@ -66,11 +63,11 @@ public static class VanillaMeleeProjectileEmitter
 
 		switch (itemType)
 		{
-			case ProjectileSwordItemTypeA:
-				Projectile.NewProjectile(source.GetSource_FromAI(), playerCenter, aimDirection * 18f, ProjectileID.LightBeam, source.damage, source.knockBack / 2f, source.owner);
+			case ItemID.TrueExcalibur:
+				Projectile.NewProjectile(source.GetSource_FromAI(), playerCenter, aimDirection * TrueExcaliburShootSpeed, ProjectileID.TrueExcalibur, source.damage, source.knockBack, source.owner);
 				return;
-			case ProjectileSwordItemTypeB:
-				Projectile.NewProjectile(source.GetSource_FromAI(), playerCenter, aimDirection * 18f, ProjectileID.NightBeam, source.damage, source.knockBack / 2f, source.owner);
+			case ItemID.TrueNightsEdge:
+				Projectile.NewProjectile(source.GetSource_FromAI(), playerCenter, aimDirection * TrueNightsEdgeShootSpeed, ProjectileID.TrueNightsEdge, source.damage, source.knockBack, source.owner);
 				return;
 		}
 
@@ -82,7 +79,7 @@ public static class VanillaMeleeProjectileEmitter
 
 	private static void EmitCharged(Projectile source, int itemType, Player player, Vector2 targetWorld, Vector2 playerCenter, Vector2 aimDirection)
 	{
-		if (itemType == StarfuryItemType)
+		if (itemType == ItemID.Starfury)
 		{
 			EmitBladeLaunchedStarfury(source, playerCenter, aimDirection);
 			EmitBladeLaunchedStarfury(source, playerCenter, aimDirection.RotatedBy(0.12f));
@@ -90,7 +87,7 @@ public static class VanillaMeleeProjectileEmitter
 			return;
 		}
 
-		if (itemType == StarWrathItemType)
+		if (itemType == ItemID.StarWrath)
 		{
 			for (int i = 0; i < 9; i++)
 			{
@@ -103,11 +100,11 @@ public static class VanillaMeleeProjectileEmitter
 
 		switch (itemType)
 		{
-			case ProjectileSwordItemTypeA:
-				EmitScaledSpread(source, playerCenter, aimDirection, 156);
+			case ItemID.TrueExcalibur:
+				EmitScaledSpread(source, playerCenter, aimDirection, ProjectileID.TrueExcalibur, TrueExcaliburShootSpeed);
 				return;
-			case ProjectileSwordItemTypeB:
-				EmitScaledSpread(source, playerCenter, aimDirection, 157);
+			case ItemID.TrueNightsEdge:
+				EmitScaledSpread(source, playerCenter, aimDirection, ProjectileID.TrueNightsEdge, TrueNightsEdgeShootSpeed);
 				return;
 		}
 
@@ -124,11 +121,11 @@ public static class VanillaMeleeProjectileEmitter
 		Projectile.NewProjectile(source.GetSource_FromAI(), playerCenter, aimDirection * 30f, player.HeldItem.shoot, source.damage / 2, source.knockBack / 2f, source.owner);
 	}
 
-	private static void EmitScaledSpread(Projectile source, Vector2 playerCenter, Vector2 aimDirection, int projectileType)
+	private static void EmitScaledSpread(Projectile source, Vector2 playerCenter, Vector2 aimDirection, int projectileType, float shootSpeed)
 	{
 		for (int i = 1; i < 3; i++)
 		{
-			Projectile.NewProjectile(source.GetSource_FromAI(), playerCenter, aimDirection.RotatedByRandom(0.25) * 30f, projectileType, source.damage / 2, source.knockBack / 2f, source.owner);
+			Projectile.NewProjectile(source.GetSource_FromAI(), playerCenter, aimDirection.RotatedByRandom(0.25) * shootSpeed, projectileType, source.damage / 2, source.knockBack / 2f, source.owner);
 		}
 	}
 
