@@ -13,6 +13,7 @@ namespace WeaponEffects;
 public class SlashChannelProjectile : ModProjectile
 {
 	private const float LegacyAverageLengthScale = 190f / 110f;
+	private const float FourthComboCounterClockwiseRotationOffsetDegrees = -90f;
 	private const int AimSyncInterval = 6;
 	private const float AimSyncThreshold = 0.03f;
 	private static readonly SlashEmissionMode EmissionMode = SlashEmissionMode.Compact3DComboSchemeA;
@@ -190,12 +191,14 @@ public class SlashChannelProjectile : ModProjectile
 		MeleeEffectAssets.PlaySound(in swingSound, player.Center);
 
 		float hitAngle = MathHelper.ToRadians(step.HitAngleDegrees);
-		float baseRotation = _aimRotation - hitAngle;
+		float fourthComboRotationOffset = comboStepIndex == 3 ? MathHelper.ToRadians(FourthComboCounterClockwiseRotationOffsetDegrees) : 0f;
+		float baseRotation = _aimRotation - hitAngle + fourthComboRotationOffset;
 		float startingRotation = MathHelper.ToRadians(step.StartAngleDegrees);
 		float length = _weaponLength * LegacyAverageLengthScale * step.LengthScale;
 		float thicknessScale = step.ThicknessScale;
 		float yScale = RuntimeYScaleForStep(in step);
 		int damage = NormalSlashDamage;
+		float knockbackRotation = _aimRotation + fourthComboRotationOffset;
 
 		if (comboStepIndex == 3)
 		{
@@ -219,7 +222,7 @@ public class SlashChannelProjectile : ModProjectile
 			owner: player.whoAmI,
 			ownerNPC: 0,
 			weaponItemType: _weaponItemType,
-			knockbackRotation: _aimRotation,
+			knockbackRotation: knockbackRotation,
 			visual: in step.Visual,
 			hitProgress: (step.ActiveStart + step.ActiveEnd) * 0.5f);
 
