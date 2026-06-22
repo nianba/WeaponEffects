@@ -18,7 +18,7 @@
 | --- | --- | --- |
 | `WeaponEffects.cs` | 模组入口 | tModLoader `Mod` 类型，当前仅作为注册入口。 |
 | `Common/Configs` | 配置定义 | `WeaponEffectsGameplayConfig` 是服务端玩法配置，`WeaponEffectsVisualConfig` 是客户端视觉配置。 |
-| `Common/Players` | 玩家局部状态 | `WeaponEffectsPlayer` 负责本地屏幕震动。 |
+| `Common/Players` | 玩家局部状态 | `WeaponEffectsPlayer` 负责本地屏幕震动、普通攻击连段索引、刃势层数、刃心饰品加成和暗影焰刀召回状态。 |
 | `Content/Items` | 物品全局改写 | `SlashGlobalItem` 筛选近战武器并替换使用行为。 |
 | `Content/Projectiles` | 投射物与战斗流程 | 普通挥砍控制、蓄力控制、剑气本体、剑气光效、命中特效、原版弹幕兼容。 |
 | `Content/Dusts` | 自定义粒子 | `CommonSpark` 和 `DarkSpark` 定义火花粒子的更新和绘制。 |
@@ -47,9 +47,9 @@
    - 普通攻击创建 `SlashChannelProjectile`。
    - 右键蓄力创建 `ChargedSlashProjectile`。
 5. 控制投射物持有武器类型、使用动画时长、武器长度、瞄准点和瞄准角度，并通过 `SendExtraAI` / `ReceiveExtraAI` 同步给其他客户端。
-6. 普通攻击控制器按武器 `useAnimation` 周期发射剑气。
-7. 蓄力攻击控制器在持续按住到 `useAnimation * 3` 后进入可释放状态，结束时生成高伤害剑气并触发屏幕震动。
-8. `SlashArcProjectile.CreateSlash` 同时创建：
+6. 普通攻击控制器按武器 `useAnimation`、服务端间隔配置和玩家当前近战速度计算剑气间隔，并按四段连段循环发射剑气。
+7. 蓄力攻击控制器按 `ChargeMinDurationMultiplier` 与 `ChargeMaxDurationMultiplier` 计算最短释放时间和蓄满时间；凝势沙漏、聚势纹章和刃心会通过玩家状态缩短有效蓄满时间。释放时生成高伤害剑气并触发屏幕震动。
+8. `SlashArcProjectile.CreateSlash` / `CreateProfiledSlash` 同时创建：
    - `SlashArcProjectile`：有碰撞和伤害的剑气本体。
    - `SlashArcGlowProjectile`：只负责额外发光视觉层。
 9. 剑气本体在 AI、碰撞、命中和绘制阶段分别处理武器朝向、命中判定、敌对弹幕格挡、音效粒子、Shader 绘制和武器贴图绘制。
@@ -73,16 +73,16 @@
 - `extraUpdates`。
 - `SlashArcVisualProfile` 视觉参数。
 
-当前发射逻辑实际使用了命中角、起始角、长度倍率、厚度倍率、`extraUpdates` 和颜色；`SlashArcVisualProfile` 中更细的深度、拖影、边缘高光等字段已经建模，但尚未完全接入绘制管线。
+当前发射逻辑使用命中角、起始角、长度倍率、厚度倍率、`extraUpdates` 和 `SlashArcVisualProfile`。视觉 profile 中的深度、拖影、边缘高光、峰值闪光和近远侧偏移会同步到 `SlashArcProjectile` 与 `SlashArcGlowProjectile` 绘制管线。
 
 ## 关键类型关系
 
 | 类型 | 角色 | 依赖方向 |
 | --- | --- | --- |
 | `SlashGlobalItem` | 近战武器接管入口 | 创建 `SlashChannelProjectile` 或 `ChargedSlashProjectile`，调用配置与贴图长度计算。 |
-| `SlashChannelProjectile` | 普通攻击控制器 | 读取本地鼠标，循环连段，调用 `VanillaMeleeProjectileEmitter` 和 `SlashArcProjectile.CreateSlash`。 |
-| `ChargedSlashProjectile` | 蓄力攻击控制器 | 读取本地鼠标，绘制武器和蓄力条，蓄力完成后创建强化剑气。 |
-| `SlashArcProjectile` | 伤害剑气本体 | 处理碰撞、切草、命中、弹幕格挡、武器绘制和 Shader 剑气绘制。 |
+| `SlashChannelProjectile` | 普通攻击控制器 | 读取本地鼠标，按近战速度和配置计算攻击间隔，循环四段连段，调用 `VanillaMeleeProjectileEmitter` 和 `SlashArcProjectile.CreateProfiledSlash`。 |
+| `ChargedSlashProjectile` | 蓄力攻击控制器 | 读取本地鼠标，绘制武器和蓄力条，按有效蓄满时间计算进度，释放后创建强化剑气。 |
+| `SlashArcProjectile` | 伤害剑气本体 | 处理碰撞、切草、命中、刃势授予、弹幕格挡、武器绘制和 Shader 剑气绘制。 |
 | `SlashArcGlowProjectile` | 剑气发光层 | 跟随剑气轨迹绘制 additive 光效。 |
 | `SlashHitEffectProjectile` | 命中视觉 | 在命中点绘制短暂横向闪光。 |
 | `VanillaMeleeProjectileEmitter` | 原版武器兼容 | 为星怒、星光、光束剑、天顶剑等恢复或强化原版弹幕行为。 |
@@ -94,7 +94,7 @@
 | 数据 | 当前策略 | 原因 |
 | --- | --- | --- |
 | 鼠标瞄准点 | 只有 `Projectile.owner == Main.myPlayer` 时读取 `Main.MouseWorld` | 远端客户端没有其他玩家的鼠标状态。 |
-| 控制器状态 | 武器类型、动画时长、武器长度、目标点、瞄准角、连段索引通过 `SendExtraAI` 同步 | 其他客户端需要复现持剑朝向和视觉。 |
+| 控制器状态 | 武器类型、动画时长、武器长度、目标点和瞄准角通过 `SendExtraAI` 同步 | 其他客户端需要复现持剑朝向和视觉。 |
 | 视觉配置 | `WeaponEffectsVisualConfig` 使用 `ClientSide` | 每个客户端可独立选择剑气样式和闪光强度。 |
 | 玩法配置 | `WeaponEffectsGameplayConfig` 使用 `ServerSide` | 伤害倍率、剑气尺寸和是否格挡弹幕属于玩法规则。 |
 | 武器贴图 | 同步 `weaponItemType`，本地从 `TextureAssets.Item` 取贴图 | 避免同步不可序列化的 `Texture2D`。 |
@@ -121,12 +121,25 @@
 
 | 配置类型 | 字段 | 作用 |
 | --- | --- | --- |
-| 服务端玩法配置 | `SlashScale` | 控制剑气内外宽度比例。 |
-| 服务端玩法配置 | `ChargeDamage` | 蓄力斩伤害倍率。 |
+| 服务端玩法配置 | `SlashScale` | 控制剑气判定和特效宽度。 |
+| 服务端玩法配置 | `NormalSlashDamageMultiplier` | 普通斩击伤害倍率。 |
+| 服务端玩法配置 | `NormalSlashIntervalMultiplier` | 普通斩击间隔倍率，之后还会除以玩家当前近战速度。 |
+| 服务端玩法配置 | `SlashKnockbackMultiplier` | 普通斩击和蓄力斩击击退倍率。 |
+| 服务端玩法配置 | `ChargeDamage` | 蓄力斩最大伤害倍率。 |
+| 服务端玩法配置 | `ChargeMinDurationMultiplier` | 右键蓄力至少达到多少倍 `useAnimation` 后才能释放。 |
+| 服务端玩法配置 | `ChargeMaxDurationMultiplier` | 右键蓄满需要多少倍 `useAnimation`。 |
+| 服务端玩法配置 | `ChargeLengthScale` | 蓄力斩最大距离倍率。 |
 | 服务端玩法配置 | `SlashCanKillProjectiles` | 是否允许剑气击落敌对弹幕。 |
 | 服务端玩法配置 | `CanCharge` | 是否允许右键蓄力。 |
+| 服务端玩法配置 | `EmitVanillaSwordProjectiles` | 是否保留兼容原版武器弹幕。 |
+| 服务端玩法配置 | `ComboResetDelay` | 普通攻击连段重置延迟。 |
 | 客户端视觉配置 | `SlashBlink` | 发光层亮度倍率。 |
 | 客户端视觉配置 | `SlashStyle` | 剑气绘制风格选择。 |
+| 客户端视觉配置 | `ShowChargeBar` | 是否显示右键蓄力条。 |
+| 客户端视觉配置 | `DrawHeldWeapon` | 是否在剑气和蓄力视觉中绘制武器贴图。 |
+| 客户端视觉配置 | `ParticleDensity` | 斩击拖尾、命中和蓄力特效的粒子数量倍率。 |
+| 客户端视觉配置 | `ScreenShakeStrength` | 屏幕震动强度倍率。 |
+| 客户端视觉配置 | `EffectVolume` | 斩击、蓄力、命中和格挡音效音量倍率。 |
 
 ## 扩展点
 
@@ -137,8 +150,9 @@
 | 增加某些武器的特殊弹幕 | `VanillaMeleeProjectileEmitter.EmitNormal` / `EmitCharged`。 |
 | 调整普通攻击连段 | `Core/Combos/Compact3DComboSchemeA.cs`。 |
 | 增加新的连段方案 | 新建连段配置类，并在 `SlashChannelProjectile` 的发射模式中接入。 |
+| 调整刃心体系饰品数值 | `Content/Items/Accessories` 下对应饰品类和 `WeaponEffectsPlayer` 注册逻辑。 |
 | 调整剑气绘制资源 | `MeleeEffectAssets` 的路径常量和 `Assets/Textures`。 |
-| 改变蓄力判定 | `ChargedSlashProjectile.ChargeReadyFrame` 和 `OnKill`。 |
+| 改变蓄力判定 | `ChargedSlashProjectile.MinChargeFrame`、`ChargeReadyFrame`、`EffectiveChargeReadyFrame` 和 `OnKill`。 |
 | 改变敌对弹幕格挡规则 | `SlashArcProjectile.HandleProjectileBlocking` 和 `CanBlock`。 |
 
 ## 文件组织约定
@@ -177,4 +191,3 @@ dotnet build .\WeaponEffects.csproj
 4. 测试右键蓄力开启和关闭两种配置。
 5. 测试敌对弹幕格挡开启和关闭两种配置。
 6. 多人环境下测试其他客户端是否能看到正确的武器贴图、剑气方向和连段视觉。
-
