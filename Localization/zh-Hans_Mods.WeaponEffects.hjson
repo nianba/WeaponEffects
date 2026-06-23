@@ -9,6 +9,9 @@ Projectiles: {
 	// ShadowFlamePierceKnifeProjectile.DisplayName: Shadow Flame Pierce Knife Projectile
 	// ShadowFlameRecallKnifeProjectile.DisplayName: Shadow Flame Recall Knife Projectile
 	// ShadowFlameStuckKnifeProjectile.DisplayName: Shadow Flame Stuck Knife Projectile
+	// SpearChannelProjectile.DisplayName: Spear Channel Projectile
+	// SpearStrikeProjectile.DisplayName: Spear Strike Projectile
+	// SpearTrailGlowProjectile.DisplayName: Spear Trail Glow Projectile
 }
 
 Items: {
@@ -215,6 +218,26 @@ Configs: {
 		EffectVolume: {
 			Label: 特效音量
 			Tooltip: 本模组斩击、蓄力、命中和格挡音效的音量倍率。
+		}
+
+		DrawSpearTipTrail: {
+			// Label: Draw Spear Tip Trail
+			// Tooltip: ""
+		}
+
+		DrawSpearShaftTrail: {
+			// Label: Draw Spear Shaft Trail
+			// Tooltip: ""
+		}
+
+		DrawSpearHeldWeapon: {
+			// Label: Draw Spear Held Weapon
+			// Tooltip: ""
+		}
+
+		DrawSpearHitFlash: {
+			// Label: Draw Spear Hit Flash
+			// Tooltip: ""
 		}
 	}
 }

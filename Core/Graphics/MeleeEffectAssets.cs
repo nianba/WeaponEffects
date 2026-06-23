@@ -16,6 +16,7 @@ public static class MeleeEffectAssets
 	public const string ChargeBarFill = TextureRoot + "/BarInside";
 	public const string SlashTexture = TextureRoot + "/SlashTex";
 	public const string SlashGlowTexture = TextureRoot + "/EX112";
+	public const string SpearTipTrailTexture = TextureRoot + "/SpearTipTrail";
 
 	public static Texture2D GetTexture(string path)
 	{

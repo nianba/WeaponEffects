@@ -2,6 +2,7 @@ using System;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using WeaponEffects.Spears;
 
 namespace WeaponEffects;
 
@@ -13,6 +14,7 @@ public class WeaponEffectsPlayer : ModPlayer
 
 	public int ScreenShakeTimer;
 	public int SlashComboStepIndex;
+	public int SpearComboStepIndex;
 	public int BladeMomentumStacks;
 	public float FourthSlashDamageMultiplier = 1f;
 	public float FourthSlashLengthMultiplier = 1f;
@@ -33,6 +35,7 @@ public class WeaponEffectsPlayer : ModPlayer
 	private int _bladeMomentumCritMaxStacks;
 	private int _bladeMomentumDamageMaxStacks;
 	private int _slashComboResetTimer;
+	private int _spearComboResetTimer;
 	private readonly int[] _bladeMomentumNpcCooldown = new int[Main.maxNPCs];
 	private readonly int[] _shadowFlameRecallHitCount = new int[Main.maxNPCs];
 	private readonly int[] _shadowFlameRecallWindowTimer = new int[Main.maxNPCs];
@@ -63,6 +66,14 @@ public class WeaponEffectsPlayer : ModPlayer
 		int index = SlashComboStepIndex;
 		SlashComboStepIndex = (SlashComboStepIndex + 1) % Compact3DComboSchemeA.Count;
 		_slashComboResetTimer = ModContent.GetInstance<WeaponEffectsGameplayConfig>().ComboResetDelay;
+		return index;
+	}
+
+	public int ConsumeNextSpearComboStep()
+	{
+		int index = SpearComboStepIndex;
+		SpearComboStepIndex = (SpearComboStepIndex + 1) % TridentSpearComboScheme.Count;
+		_spearComboResetTimer = ModContent.GetInstance<WeaponEffectsGameplayConfig>().ComboResetDelay;
 		return index;
 	}
 
@@ -217,6 +228,15 @@ public class WeaponEffectsPlayer : ModPlayer
 		else
 		{
 			_slashComboResetTimer--;
+		}
+
+		if (_spearComboResetTimer <= 0)
+		{
+			SpearComboStepIndex = 0;
+		}
+		else
+		{
+			_spearComboResetTimer--;
 		}
 
 		UpdateBladeMomentum();
