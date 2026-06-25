@@ -24,6 +24,7 @@ public class SpearStrikeProjectile : ModProjectile
 	private SpearComboBranch _branch;
 	private float _aimRotation;
 	private float _weaponLength;
+	private int _totalLifetimeUpdates;
 	private int _age;
 
 	public override string Texture => "Terraria/Images/Item_" + ItemID.Trident;
@@ -66,6 +67,7 @@ public class SpearStrikeProjectile : ModProjectile
 		_weaponLength = Math.Max(1f, weaponLength);
 		ref readonly SpearComboStep step = ref TridentSpearComboScheme.GetStep(_comboStepIndex);
 		Projectile.extraUpdates = step.ExtraUpdates;
+		_totalLifetimeUpdates = ScaledLifetimeUpdates(in step, _branch);
 		Projectile.timeLeft = TotalLifetimeUpdates + 2;
 		Projectile.netUpdate = true;
 	}
@@ -99,6 +101,7 @@ public class SpearStrikeProjectile : ModProjectile
 		writer.Write((int)_branch);
 		writer.Write(_aimRotation);
 		writer.Write(_weaponLength);
+		writer.Write(_totalLifetimeUpdates);
 		writer.Write(_age);
 	}
 
@@ -109,6 +112,7 @@ public class SpearStrikeProjectile : ModProjectile
 		_branch = (SpearComboBranch)reader.ReadInt32();
 		_aimRotation = reader.ReadSingle();
 		_weaponLength = reader.ReadSingle();
+		_totalLifetimeUpdates = reader.ReadInt32();
 		_age = reader.ReadInt32();
 	}
 
@@ -296,9 +300,17 @@ public class SpearStrikeProjectile : ModProjectile
 		return sourceItem != null && !sourceItem.IsAir && sourceItem.type == _weaponItemType;
 	}
 
-	private int TotalLifetimeUpdates => StrikeLifetimeTicks * (Projectile.extraUpdates + 1);
+	private int TotalLifetimeUpdates => _totalLifetimeUpdates > 0
+		? _totalLifetimeUpdates
+		: StrikeLifetimeTicks * (Projectile.extraUpdates + 1);
 
 	private float CurrentProgress => MathHelper.Clamp(_age / (float)Math.Max(1, TotalLifetimeUpdates), 0f, 1f);
+
+	private static int ScaledLifetimeUpdates(in SpearComboStep step, SpearComboBranch branch)
+	{
+		float scaledTicks = StrikeLifetimeTicks * step.GetTimeMultiplier(branch);
+		return Math.Max(1, (int)MathF.Round(scaledTicks)) * (step.ExtraUpdates + 1);
+	}
 
 	private static NumericsVector2 ToNumerics(XnaVector2 value)
 	{

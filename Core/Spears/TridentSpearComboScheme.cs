@@ -12,7 +12,8 @@ public static class TridentSpearComboScheme
 			activeEnd: 0.55f,
 			reachScale: 1.15f,
 			collisionWidth: 22f,
-			damageMultiplier: 1f,
+			damageMultiplier: 0.85f,
+			timeMultiplier: 0.75f,
 			extraUpdates: 4),
 
 		new(
@@ -24,6 +25,7 @@ public static class TridentSpearComboScheme
 			reachScale: 1.05f,
 			collisionWidth: 24f,
 			damageMultiplier: 1f,
+			timeMultiplier: 0.9f,
 			extraUpdates: 4),
 
 		new(
@@ -34,7 +36,8 @@ public static class TridentSpearComboScheme
 			activeEnd: 0.58f,
 			reachScale: 1f,
 			collisionWidth: 28f,
-			damageMultiplier: 1f,
+			damageMultiplier: 0.85f,
+			timeMultiplier: 1.05f,
 			extraUpdates: 4),
 
 		new(
@@ -45,8 +48,10 @@ public static class TridentSpearComboScheme
 			activeEnd: 0.72f,
 			reachScale: 1.35f,
 			collisionWidth: 32f,
-			damageMultiplier: 1.15f,
-			extraUpdates: 4)
+			damageMultiplier: 1.3f,
+			timeMultiplier: 1.15f,
+			extraUpdates: 4,
+			airborneTimeMultiplier: 1.2f)
 	};
 
 	public static int Count => Steps.Length;

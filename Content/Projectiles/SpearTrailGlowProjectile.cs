@@ -22,6 +22,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 	private SpearComboBranch _branch;
 	private float _aimRotation;
 	private float _weaponLength;
+	private int _totalLifetimeUpdates;
 	private int _age;
 
 	public override string Texture => "Terraria/Images/Projectile_" + ProjectileID.WoodenArrowFriendly;
@@ -60,6 +61,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 		_weaponLength = Math.Max(1f, weaponLength);
 		ref readonly SpearComboStep step = ref TridentSpearComboScheme.GetStep(_comboStepIndex);
 		Projectile.extraUpdates = step.ExtraUpdates;
+		_totalLifetimeUpdates = ScaledLifetimeUpdates(in step, _branch);
 		Projectile.timeLeft = TotalLifetimeUpdates + 2;
 		Projectile.netUpdate = true;
 	}
@@ -81,6 +83,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 		writer.Write((int)_branch);
 		writer.Write(_aimRotation);
 		writer.Write(_weaponLength);
+		writer.Write(_totalLifetimeUpdates);
 		writer.Write(_age);
 	}
 
@@ -90,6 +93,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 		_branch = (SpearComboBranch)reader.ReadInt32();
 		_aimRotation = reader.ReadSingle();
 		_weaponLength = reader.ReadSingle();
+		_totalLifetimeUpdates = reader.ReadInt32();
 		_age = reader.ReadInt32();
 	}
 
@@ -266,9 +270,17 @@ public class SpearTrailGlowProjectile : ModProjectile
 		return Projectile.Center;
 	}
 
-	private int TotalLifetimeUpdates => TrailLifetimeTicks * (Projectile.extraUpdates + 1);
+	private int TotalLifetimeUpdates => _totalLifetimeUpdates > 0
+		? _totalLifetimeUpdates
+		: TrailLifetimeTicks * (Projectile.extraUpdates + 1);
 
 	private float CurrentProgress => MathHelper.Clamp(_age / (float)Math.Max(1, TotalLifetimeUpdates), 0f, 1f);
+
+	private static int ScaledLifetimeUpdates(in SpearComboStep step, SpearComboBranch branch)
+	{
+		float scaledTicks = TrailLifetimeTicks * step.GetTimeMultiplier(branch);
+		return Math.Max(1, (int)MathF.Round(scaledTicks)) * (step.ExtraUpdates + 1);
+	}
 
 	private static NumericsVector2 ToNumerics(XnaVector2 value)
 	{

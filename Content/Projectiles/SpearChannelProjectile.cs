@@ -20,6 +20,7 @@ public class SpearChannelProjectile : ModProjectile
 	private Vector2 _targetWorld;
 	private float _aimRotation;
 	private float _lastSyncedAimRotation;
+	private int _nextSpearTimer;
 
 	public override string Texture => "Terraria/Images/Item_" + ItemID.Trident;
 
@@ -52,6 +53,7 @@ public class SpearChannelProjectile : ModProjectile
 		writer.Write(_targetWorld.X);
 		writer.Write(_targetWorld.Y);
 		writer.Write(_aimRotation);
+		writer.Write(_nextSpearTimer);
 	}
 
 	public override void ReceiveExtraAI(BinaryReader reader)
@@ -61,6 +63,7 @@ public class SpearChannelProjectile : ModProjectile
 		_weaponLength = reader.ReadSingle();
 		_targetWorld = new Vector2(reader.ReadSingle(), reader.ReadSingle());
 		_aimRotation = reader.ReadSingle();
+		_nextSpearTimer = reader.ReadInt32();
 		_lastSyncedAimRotation = _aimRotation;
 	}
 
@@ -75,15 +78,15 @@ public class SpearChannelProjectile : ModProjectile
 
 		Projectile.ai[1] += 1f;
 		int useAnimation = Math.Max(1, _useAnimation);
-		int spearInterval = NormalSpearInterval;
+		int currentSpearInterval = Math.Max(1, _nextSpearTimer > 0 ? _nextSpearTimer : NormalSpearInterval);
 
 		if (Projectile.owner == Main.myPlayer)
 		{
 			UpdateLocalAim(player);
 		}
 
-		player.itemAnimation = Math.Max(useAnimation, spearInterval);
-		player.itemTime = Math.Max(useAnimation, spearInterval);
+		player.itemAnimation = Math.Max(useAnimation, currentSpearInterval);
+		player.itemTime = Math.Max(useAnimation, currentSpearInterval);
 		player.heldProj = Projectile.whoAmI;
 		Projectile.rotation = _aimRotation;
 
@@ -100,9 +103,17 @@ public class SpearChannelProjectile : ModProjectile
 		Projectile.velocity = Vector2.Zero;
 		Projectile.Center = player.Center;
 
-		if (Projectile.owner == Main.myPlayer && ShouldFireSpearThisFrame(useAnimation, spearInterval))
+		if (_nextSpearTimer > 0)
 		{
-			FireSpearStrike(player);
+			_nextSpearTimer--;
+		}
+
+		if (Projectile.owner == Main.myPlayer)
+		{
+			if (_nextSpearTimer <= 0)
+			{
+				FireSpearStrike(player);
+			}
 		}
 	}
 
@@ -162,6 +173,7 @@ public class SpearChannelProjectile : ModProjectile
 			_aimRotation,
 			_weaponLength);
 
+		_nextSpearTimer = IntervalForStep(in step, branch);
 		Projectile.netUpdate = true;
 	}
 
@@ -186,14 +198,10 @@ public class SpearChannelProjectile : ModProjectile
 		}
 	}
 
-	private bool ShouldFireSpearThisFrame(int useAnimation, int spearInterval)
+	private int IntervalForStep(in SpearComboStep step, SpearComboBranch branch)
 	{
-		if (spearInterval == useAnimation)
-		{
-			return Projectile.ai[1] % useAnimation == 2f;
-		}
-
-		return Projectile.ai[1] % spearInterval == Math.Min(2, spearInterval - 1);
+		float interval = NormalSpearInterval * step.GetTimeMultiplier(branch);
+		return Math.Max(1, (int)MathF.Round(interval));
 	}
 
 	private int NormalSpearDamage
