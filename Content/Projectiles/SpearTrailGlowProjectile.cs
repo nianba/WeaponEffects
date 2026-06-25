@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.GameContent;
@@ -19,10 +20,9 @@ public class SpearTrailGlowProjectile : ModProjectile
 	private const int TrailSamples = 5;
 	private const int SweepArcSamples = 14;
 	private const int SweepArcMaxVertices = SweepArcSamples * 2;
-	private static BasicEffect _sweepArcEffect;
-	private static GraphicsDevice _sweepArcEffectDevice;
+	private static Asset<Effect> _sweepArcEffect;
 
-	private readonly VertexPositionColor[] _sweepArcVertices = new VertexPositionColor[SweepArcMaxVertices];
+	private readonly SlashVertex[] _sweepArcVertices = new SlashVertex[SweepArcMaxVertices];
 	private int _comboStepIndex;
 	private SpearComboBranch _branch;
 	private float _aimRotation;
@@ -147,7 +147,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 				DrawShaftTrail(shaftTexture, pose, fade, i);
 			}
 
-			if (visualConfig.DrawSpearTipTrail)
+			if (visualConfig.DrawSpearTipTrail && ShouldDrawSpearTipGlow())
 			{
 				DrawSpearTipGlow(pose, fade, sampleProgress, i);
 			}
@@ -193,16 +193,18 @@ public class SpearTrailGlowProjectile : ModProjectile
 			float widthFactor = SweepWidthFactor(trailPosition);
 			float width = settings.Width * widthFactor;
 			float alpha = motionAlpha * SweepAlphaFactor(trailPosition);
-			Color color = Color.Lerp(settings.Color, Color.White, settings.WhiteMix * widthFactor) * alpha;
+			Color baseColor = Color.Lerp(settings.Color, Color.White, settings.WhiteMix * widthFactor);
+			Color color = baseColor * alpha;
 			XnaVector2 screenPoint = point - Main.screenPosition;
+			float texX = MathHelper.Clamp(1f - trailPosition, 0.06f, 0.94f);
 
 			if (vertexCount + 2 > _sweepArcVertices.Length)
 			{
 				break;
 			}
 
-			_sweepArcVertices[vertexCount++] = new VertexPositionColor(new Vector3(screenPoint + normal * width, 0f), color);
-			_sweepArcVertices[vertexCount++] = new VertexPositionColor(new Vector3(screenPoint - normal * width, 0f), color * 0.78f);
+			_sweepArcVertices[vertexCount++] = new SlashVertex(screenPoint + normal * width, new Vector3(texX, 0f, 1f), color);
+			_sweepArcVertices[vertexCount++] = new SlashVertex(screenPoint - normal * width, new Vector3(texX, 1f, 1f), color * 0.78f);
 		}
 
 		if (vertexCount < 4)
@@ -211,6 +213,12 @@ public class SpearTrailGlowProjectile : ModProjectile
 		}
 
 		DrawSweepArcVertices(vertexCount);
+	}
+
+	private bool ShouldDrawSpearTipGlow()
+	{
+		ref readonly SpearComboStep step = ref TridentSpearComboScheme.GetStep(_comboStepIndex);
+		return step.Kind is not SpearComboStepKind.RisingLift and not SpearComboStepKind.Backsweep;
 	}
 
 	private XnaVector2 SweepTangentAt(float progress)
@@ -224,15 +232,16 @@ public class SpearTrailGlowProjectile : ModProjectile
 	private void DrawSweepArcVertices(int vertexCount)
 	{
 		GraphicsDevice device = Main.graphics.GraphicsDevice;
-		BasicEffect effect = GetSweepArcEffect(device);
-		effect.World = Matrix.Identity;
-		effect.View = Main.GameViewMatrix.TransformationMatrix;
-		effect.Projection = Matrix.CreateOrthographicOffCenter(0f, Main.screenWidth, Main.screenHeight, 0f, 0f, 1f);
+		Effect effect = GetSweepArcEffect();
+		if (effect == null)
+		{
+			return;
+		}
 
 		Main.spriteBatch.End();
-		device.BlendState = BlendState.Additive;
-		device.DepthStencilState = DepthStencilState.None;
-		device.RasterizerState = RasterizerState.CullNone;
+		Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.NonPremultiplied, SamplerState.AnisotropicClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
+		device.Textures[0] = MeleeEffectAssets.GetTexture(MeleeEffectAssets.SlashTexture);
+		device.Textures[1] = TextureAssets.Projectile[Projectile.type].Value;
 
 		foreach (EffectPass pass in effect.CurrentTechnique.Passes)
 		{
@@ -240,23 +249,19 @@ public class SpearTrailGlowProjectile : ModProjectile
 			device.DrawUserPrimitives(PrimitiveType.TriangleStrip, _sweepArcVertices, 0, vertexCount - 2);
 		}
 
+		Main.spriteBatch.End();
 		Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
 	}
 
-	private static BasicEffect GetSweepArcEffect(GraphicsDevice device)
+	private static Effect GetSweepArcEffect()
 	{
-		if (_sweepArcEffect == null || _sweepArcEffectDevice != device)
+		if (Main.dedServ)
 		{
-			_sweepArcEffect?.Dispose();
-			_sweepArcEffect = new BasicEffect(device)
-			{
-				VertexColorEnabled = true,
-				TextureEnabled = false
-			};
-			_sweepArcEffectDevice = device;
+			return null;
 		}
 
-		return _sweepArcEffect;
+		_sweepArcEffect ??= ModContent.Request<Effect>("WeaponEffects/Effects/Mhd", AssetRequestMode.ImmediateLoad);
+		return _sweepArcEffect.Value;
 	}
 
 	private void DrawShaftTrail(Texture2D texture, SpearPoseXna pose, float fade, int sampleIndex)
@@ -477,22 +482,22 @@ public class SpearTrailGlowProjectile : ModProjectile
 			return kind switch
 			{
 				SpearComboStepKind.RisingLift => new SweepArcSettings(
-					sampleCount: 10,
-					progressWindow: 0.28f,
-					width: 7.5f,
-					alpha: 0.48f,
+					sampleCount: 12,
+					progressWindow: 0.36f,
+					width: 16f,
+					alpha: 0.58f,
 					fadeInEnd: 0.24f,
-					fadeOutStart: 0.38f,
+					fadeOutStart: 0.46f,
 					whiteMix: 0.5f,
 					color: new Color(150, 225, 255)),
 
 				SpearComboStepKind.Backsweep => new SweepArcSettings(
 					sampleCount: 14,
-					progressWindow: 0.42f,
-					width: 9.5f,
-					alpha: 0.38f,
+					progressWindow: 0.58f,
+					width: 22f,
+					alpha: 0.5f,
 					fadeInEnd: 0.18f,
-					fadeOutStart: 0.45f,
+					fadeOutStart: 0.56f,
 					whiteMix: 0.38f,
 					color: new Color(120, 210, 255)),
 
