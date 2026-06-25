@@ -239,5 +239,10 @@ Configs: {
 			// Label: Draw Spear Hit Flash
 			// Tooltip: ""
 		}
+
+		DrawSpearSweepArc: {
+			// Label: Draw Spear Sweep Arc
+			// Tooltip: ""
+		}
 	}
 }

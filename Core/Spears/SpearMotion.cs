@@ -5,6 +5,8 @@ namespace WeaponEffects.Spears;
 
 public static class SpearMotion
 {
+	public const float MinimumSpearReach = 118f;
+
 	public static SpearComboBranch SelectFinisherBranch(bool isGrounded)
 	{
 		return isGrounded ? SpearComboBranch.GroundedFinisher : SpearComboBranch.AirborneFinisher;
@@ -19,7 +21,7 @@ public static class SpearMotion
 		float progress)
 	{
 		float clampedProgress = Math.Clamp(progress, 0f, 1f);
-		float reach = Math.Max(1f, weaponLength) * step.ReachScale;
+		float reach = ResolveReach(weaponLength, step.ReachScale);
 		Vector2 localTip = LocalTipFor(step.Kind, branch, reach, clampedProgress);
 		float facing = MathF.Cos(aimRotation) < 0f ? -1f : 1f;
 		Vector2 grip = ownerCenter + new Vector2(12f * facing, 4f);
@@ -27,6 +29,11 @@ public static class SpearMotion
 		bool active = clampedProgress >= step.ActiveStart && clampedProgress <= step.ActiveEnd;
 
 		return new SpearPoseSnapshot(grip, tip, step.CollisionWidth, active);
+	}
+
+	public static float ResolveReach(float weaponLength, float reachScale)
+	{
+		return Math.Max(MinimumSpearReach, Math.Max(1f, weaponLength)) * reachScale;
 	}
 
 	private static Vector2 LocalTipFor(SpearComboStepKind kind, SpearComboBranch branch, float reach, float progress)
@@ -46,9 +53,10 @@ public static class SpearMotion
 	private static Vector2 RisingLiftTip(float reach, float progress)
 	{
 		float eased = Smooth01(progress);
-		Vector2 start = new(reach * 0.62f, 34f);
-		Vector2 end = new(reach * 0.92f, -62f);
-		return Lerp(start, end, eased);
+		Vector2 start = new(reach * 0.5f, 52f);
+		Vector2 control = new(reach * 0.9f, -6f);
+		Vector2 end = new(reach * 1.0f, -150f);
+		return QuadraticBezier(start, control, end, eased);
 	}
 
 	private static Vector2 BacksweepTip(float reach, float progress)

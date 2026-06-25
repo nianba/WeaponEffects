@@ -108,6 +108,9 @@ internal class WeaponEffectsVisualConfig : ModConfig
 	public bool DrawSpearShaftTrail = true;
 
 	[DefaultValue(true)]
+	public bool DrawSpearSweepArc = true;
+
+	[DefaultValue(true)]
 	public bool DrawSpearHeldWeapon = true;
 
 	[DefaultValue(true)]
