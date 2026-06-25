@@ -265,11 +265,19 @@ public class SpearStrikeProjectile : ModProjectile
 			return;
 		}
 
-		float textureLength = Math.Max(1f, weaponTexture.Size().Length());
-		float drawScale = MathHelper.Clamp(_weaponLength / textureLength, 0.65f, 1.8f);
-		XnaVector2 drawPosition = (pose.Grip + pose.Tip) * 0.5f - Main.screenPosition;
-		float rotation = pose.Rotation + MathHelper.PiOver4;
-		SpriteEffects effects = pose.Tip.X < pose.Grip.X ? SpriteEffects.FlipVertically : SpriteEffects.None;
+		XnaVector2 shaft = pose.Tip - pose.Grip;
+		if (shaft.LengthSquared() <= 1f)
+		{
+			return;
+		}
+
+		XnaVector2 gripOrigin = HeldSpearGripOrigin(weaponTexture);
+		XnaVector2 tipOrigin = HeldSpearTipOrigin(weaponTexture);
+		XnaVector2 textureShaft = tipOrigin - gripOrigin;
+		float textureGripToTipLength = Math.Max(1f, textureShaft.Length());
+		float drawScale = MathHelper.Clamp(shaft.Length() / textureGripToTipLength, 0.65f, 1.8f);
+		XnaVector2 drawPosition = pose.Grip - Main.screenPosition;
+		float rotation = pose.Rotation - textureShaft.ToRotation();
 
 		Main.EntitySpriteDraw(
 			weaponTexture,
@@ -277,10 +285,20 @@ public class SpearStrikeProjectile : ModProjectile
 			null,
 			lightColor,
 			rotation,
-			weaponTexture.Size() * 0.5f,
+			gripOrigin,
 			drawScale,
-			effects,
+			SpriteEffects.None,
 			0f);
+	}
+
+	private static XnaVector2 HeldSpearGripOrigin(Texture2D weaponTexture)
+	{
+		return new XnaVector2(weaponTexture.Width * 0.1f, weaponTexture.Height * 0.9f);
+	}
+
+	private static XnaVector2 HeldSpearTipOrigin(Texture2D weaponTexture)
+	{
+		return new XnaVector2(weaponTexture.Width, 0f);
 	}
 
 	private void SpawnHitDust(NPC target, int dustType, int count, float minScale, float maxScale)

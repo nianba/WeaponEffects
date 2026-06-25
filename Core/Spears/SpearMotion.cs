@@ -21,7 +21,8 @@ public static class SpearMotion
 		float clampedProgress = Math.Clamp(progress, 0f, 1f);
 		float reach = Math.Max(1f, weaponLength) * step.ReachScale;
 		Vector2 localTip = LocalTipFor(step.Kind, branch, reach, clampedProgress);
-		Vector2 grip = ownerCenter + Rotate(new Vector2(12f, 4f), aimRotation);
+		float facing = MathF.Cos(aimRotation) < 0f ? -1f : 1f;
+		Vector2 grip = ownerCenter + new Vector2(12f * facing, 4f);
 		Vector2 tip = grip + Rotate(localTip, aimRotation);
 		bool active = clampedProgress >= step.ActiveStart && clampedProgress <= step.ActiveEnd;
 

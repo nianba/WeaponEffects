@@ -4,12 +4,14 @@ using WeaponEffects.Spears;
 List<(string Name, Action Test)> tests =
 [
 	("Trident combo has four steps", TridentComboHasFourSteps),
+	("Grip stays on facing hand side while aiming up", GripStaysOnFacingHandSideWhileAimingUp),
 	("Backsweep ends behind and low", BacksweepEndsBehindAndLow),
 	("Ground finisher reaches farther than opener", GroundFinisherReachesFartherThanOpener),
 	("Air finisher travels overhead then ends forward down", AirFinisherTravelsOverheadThenEndsForwardDown),
 	("Branch selection maps grounded and airborne", BranchSelectionMapsGroundedAndAirborne),
 	("Spear tip trail alpha stays narrow", SpearTipTrailAlphaStaysNarrow),
 	("Spear shaft trail avoids stacked light panels", SpearShaftTrailAvoidsStackedLightPanels),
+	("Held spear draw anchors at grip", HeldSpearDrawAnchorsAtGrip),
 	("Spear debug draw toggles are wired", SpearDebugDrawTogglesAreWired)
 ];
 
@@ -40,6 +42,20 @@ static void TridentComboHasFourSteps()
 	AssertEqual(SpearComboStepKind.RisingLift, TridentSpearComboScheme.GetStep(1).Kind);
 	AssertEqual(SpearComboStepKind.Backsweep, TridentSpearComboScheme.GetStep(2).Kind);
 	AssertEqual(SpearComboStepKind.Finisher, TridentSpearComboScheme.GetStep(3).Kind);
+}
+
+static void GripStaysOnFacingHandSideWhileAimingUp()
+{
+	SpearComboStep step = TridentSpearComboScheme.GetStep(0);
+	Vector2 ownerCenter = Vector2.Zero;
+	float aimUpRight = -MathF.PI * 0.42f;
+	float aimUpLeft = MathF.PI + MathF.PI * 0.42f;
+
+	SpearPoseSnapshot rightFacingPose = SpearMotion.EvaluatePose(step, SpearComboBranch.None, ownerCenter, aimUpRight, weaponLength: 100f, progress: 0.5f);
+	SpearPoseSnapshot leftFacingPose = SpearMotion.EvaluatePose(step, SpearComboBranch.None, ownerCenter, aimUpLeft, weaponLength: 100f, progress: 0.5f);
+
+	AssertTrue(rightFacingPose.Grip.X > ownerCenter.X + 6f, $"right-facing grip should stay on the player's right hand side while aiming up, got grip={rightFacingPose.Grip}");
+	AssertTrue(leftFacingPose.Grip.X < ownerCenter.X - 6f, $"left-facing grip should stay on the player's left hand side while aiming up, got grip={leftFacingPose.Grip}");
 }
 
 static void BacksweepEndsBehindAndLow()
@@ -139,6 +155,16 @@ static void SpearShaftTrailAvoidsStackedLightPanels()
 	AssertTrue(!source.Contains("private const int TrailSamples = 9;"), "nine full trail samples stack into a rectangular light panel");
 	AssertTrue(!source.Contains("fade * (airFinisher ? 0.34f : 0.22f)"), "shaft trail opacity is too high for a full-length rectangular texture");
 	AssertTrue(!source.Contains("float width = airFinisher ? 18f : 9f;"), "shaft trail is too wide when SlashTex is stretched over the whole spear");
+}
+
+static void HeldSpearDrawAnchorsAtGrip()
+{
+	string path = Path.Combine(AppContext.BaseDirectory, "Content", "Projectiles", "SpearStrikeProjectile.cs");
+	string source = File.ReadAllText(path);
+
+	AssertTrue(!source.Contains("XnaVector2 drawPosition = (pose.Grip + pose.Tip) * 0.5f - Main.screenPosition;"), "held spear must not be drawn from the shaft midpoint because backsweep visually detaches from the player's hand");
+	AssertTrue(source.Contains("XnaVector2 drawPosition = pose.Grip - Main.screenPosition;"), "held spear draw position should use the evaluated grip as the visual anchor");
+	AssertTrue(source.Contains("HeldSpearGripOrigin(weaponTexture)"), "held spear sprite origin should represent the texture grip point, not the texture center");
 }
 
 static void SpearDebugDrawTogglesAreWired()
