@@ -8,7 +8,7 @@ List<(string Name, Action Test)> tests =
 	("Backsweep ends behind and low", BacksweepEndsBehindAndLow),
 	("Ground finisher reaches farther than opener", GroundFinisherReachesFartherThanOpener),
 	("Air finisher travels overhead then ends forward down", AirFinisherTravelsOverheadThenEndsForwardDown),
-	("Branch selection maps grounded and airborne", BranchSelectionMapsGroundedAndAirborne),
+	("Branch selection uses grounded finisher for grounded and airborne", BranchSelectionUsesGroundedFinisherForGroundedAndAirborne),
 	("Spear tip trail alpha stays narrow", SpearTipTrailAlphaStaysNarrow),
 	("Spear shaft trail avoids stacked light panels", SpearShaftTrailAvoidsStackedLightPanels),
 	("Held spear draw anchors at grip", HeldSpearDrawAnchorsAtGrip),
@@ -86,10 +86,10 @@ static void AirFinisherTravelsOverheadThenEndsForwardDown()
 	AssertTrue(end.Tip.Y > end.Grip.Y + 20f, $"expected air finisher to end down, got grip={end.Grip}, tip={end.Tip}");
 }
 
-static void BranchSelectionMapsGroundedAndAirborne()
+static void BranchSelectionUsesGroundedFinisherForGroundedAndAirborne()
 {
 	AssertEqual(SpearComboBranch.GroundedFinisher, SpearMotion.SelectFinisherBranch(isGrounded: true));
-	AssertEqual(SpearComboBranch.AirborneFinisher, SpearMotion.SelectFinisherBranch(isGrounded: false));
+	AssertEqual(SpearComboBranch.GroundedFinisher, SpearMotion.SelectFinisherBranch(isGrounded: false));
 }
 
 static void SpearTipTrailAlphaStaysNarrow()

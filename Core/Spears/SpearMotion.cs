@@ -9,7 +9,7 @@ public static class SpearMotion
 
 	public static SpearComboBranch SelectFinisherBranch(bool isGrounded)
 	{
-		return isGrounded ? SpearComboBranch.GroundedFinisher : SpearComboBranch.AirborneFinisher;
+		return SpearComboBranch.GroundedFinisher;
 	}
 
 	public static SpearPoseSnapshot EvaluatePose(
