@@ -12,7 +12,11 @@ List<(string Name, Action Test)> tests =
 	("Spear tip trail alpha stays narrow", SpearTipTrailAlphaStaysNarrow),
 	("Spear shaft trail avoids stacked light panels", SpearShaftTrailAvoidsStackedLightPanels),
 	("Held spear draw anchors at grip", HeldSpearDrawAnchorsAtGrip),
-	("Spear debug draw toggles are wired", SpearDebugDrawTogglesAreWired)
+	("Spear debug draw toggles are wired", SpearDebugDrawTogglesAreWired),
+	("Spear throw charge rejects sub-minimum release", SpearThrowChargeRejectsSubMinimumRelease),
+	("Spear throw damage scales linearly", SpearThrowDamageScalesLinearly),
+	("Spear throw range scales linearly by screen width", SpearThrowRangeScalesLinearlyByScreenWidth),
+	("Spear throw attack speed compresses only full charge", SpearThrowAttackSpeedCompressesOnlyFullCharge)
 ];
 
 int failed = 0;
@@ -188,6 +192,40 @@ static void SpearDebugDrawTogglesAreWired()
 	AssertTrue(strike.Contains("DrawSpearHitFlash"), "hit flash toggle must be read by SpearStrikeProjectile");
 }
 
+static void SpearThrowChargeRejectsSubMinimumRelease()
+{
+	AssertEqual(60, SpearThrowChargeMath.MinimumChargeFrames);
+	AssertTrue(!SpearThrowChargeMath.IsChargeValid(59), "59 frames should cancel the throw");
+	AssertTrue(SpearThrowChargeMath.IsChargeValid(60), "60 frames should be the first valid release frame");
+}
+
+static void SpearThrowDamageScalesLinearly()
+{
+	int fullChargeFrames = SpearThrowChargeMath.BaseFullChargeFrames;
+	AssertApproximately(0f, SpearThrowChargeMath.ChargeProgress(60, fullChargeFrames), 0.0001f);
+	AssertApproximately(0.5f, SpearThrowChargeMath.ChargeProgress(180, fullChargeFrames), 0.0001f);
+	AssertApproximately(1f, SpearThrowChargeMath.ChargeProgress(300, fullChargeFrames), 0.0001f);
+	AssertApproximately(1f, SpearThrowChargeMath.DamageMultiplier(0f), 0.0001f);
+	AssertApproximately(5.5f, SpearThrowChargeMath.DamageMultiplier(0.5f), 0.0001f);
+	AssertApproximately(10f, SpearThrowChargeMath.DamageMultiplier(1f), 0.0001f);
+}
+
+static void SpearThrowRangeScalesLinearlyByScreenWidth()
+{
+	const float screenWidth = 1920f;
+	AssertApproximately(2880f, SpearThrowChargeMath.TravelDistancePixels(0f, screenWidth), 0.001f);
+	AssertApproximately(6240f, SpearThrowChargeMath.TravelDistancePixels(0.5f, screenWidth), 0.001f);
+	AssertApproximately(9600f, SpearThrowChargeMath.TravelDistancePixels(1f, screenWidth), 0.001f);
+}
+
+static void SpearThrowAttackSpeedCompressesOnlyFullCharge()
+{
+	AssertEqual(300, SpearThrowChargeMath.EffectiveFullChargeFrames(1f));
+	AssertEqual(150, SpearThrowChargeMath.EffectiveFullChargeFrames(2f));
+	AssertEqual(120, SpearThrowChargeMath.EffectiveFullChargeFrames(4f));
+	AssertEqual(60, SpearThrowChargeMath.MinimumChargeFrames);
+}
+
 static (byte ColorType, byte BitDepth, byte[] ImageData, int Width, int Height) ReadPng(Stream stream)
 {
 	int width = 0;
@@ -308,6 +346,14 @@ static void AssertTrue(bool condition, string message)
 static void AssertEqual<T>(T expected, T actual)
 {
 	if (!EqualityComparer<T>.Default.Equals(expected, actual))
+	{
+		throw new InvalidOperationException($"expected {expected}, got {actual}");
+	}
+}
+
+static void AssertApproximately(float expected, float actual, float tolerance)
+{
+	if (MathF.Abs(expected - actual) > tolerance)
 	{
 		throw new InvalidOperationException($"expected {expected}, got {actual}");
 	}
