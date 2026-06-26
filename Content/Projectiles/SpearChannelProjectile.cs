@@ -168,6 +168,7 @@ public class SpearChannelProjectile : ModProjectile
 			Projectile.GetSource_FromAI(),
 			player.Center,
 			player.whoAmI,
+			_weaponItemType,
 			comboStepIndex,
 			branch,
 			_aimRotation,
