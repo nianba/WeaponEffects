@@ -109,15 +109,15 @@ public class SpearThrowChargeProjectile : ModProjectile
 		{
 			UpdateLocalAim(player);
 			_effectiveFullChargeFrames = SpearThrowChargeMath.EffectiveFullChargeFrames(player.GetAttackSpeed(DamageClass.Melee));
-			_chargeFrames++;
-			MaintainHeldUsePose(player);
-
 			if (!CanContinueCharge(player) || !IsHoldingCharge())
 			{
 				ReleaseOrCancel(player);
 				Projectile.Kill();
 				return;
 			}
+
+			_chargeFrames++;
+			MaintainHeldUsePose(player);
 		}
 		else
 		{
@@ -266,9 +266,9 @@ public class SpearThrowChargeProjectile : ModProjectile
 		Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
 		float progress = ChargeProgress;
 		float pullBack = MathHelper.Lerp(12f, 42f, progress);
-		float raisedOffset = MathHelper.Lerp(8f, 22f, progress);
-		Vector2 grip = player.MountedCenter - direction * pullBack - normal * player.direction * 5f;
-		Vector2 tip = grip + direction * (_weaponLength * MathHelper.Lerp(0.78f, 0.98f, progress)) - Vector2.UnitY * raisedOffset;
+		float readyLift = MathHelper.Lerp(6f, 18f, progress);
+		Vector2 grip = player.MountedCenter - direction * pullBack - normal * player.direction * 5f - Vector2.UnitY * readyLift;
+		Vector2 tip = grip + direction * (_weaponLength * MathHelper.Lerp(0.78f, 0.98f, progress));
 		Vector2 shaft = tip - grip;
 		if (shaft.LengthSquared() <= 1f)
 		{
