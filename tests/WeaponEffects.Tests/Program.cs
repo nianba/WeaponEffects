@@ -19,6 +19,7 @@ List<(string Name, Action Test)> tests =
 	("Spear throw attack speed compresses only full charge", SpearThrowAttackSpeedCompressesOnlyFullCharge),
 	("Spear throw right-click item entry is wired", SpearThrowRightClickItemEntryIsWired),
 	("Spear throw charge projectile follows cancellation and release rules", SpearThrowChargeProjectileFollowsCancellationAndReleaseRules),
+	("Spear throw projectile implements piercing wall-pass rules", SpearThrowProjectileImplementsPiercingWallPassRules),
 	("Spear combo reset method is exposed", SpearComboResetMethodIsExposed)
 ];
 
@@ -251,6 +252,20 @@ static void SpearThrowChargeProjectileFollowsCancellationAndReleaseRules()
 	AssertTrue(source.Contains("Main.mouseRight"), "charge should hold while right click remains down");
 	AssertTrue(source.Contains("EmitFullChargeBurst(player);"), "full charge should emit a burst once");
 	AssertTrue(source.Contains("DrawChargingSpear("), "charge projectile should draw the held pre-throw spear");
+}
+
+static void SpearThrowProjectileImplementsPiercingWallPassRules()
+{
+	string path = Path.Combine(AppContext.BaseDirectory, "Content", "Projectiles", "SpearThrowProjectile.cs");
+	string source = File.ReadAllText(path);
+
+	AssertTrue(source.Contains("Projectile.tileCollide = false;"), "thrown spear-light must pass through walls");
+	AssertTrue(source.Contains("Projectile.penetrate = -1;"), "thrown spear-light must pierce multiple enemies");
+	AssertTrue(source.Contains("private readonly bool[] _hitNpcs = new bool[Main.maxNPCs];"), "thrown spear-light must track one hit per NPC");
+	AssertTrue(source.Contains("return target != null && !_hitNpcs[target.whoAmI];"), "CanHitNPC must prevent repeat hits per throw");
+	AssertTrue(source.Contains("_hitNpcs[target.whoAmI] = true;"), "OnHitNPC must mark the NPC as hit");
+	AssertTrue(source.Contains("DrawSpindle("), "PreDraw must use the spindle light visual");
+	AssertTrue(!source.Contains("SlashArcProjectile"), "spear throw must not route damage through SlashArcProjectile");
 }
 
 static void SpearComboResetMethodIsExposed()
