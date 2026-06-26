@@ -109,7 +109,14 @@ public class SpearThrowChargeProjectile : ModProjectile
 		{
 			UpdateLocalAim(player);
 			_effectiveFullChargeFrames = SpearThrowChargeMath.EffectiveFullChargeFrames(player.GetAttackSpeed(DamageClass.Melee));
-			if (!CanContinueCharge(player) || !IsHoldingCharge())
+			if (!CanContinueCharge(player))
+			{
+				CancelCharge();
+				Projectile.Kill();
+				return;
+			}
+
+			if (!IsHoldingCharge())
 			{
 				ReleaseOrCancel(player);
 				Projectile.Kill();
@@ -200,6 +207,17 @@ public class SpearThrowChargeProjectile : ModProjectile
 		player.itemTime = animationFrames;
 		player.itemRotation = player.direction > 0 ? _aimRotation : _aimRotation + MathHelper.Pi;
 		player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, _aimRotation - MathHelper.PiOver2);
+	}
+
+	private void CancelCharge()
+	{
+		if (_released)
+		{
+			return;
+		}
+
+		_released = true;
+		Projectile.netUpdate = true;
 	}
 
 	private void ReleaseOrCancel(Player player)
