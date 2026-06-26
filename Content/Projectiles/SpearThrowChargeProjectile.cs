@@ -229,7 +229,8 @@ public class SpearThrowChargeProjectile : ModProjectile
 
 		_released = true;
 		Projectile.netUpdate = true;
-		if (!SpearThrowChargeMath.IsChargeValid(_chargeFrames))
+		int minimumChargeFrames = SpearThrowChargeMath.MinimumChargeFrames;
+		if (_chargeFrames < minimumChargeFrames)
 		{
 			return;
 		}

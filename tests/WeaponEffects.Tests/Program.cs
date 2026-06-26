@@ -20,6 +20,7 @@ List<(string Name, Action Test)> tests =
 	("Spear throw right-click item entry is wired", SpearThrowRightClickItemEntryIsWired),
 	("Spear throw charge projectile follows cancellation and release rules", SpearThrowChargeProjectileFollowsCancellationAndReleaseRules),
 	("Spear throw projectile implements piercing wall-pass rules", SpearThrowProjectileImplementsPiercingWallPassRules),
+	("Spear throw remains isolated from sword slash projectile", SpearThrowRemainsIsolatedFromSwordSlashProjectile),
 	("Spear combo reset method is exposed", SpearComboResetMethodIsExposed)
 ];
 
@@ -247,7 +248,8 @@ static void SpearThrowChargeProjectileFollowsCancellationAndReleaseRules()
 	string path = Path.Combine(AppContext.BaseDirectory, "Content", "Projectiles", "SpearThrowChargeProjectile.cs");
 	string source = File.ReadAllText(path);
 
-	AssertTrue(source.Contains("SpearThrowChargeMath.IsChargeValid(_chargeFrames)"), "charge projectile must cancel releases below the 1 second minimum");
+	AssertTrue(source.Contains("SpearThrowChargeMath.MinimumChargeFrames"), "charge projectile must use the spear throw minimum charge constant");
+	AssertTrue(source.Contains("_chargeFrames < minimumChargeFrames"), "charge projectile must cancel releases below the 1 second minimum");
 	AssertTrue(source.Contains("SpearThrowProjectile.Spawn("), "valid releases must spawn the thrown spear-light");
 	AssertTrue(source.Contains("Main.mouseRight"), "charge should hold while right click remains down");
 	AssertTrue(source.Contains("EmitFullChargeBurst(player);"), "full charge should emit a burst once");
@@ -266,6 +268,18 @@ static void SpearThrowProjectileImplementsPiercingWallPassRules()
 	AssertTrue(source.Contains("_hitNpcs[target.whoAmI] = true;"), "OnHitNPC must mark the NPC as hit");
 	AssertTrue(source.Contains("DrawSpindle("), "PreDraw must use the spindle light visual");
 	AssertTrue(!source.Contains("SlashArcProjectile"), "spear throw must not route damage through SlashArcProjectile");
+}
+
+static void SpearThrowRemainsIsolatedFromSwordSlashProjectile()
+{
+	string chargePath = Path.Combine(AppContext.BaseDirectory, "Content", "Projectiles", "SpearThrowChargeProjectile.cs");
+	string throwPath = Path.Combine(AppContext.BaseDirectory, "Content", "Projectiles", "SpearThrowProjectile.cs");
+	string itemPath = Path.Combine(AppContext.BaseDirectory, "Content", "Items", "SpearGlobalItem.cs");
+	string combined = File.ReadAllText(chargePath) + File.ReadAllText(throwPath) + File.ReadAllText(itemPath);
+
+	AssertTrue(!combined.Contains("ChargedSlashProjectile"), "spear throw should not reuse sword charge projectile");
+	AssertTrue(!combined.Contains("SlashArcProjectile"), "spear throw should not reuse sword slash projectile");
+	AssertTrue(combined.Contains("SpearThrowChargeMath.MinimumChargeFrames"), "spear throw should use the pure charge constants");
 }
 
 static void SpearComboResetMethodIsExposed()
