@@ -254,6 +254,8 @@ static void SpearThrowChargeProjectileFollowsCancellationAndReleaseRules()
 	AssertTrue(source.Contains("Main.mouseRight"), "charge should hold while right click remains down");
 	AssertTrue(source.Contains("EmitFullChargeBurst(player);"), "full charge should emit a burst once");
 	AssertTrue(source.Contains("DrawChargingSpear("), "charge projectile should draw the held pre-throw spear");
+	AssertTrue(source.Contains("Vector2 grip = ChargeGripPosition(player);"), "charge pose should share the pulled-back grip between spear drawing and arm pose");
+	AssertTrue(source.Contains("armDirection.ToRotation() - MathHelper.PiOver2"), "front arm should point at the pulled-back spear grip instead of the mouse aim direction");
 }
 
 static void SpearThrowProjectileImplementsPiercingWallPassRules()
@@ -267,6 +269,8 @@ static void SpearThrowProjectileImplementsPiercingWallPassRules()
 	AssertTrue(source.Contains("return target != null && !_hitNpcs[target.whoAmI];"), "CanHitNPC must prevent repeat hits per throw");
 	AssertTrue(source.Contains("_hitNpcs[target.whoAmI] = true;"), "OnHitNPC must mark the NPC as hit");
 	AssertTrue(source.Contains("DrawSpindle("), "PreDraw must use the spindle light visual");
+	AssertTrue(source.Contains("Vector2 baseScale = new(width / texture.Width, length / texture.Height);"), "spindle texture length must be drawn along the rotated long axis");
+	AssertTrue(source.Contains("private float SpindleLength => MathHelper.Lerp(296f, 528f, _chargeProgress);"), "spindle visual length should stay at the 4x tuned size");
 	AssertTrue(!source.Contains("Projectile.extraUpdates = 1;"), "thrown spear-light must not double the fixed 42 px/tick throw speed with extraUpdates");
 	AssertTrue(!source.Contains("SlashArcProjectile"), "spear throw must not route damage through SlashArcProjectile");
 }

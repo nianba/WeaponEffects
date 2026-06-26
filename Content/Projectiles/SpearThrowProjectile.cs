@@ -189,7 +189,7 @@ public class SpearThrowProjectile : ModProjectile
 		float length = SpindleLength;
 		float width = Math.Max(1f, _visualWidth);
 		float rotation = _aimRotation + MathHelper.PiOver2;
-		Vector2 baseScale = new(length / texture.Width, width / texture.Height);
+		Vector2 baseScale = new(width / texture.Width, length / texture.Height);
 		float pulse = 0.92f + 0.08f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 18f);
 
 		DrawSpindleLayer(texture, origin, drawPosition, rotation, baseScale * new Vector2(1.08f, 1.24f), new Color(255, 167, 34, 0) * 0.32f * pulse);
@@ -229,5 +229,5 @@ public class SpearThrowProjectile : ModProjectile
 		}
 	}
 
-	private float SpindleLength => MathHelper.Lerp(74f, 132f, _chargeProgress);
+	private float SpindleLength => MathHelper.Lerp(296f, 528f, _chargeProgress);
 }

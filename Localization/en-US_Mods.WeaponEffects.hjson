@@ -12,6 +12,8 @@ Projectiles: {
 	SpearChannelProjectile.DisplayName: Spear Channel Projectile
 	SpearStrikeProjectile.DisplayName: Spear Strike Projectile
 	SpearTrailGlowProjectile.DisplayName: Spear Trail Glow Projectile
+	SpearThrowChargeProjectile.DisplayName: Spear Throw Charge Projectile
+	SpearThrowProjectile.DisplayName: Spear Throw Projectile
 }
 
 Items: {

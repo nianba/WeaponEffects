@@ -202,11 +202,13 @@ public class SpearThrowChargeProjectile : ModProjectile
 	private void MaintainHeldUsePose(Player player)
 	{
 		int animationFrames = Math.Max(2, Math.Min(Math.Max(1, _useAnimation), 12));
+		Vector2 grip = ChargeGripPosition(player);
+		Vector2 armDirection = (grip - player.MountedCenter).SafeNormalize(_aimRotation.ToRotationVector2());
 		player.heldProj = Projectile.whoAmI;
 		player.itemAnimation = animationFrames;
 		player.itemTime = animationFrames;
 		player.itemRotation = player.direction > 0 ? _aimRotation : _aimRotation + MathHelper.Pi;
-		player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, _aimRotation - MathHelper.PiOver2);
+		player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, armDirection.ToRotation() - MathHelper.PiOver2);
 	}
 
 	private void CancelCharge()
@@ -282,11 +284,8 @@ public class SpearThrowChargeProjectile : ModProjectile
 	private void DrawChargingSpear(Player player, Texture2D weaponTexture, Color lightColor)
 	{
 		Vector2 direction = _aimRotation.ToRotationVector2();
-		Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
 		float progress = ChargeProgress;
-		float pullBack = MathHelper.Lerp(12f, 42f, progress);
-		float readyLift = MathHelper.Lerp(6f, 18f, progress);
-		Vector2 grip = player.MountedCenter - direction * pullBack - normal * player.direction * 5f - Vector2.UnitY * readyLift;
+		Vector2 grip = ChargeGripPosition(player);
 		Vector2 tip = grip + direction * (_weaponLength * MathHelper.Lerp(0.78f, 0.98f, progress));
 		Vector2 shaft = tip - grip;
 		if (shaft.LengthSquared() <= 1f)
@@ -391,6 +390,16 @@ public class SpearThrowChargeProjectile : ModProjectile
 		: SpearThrowChargeMath.BaseFullChargeFrames;
 
 	private float ChargeProgress => SpearThrowChargeMath.ChargeProgress(_chargeFrames, EffectiveFullChargeFrames);
+
+	private Vector2 ChargeGripPosition(Player player)
+	{
+		Vector2 direction = _aimRotation.ToRotationVector2();
+		Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
+		float progress = ChargeProgress;
+		float pullBack = MathHelper.Lerp(12f, 42f, progress);
+		float readyLift = MathHelper.Lerp(6f, 18f, progress);
+		return player.MountedCenter - direction * pullBack - normal * player.direction * 5f - Vector2.UnitY * readyLift;
+	}
 
 	private static Vector2 HeldSpearGripOrigin(Texture2D weaponTexture)
 	{
