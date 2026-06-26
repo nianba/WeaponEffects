@@ -40,7 +40,7 @@ public static class SpearMotion
 	{
 		return kind switch
 		{
-			SpearComboStepKind.ForwardThrust => Lerp(new Vector2(reach * 0.45f, 5f), new Vector2(reach, 0f), Smooth01(progress)),
+			SpearComboStepKind.ForwardThrust => Lerp(new Vector2(reach * 0.45f, 5f), new Vector2(reach * 0.82f, 0f), Smooth01(progress)),
 			SpearComboStepKind.RisingLift => RisingLiftTip(reach, progress),
 			SpearComboStepKind.Backsweep => BacksweepTip(reach, progress),
 			SpearComboStepKind.Finisher => branch == SpearComboBranch.AirborneFinisher
@@ -70,10 +70,18 @@ public static class SpearMotion
 
 	private static Vector2 GroundedFinisherTip(float reach, float progress)
 	{
-		float eased = Smooth01(progress);
 		Vector2 start = new(-reach * 0.52f, 38f);
-		Vector2 end = new(reach, 8f);
-		return Lerp(start, end, eased);
+		Vector2 held = new(-reach * 0.55f, 44f);
+		Vector2 end = new(reach * 1.25f, 8f);
+		const float windupEnd = 0.5f;
+		if (progress <= windupEnd)
+		{
+			float windupProgress = Smooth01(progress / windupEnd);
+			return Lerp(start, held, windupProgress);
+		}
+
+		float thrustProgress = Smooth01((progress - windupEnd) / (1f - windupEnd));
+		return Lerp(held, end, thrustProgress);
 	}
 
 	private static Vector2 AirborneFinisherTip(float reach, float progress)

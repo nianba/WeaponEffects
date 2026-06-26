@@ -7,10 +7,12 @@ List<(string Name, Action Test)> tests =
 	("Grip stays on facing hand side while aiming up", GripStaysOnFacingHandSideWhileAimingUp),
 	("Backsweep ends behind and low", BacksweepEndsBehindAndLow),
 	("Ground finisher reaches farther than opener", GroundFinisherReachesFartherThanOpener),
+	("Ground finisher holds behind low before thrust", GroundFinisherHoldsBehindLowBeforeThrust),
 	("Air finisher travels overhead then ends forward down", AirFinisherTravelsOverheadThenEndsForwardDown),
 	("Branch selection uses grounded finisher for grounded and airborne", BranchSelectionUsesGroundedFinisherForGroundedAndAirborne),
 	("Spear tip trail alpha stays narrow", SpearTipTrailAlphaStaysNarrow),
 	("Spear shaft trail avoids stacked light panels", SpearShaftTrailAvoidsStackedLightPanels),
+	("Spear tip glow uses step-specific width scale", SpearTipGlowUsesStepSpecificWidthScale),
 	("Held spear draw anchors at grip", HeldSpearDrawAnchorsAtGrip),
 	("Spear debug draw toggles are wired", SpearDebugDrawTogglesAreWired),
 	("Spear throw charge rejects sub-minimum release", SpearThrowChargeRejectsSubMinimumRelease),
@@ -82,6 +84,17 @@ static void GroundFinisherReachesFartherThanOpener()
 	SpearPoseSnapshot finisher = SpearMotion.EvaluatePose(TridentSpearComboScheme.GetStep(3), SpearComboBranch.GroundedFinisher, Vector2.Zero, 0f, 100f, 1f);
 
 	AssertTrue(finisher.Tip.X > opener.Tip.X + 15f, $"expected grounded finisher reach beyond opener, opener={opener.Tip}, finisher={finisher.Tip}");
+}
+
+static void GroundFinisherHoldsBehindLowBeforeThrust()
+{
+	SpearComboStep finisherStep = TridentSpearComboScheme.GetStep(3);
+	SpearPoseSnapshot start = SpearMotion.EvaluatePose(finisherStep, SpearComboBranch.GroundedFinisher, Vector2.Zero, 0f, 100f, 0f);
+	SpearPoseSnapshot windup = SpearMotion.EvaluatePose(finisherStep, SpearComboBranch.GroundedFinisher, Vector2.Zero, 0f, 100f, 0.28f);
+
+	AssertTrue(windup.Tip.X < windup.Grip.X - 45f, $"expected windup tip to remain behind grip, got grip={windup.Grip}, tip={windup.Tip}");
+	AssertTrue(windup.Tip.Y > windup.Grip.Y + 25f, $"expected windup tip to stay low, got grip={windup.Grip}, tip={windup.Tip}");
+	AssertTrue(MathF.Abs(windup.Tip.X - start.Tip.X) < 12f, $"expected windup to hold near the starting X, start={start.Tip}, windup={windup.Tip}");
 }
 
 static void AirFinisherTravelsOverheadThenEndsForwardDown()
@@ -164,6 +177,18 @@ static void SpearShaftTrailAvoidsStackedLightPanels()
 	AssertTrue(!source.Contains("private const int TrailSamples = 9;"), "nine full trail samples stack into a rectangular light panel");
 	AssertTrue(!source.Contains("fade * (airFinisher ? 0.34f : 0.22f)"), "shaft trail opacity is too high for a full-length rectangular texture");
 	AssertTrue(!source.Contains("float width = airFinisher ? 18f : 9f;"), "shaft trail is too wide when SlashTex is stretched over the whole spear");
+}
+
+static void SpearTipGlowUsesStepSpecificWidthScale()
+{
+	string path = Path.Combine(AppContext.BaseDirectory, "Content", "Projectiles", "SpearTrailGlowProjectile.cs");
+	string source = File.ReadAllText(path);
+
+	AssertTrue(source.Contains("private const float FirstComboTipGlowWidthScale = 0.55f;"), "first combo tip glow should have a dedicated thinner width scale");
+	AssertTrue(source.Contains("private const float FinisherTipGlowWidthScale = 1.25f;"), "finisher tip glow should have a dedicated wider width scale");
+	AssertTrue(source.Contains("0 => FirstComboTipGlowWidthScale"), "first combo tip glow width scale must apply to combo step 1");
+	AssertTrue(source.Contains("3 => FinisherTipGlowWidthScale"), "finisher tip glow width scale must apply to combo step 4");
+	AssertTrue(source.Contains("return 10f + 30f * MathHelper.Clamp(progress, 0f, 1f);"), "first combo tip glow length should keep the existing extension distance formula");
 }
 
 static void HeldSpearDrawAnchorsAtGrip()

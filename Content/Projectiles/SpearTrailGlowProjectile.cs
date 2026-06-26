@@ -20,6 +20,10 @@ public class SpearTrailGlowProjectile : ModProjectile
 	private const int TrailSamples = 8;
 	private const int SweepArcSamples = 30;
 	private const int SweepArcMaxVertices = SweepArcSamples * 2;
+	private const float FirstComboTipGlowWidthScale = 0.55f;
+	private const float FinisherTipGlowReachScale = 1.3f;
+	private const float FinisherTipGlowWidthScale = 1.25f;
+	private const float SweepTipEdgeInnerShaftAmount = 0.86f;
 	private static Asset<Effect> _sweepArcEffect;
 
 	private readonly SlashVertex[] _sweepArcVertices = new SlashVertex[SweepArcMaxVertices];
@@ -229,7 +233,10 @@ public class SpearTrailGlowProjectile : ModProjectile
 			float innerExtension = settings.Width * widthFactor * widthScale * 0.08f;
 			float alpha = motionAlpha * alphaScale * SweepAlphaFactor(rawTrailPosition);
 			Color color = passColor * alpha;
-			XnaVector2 innerPoint = XnaVector2.Lerp(pose.Grip, pose.Tip, settings.InnerShaftAmount);
+			float innerShaftAmount = pass == SweepArcPass.NearEdge
+				? SweepTipEdgeInnerShaftAmount
+				: settings.InnerShaftAmount;
+			XnaVector2 innerPoint = XnaVector2.Lerp(pose.Grip, pose.Tip, innerShaftAmount);
 			XnaVector2 outer = pose.Tip + normal * edgeOffset + shaftDirection * outerExtension - Main.screenPosition;
 			XnaVector2 inner = innerPoint + normal * edgeOffset - shaftDirection * innerExtension - Main.screenPosition;
 			float texX = MathHelper.Clamp(1f - rawTrailPosition, 0.08f, 0.92f);
@@ -340,6 +347,11 @@ public class SpearTrailGlowProjectile : ModProjectile
 			return;
 		}
 
+		if (_comboStepIndex == 3 && progress <= 0.5f)
+		{
+			return;
+		}
+
 		XnaVector2 direction = pose.Tip - pose.Grip;
 		float spearLength = direction.Length();
 		if (spearLength <= 1f)
@@ -350,10 +362,11 @@ public class SpearTrailGlowProjectile : ModProjectile
 		direction /= spearLength;
 
 		float extensionProgress = MathHelper.Clamp(progress, 0f, 1f);
-		float extensionDistance = 10f + 30f * extensionProgress;
+		float extensionDistance = TipGlowExtensionDistance(spearLength, progress);
 		float extensionSize = 10f + 10f * extensionProgress;
 		float baseSpearHitboxDiagonal = MathF.Sqrt(22f * 22f + 2f * 2f);
 		float extensionScale = extensionSize * MathF.Sqrt(2f) / baseSpearHitboxDiagonal;
+		float widthScale = TipGlowWidthScale();
 		float glowStrength = Utils.Remap(extensionProgress, 0f, 0.3f, 0f, 1f) * Utils.Remap(extensionProgress, 0.3f, 1f, 1f, 0f);
 		glowStrength = 1f - (1f - glowStrength) * (1f - glowStrength);
 		glowStrength *= fade;
@@ -370,17 +383,39 @@ public class SpearTrailGlowProjectile : ModProjectile
 		XnaVector2 glowOrigin = glowTexture.Size() * 0.5f;
 		Color glowColor = new Color(245, 250, 255, 0) * glowStrength;
 
-		DrawSpearTipGlowSegment(glowTexture, glowOrigin, XnaVector2.Lerp(extensionCenter, spearTip, 0.5f), glowColor, rotation, new XnaVector2(glowStrength * extensionScale, extensionScale) * extensionScale);
-		DrawSpearTipGlowSegment(glowTexture, glowOrigin, XnaVector2.Lerp(extensionCenter, spearTip, 1f), glowColor, rotation, new XnaVector2(glowStrength * extensionScale, extensionScale * 1.5f) * extensionScale);
-		DrawSpearTipGlowSegment(glowTexture, glowOrigin, XnaVector2.Lerp(grip, spearTip, extensionProgress * 1.5f - 0.5f) + new XnaVector2(0f, 2f), glowColor, rotation, new XnaVector2(glowStrength * extensionScale * glowStrength, extensionScale * 2f * glowStrength) * extensionScale);
+		DrawSpearTipGlowSegment(glowTexture, glowOrigin, XnaVector2.Lerp(extensionCenter, spearTip, 0.5f), glowColor, rotation, new XnaVector2(glowStrength * extensionScale * widthScale, extensionScale) * extensionScale);
+		DrawSpearTipGlowSegment(glowTexture, glowOrigin, XnaVector2.Lerp(extensionCenter, spearTip, 1f), glowColor, rotation, new XnaVector2(glowStrength * extensionScale * widthScale, extensionScale * 1.5f) * extensionScale);
+		DrawSpearTipGlowSegment(glowTexture, glowOrigin, XnaVector2.Lerp(grip, spearTip, extensionProgress * 1.5f - 0.5f) + new XnaVector2(0f, 2f), glowColor, rotation, new XnaVector2(glowStrength * extensionScale * glowStrength * widthScale, extensionScale * 2f * glowStrength) * extensionScale);
 
 		for (float amount = 0.4f; amount <= 1f; amount += 0.1f)
 		{
 			XnaVector2 position = XnaVector2.Lerp(grip, extensionCenter, amount + 0.2f) + new XnaVector2(0f, 2f);
 			Color segmentColor = glowColor * 0.75f * amount;
-			XnaVector2 segmentScale = new XnaVector2(glowStrength * extensionScale * glowStrength, extensionScale * 2f * glowStrength) * extensionScale;
+			XnaVector2 segmentScale = new XnaVector2(glowStrength * extensionScale * glowStrength * widthScale, extensionScale * 2f * glowStrength) * extensionScale;
 			DrawSpearTipGlowSegment(glowTexture, glowOrigin, position, segmentColor, rotation, segmentScale);
 		}
+	}
+
+	private float TipGlowWidthScale()
+	{
+		return _comboStepIndex switch
+		{
+			0 => FirstComboTipGlowWidthScale,
+			3 => FinisherTipGlowWidthScale,
+			_ => 1f
+		};
+	}
+
+	private float TipGlowExtensionDistance(float spearLength, float progress)
+	{
+		if (_comboStepIndex != 3)
+		{
+			return 10f + 30f * MathHelper.Clamp(progress, 0f, 1f);
+		}
+
+		ref readonly SpearComboStep step = ref TridentSpearComboScheme.GetStep(_comboStepIndex);
+		float targetReach = SpearMotion.ResolveReach(_weaponLength, step.ReachScale) * FinisherTipGlowReachScale;
+		return Math.Max(0f, targetReach - spearLength);
 	}
 
 	private static void DrawSpearTipGlowSegment(Texture2D texture, XnaVector2 origin, XnaVector2 worldPosition, Color color, float rotation, XnaVector2 scale)
@@ -480,9 +515,9 @@ public class SpearTrailGlowProjectile : ModProjectile
 				offsetScale = 0.08f;
 				break;
 			case SweepArcPass.NearEdge:
-				alphaScale = 0.2f;
-				widthScale = 0.14f;
-				offsetScale = 0.58f;
+				alphaScale = 0.72f;
+				widthScale = 0.08f;
+				offsetScale = 0.72f;
 				break;
 		}
 	}
@@ -548,7 +583,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 					sampleCount: 18,
 					progressWindow: 0.58f,
 					width: 22f,
-					alpha: 0.05f,
+					alpha: 0.02f,
 					fadeInEnd: 0.24f,
 					fadeOutStart: 0.46f,
 					innerShaftAmount: 0.54f),
@@ -557,7 +592,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 					sampleCount: 30,
 					progressWindow: 1.12f,
 					width: 30f,
-					alpha: 0.05f,
+					alpha: 0.02f,
 					fadeInEnd: 0.18f,
 					fadeOutStart: 0.56f,
 					innerShaftAmount: 0.16f),
