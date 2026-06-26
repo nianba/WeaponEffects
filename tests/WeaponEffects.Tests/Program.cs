@@ -256,6 +256,9 @@ static void SpearThrowChargeProjectileFollowsCancellationAndReleaseRules()
 	AssertTrue(source.Contains("DrawChargingSpear("), "charge projectile should draw the held pre-throw spear");
 	AssertTrue(source.Contains("Vector2 grip = ChargeGripPosition(player);"), "charge pose should share the pulled-back grip between spear drawing and arm pose");
 	AssertTrue(source.Contains("armDirection.ToRotation() - MathHelper.PiOver2"), "front arm should point at the pulled-back spear grip instead of the mouse aim direction");
+	AssertTrue(source.Contains("DrawChargedSpearLight("), "charge projectile should layer a spear-shaped golden light over the weapon");
+	AssertTrue(source.Contains("goldBodyProgress"), "charge light should transition from heated weapon color into a full gold spear body");
+	AssertTrue(source.Contains("coreWhite"), "full charge should add a bright inner spear-shaped core");
 }
 
 static void SpearThrowProjectileImplementsPiercingWallPassRules()

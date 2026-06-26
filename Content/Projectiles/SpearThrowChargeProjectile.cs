@@ -301,6 +301,10 @@ public class SpearThrowChargeProjectile : ModProjectile
 		Color heatColor = progress < 0.5f
 			? Color.Lerp(lightColor, new Color(255, 125, 32), progress / 0.5f)
 			: Color.Lerp(new Color(255, 125, 32), new Color(255, 226, 96), (progress - 0.5f) / 0.5f);
+		float goldBodyProgress = MathHelper.Clamp((progress - 0.55f) / 0.45f, 0f, 1f);
+		Color chargedBodyColor = Color.Lerp(heatColor, new Color(255, 224, 86), goldBodyProgress) * MathHelper.Lerp(1f, 0.24f, goldBodyProgress);
+
+		DrawChargedSpearLight(weaponTexture, grip, rotation, gripOrigin, scale, progress, behindBody: true);
 
 		if (progress > 0f)
 		{
@@ -312,7 +316,7 @@ public class SpearThrowChargeProjectile : ModProjectile
 					weaponTexture,
 					grip - Main.screenPosition + offset,
 					null,
-					heatColor * (0.18f * progress * pulse),
+					heatColor * (0.12f * progress * pulse),
 					rotation,
 					gripOrigin,
 					scale,
@@ -325,10 +329,77 @@ public class SpearThrowChargeProjectile : ModProjectile
 			weaponTexture,
 			grip - Main.screenPosition,
 			null,
-			heatColor,
+			chargedBodyColor,
 			rotation,
 			gripOrigin,
 			scale,
+			SpriteEffects.None,
+			0f);
+
+		DrawChargedSpearLight(weaponTexture, grip, rotation, gripOrigin, scale, progress, behindBody: false);
+	}
+
+	private void DrawChargedSpearLight(Texture2D weaponTexture, Vector2 grip, float rotation, Vector2 gripOrigin, float scale, float progress, bool behindBody)
+	{
+		float auraProgress = MathHelper.Clamp((progress - 0.12f) / 0.88f, 0f, 1f);
+		float goldBodyProgress = MathHelper.Clamp((progress - 0.55f) / 0.45f, 0f, 1f);
+		if (auraProgress <= 0f)
+		{
+			return;
+		}
+
+		float fullPulse = progress >= 1f ? 0.78f + 0.22f * (float)Math.Sin(_chargeFrames * 0.3f) : 1f;
+		Vector2 drawPosition = grip - Main.screenPosition;
+
+		if (behindBody)
+		{
+			Color outerGlow = new Color(255, 166, 32, 0) * (0.16f + auraProgress * 0.42f) * fullPulse;
+			int auraCopies = goldBodyProgress > 0.6f ? 8 : 5;
+			float auraRadius = MathHelper.Lerp(1.4f, 7f, auraProgress);
+			for (int i = 0; i < auraCopies; i++)
+			{
+				Vector2 offset = (MathHelper.TwoPi * i / auraCopies + _chargeFrames * 0.06f).ToRotationVector2() * auraRadius;
+				Main.EntitySpriteDraw(
+					weaponTexture,
+					drawPosition + offset,
+					null,
+					outerGlow,
+					rotation,
+					gripOrigin,
+					scale * MathHelper.Lerp(1.01f, 1.09f, auraProgress),
+					SpriteEffects.None,
+					0f);
+			}
+
+			return;
+		}
+
+		if (goldBodyProgress <= 0f)
+		{
+			return;
+		}
+
+		Color goldBody = new(255, 216, 73, 0);
+		Color coreWhite = new(255, 249, 178, 0);
+		Main.EntitySpriteDraw(
+			weaponTexture,
+			drawPosition,
+			null,
+			goldBody * MathHelper.Lerp(0.22f, 0.72f, goldBodyProgress) * fullPulse,
+			rotation,
+			gripOrigin,
+			scale * MathHelper.Lerp(1f, 1.04f, goldBodyProgress),
+			SpriteEffects.None,
+			0f);
+
+		Main.EntitySpriteDraw(
+			weaponTexture,
+			drawPosition,
+			null,
+			coreWhite * MathHelper.Lerp(0.08f, 0.66f, goldBodyProgress) * fullPulse,
+			rotation,
+			gripOrigin,
+			scale * MathHelper.Lerp(0.96f, 1.01f, goldBodyProgress),
 			SpriteEffects.None,
 			0f);
 	}
