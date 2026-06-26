@@ -18,6 +18,7 @@ List<(string Name, Action Test)> tests =
 	("Spear throw range scales linearly by screen width", SpearThrowRangeScalesLinearlyByScreenWidth),
 	("Spear throw attack speed compresses only full charge", SpearThrowAttackSpeedCompressesOnlyFullCharge),
 	("Spear throw right-click item entry is wired", SpearThrowRightClickItemEntryIsWired),
+	("Spear throw charge projectile follows cancellation and release rules", SpearThrowChargeProjectileFollowsCancellationAndReleaseRules),
 	("Spear combo reset method is exposed", SpearComboResetMethodIsExposed)
 ];
 
@@ -238,6 +239,18 @@ static void SpearThrowRightClickItemEntryIsWired()
 	AssertTrue(source.Contains("StartSpearThrowCharge(item, player);"), "right-click use must start the spear throw charge controller");
 	AssertTrue(source.Contains("KillOwnedSpearChannels(player);"), "right-click charge must interrupt active spear channels");
 	AssertTrue(source.Contains("ResetSpearCombo()"), "right-click charge must reset the spear combo");
+}
+
+static void SpearThrowChargeProjectileFollowsCancellationAndReleaseRules()
+{
+	string path = Path.Combine(AppContext.BaseDirectory, "Content", "Projectiles", "SpearThrowChargeProjectile.cs");
+	string source = File.ReadAllText(path);
+
+	AssertTrue(source.Contains("SpearThrowChargeMath.IsChargeValid(_chargeFrames)"), "charge projectile must cancel releases below the 1 second minimum");
+	AssertTrue(source.Contains("SpearThrowProjectile.Spawn("), "valid releases must spawn the thrown spear-light");
+	AssertTrue(source.Contains("Main.mouseRight"), "charge should hold while right click remains down");
+	AssertTrue(source.Contains("EmitFullChargeBurst(player);"), "full charge should emit a burst once");
+	AssertTrue(source.Contains("DrawChargingSpear("), "charge projectile should draw the held pre-throw spear");
 }
 
 static void SpearComboResetMethodIsExposed()

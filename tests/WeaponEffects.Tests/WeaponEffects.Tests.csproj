@@ -12,6 +12,7 @@
     <None Include="..\..\Assets\Textures\SpearTipTrail.png" Link="Assets\Textures\SpearTipTrail.png" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\Content\Projectiles\SpearTrailGlowProjectile.cs" Link="Content\Projectiles\SpearTrailGlowProjectile.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\Content\Projectiles\SpearStrikeProjectile.cs" Link="Content\Projectiles\SpearStrikeProjectile.cs" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\Content\Projectiles\SpearThrowChargeProjectile.cs" Link="Content\Projectiles\SpearThrowChargeProjectile.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\Content\Items\SpearGlobalItem.cs" Link="Content\Items\SpearGlobalItem.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\Common\Players\WeaponEffectsPlayer.cs" Link="Common\Players\WeaponEffectsPlayer.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\Common\Configs\WeaponEffectsConfig.cs" Link="Common\Configs\WeaponEffectsConfig.cs" CopyToOutputDirectory="PreserveNewest" />
