@@ -85,7 +85,6 @@ public class SpearThrowProjectile : ModProjectile
 		Projectile.ignoreWater = true;
 		Projectile.penetrate = -1;
 		Projectile.timeLeft = 300;
-		Projectile.extraUpdates = 1;
 		Projectile.aiStyle = -1;
 		Projectile.noEnchantmentVisuals = true;
 	}

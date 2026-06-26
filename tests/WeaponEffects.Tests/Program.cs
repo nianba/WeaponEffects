@@ -267,6 +267,7 @@ static void SpearThrowProjectileImplementsPiercingWallPassRules()
 	AssertTrue(source.Contains("return target != null && !_hitNpcs[target.whoAmI];"), "CanHitNPC must prevent repeat hits per throw");
 	AssertTrue(source.Contains("_hitNpcs[target.whoAmI] = true;"), "OnHitNPC must mark the NPC as hit");
 	AssertTrue(source.Contains("DrawSpindle("), "PreDraw must use the spindle light visual");
+	AssertTrue(!source.Contains("Projectile.extraUpdates = 1;"), "thrown spear-light must not double the fixed 42 px/tick throw speed with extraUpdates");
 	AssertTrue(!source.Contains("SlashArcProjectile"), "spear throw must not route damage through SlashArcProjectile");
 }
 
