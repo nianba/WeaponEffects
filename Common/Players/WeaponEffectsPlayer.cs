@@ -77,6 +77,12 @@ public class WeaponEffectsPlayer : ModPlayer
 		return index;
 	}
 
+	public void ResetSpearCombo()
+	{
+		SpearComboStepIndex = 0;
+		_spearComboResetTimer = 0;
+	}
+
 	public void StartShadowFlameRecallSession()
 	{
 		Array.Clear(_shadowFlameRecallHitCount);
@@ -219,6 +225,7 @@ public class WeaponEffectsPlayer : ModPlayer
 		{
 			TryRecallShadowFlameKnifeInterrupt();
 			SlashGlobalItem.TryStartChargeInterrupt(Player);
+			SpearGlobalItem.TryStartThrowChargeInterrupt(Player);
 		}
 
 		if (_slashComboResetTimer <= 0)

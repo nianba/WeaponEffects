@@ -16,7 +16,9 @@ List<(string Name, Action Test)> tests =
 	("Spear throw charge rejects sub-minimum release", SpearThrowChargeRejectsSubMinimumRelease),
 	("Spear throw damage scales linearly", SpearThrowDamageScalesLinearly),
 	("Spear throw range scales linearly by screen width", SpearThrowRangeScalesLinearlyByScreenWidth),
-	("Spear throw attack speed compresses only full charge", SpearThrowAttackSpeedCompressesOnlyFullCharge)
+	("Spear throw attack speed compresses only full charge", SpearThrowAttackSpeedCompressesOnlyFullCharge),
+	("Spear throw right-click item entry is wired", SpearThrowRightClickItemEntryIsWired),
+	("Spear combo reset method is exposed", SpearComboResetMethodIsExposed)
 ];
 
 int failed = 0;
@@ -224,6 +226,27 @@ static void SpearThrowAttackSpeedCompressesOnlyFullCharge()
 	AssertEqual(150, SpearThrowChargeMath.EffectiveFullChargeFrames(2f));
 	AssertEqual(120, SpearThrowChargeMath.EffectiveFullChargeFrames(4f));
 	AssertEqual(60, SpearThrowChargeMath.MinimumChargeFrames);
+}
+
+static void SpearThrowRightClickItemEntryIsWired()
+{
+	string itemPath = Path.Combine(AppContext.BaseDirectory, "Content", "Items", "SpearGlobalItem.cs");
+	string source = File.ReadAllText(itemPath);
+
+	AssertTrue(source.Contains("public override bool AltFunctionUse(Item item, Player player)"), "SpearGlobalItem must expose right-click use");
+	AssertTrue(source.Contains("player.altFunctionUse == 2"), "SpearGlobalItem.UseItem must branch right-click use");
+	AssertTrue(source.Contains("StartSpearThrowCharge(item, player);"), "right-click use must start the spear throw charge controller");
+	AssertTrue(source.Contains("KillOwnedSpearChannels(player);"), "right-click charge must interrupt active spear channels");
+	AssertTrue(source.Contains("ResetSpearCombo()"), "right-click charge must reset the spear combo");
+}
+
+static void SpearComboResetMethodIsExposed()
+{
+	string playerPath = Path.Combine(AppContext.BaseDirectory, "Common", "Players", "WeaponEffectsPlayer.cs");
+	string source = File.ReadAllText(playerPath);
+
+	AssertTrue(source.Contains("public void ResetSpearCombo()"), "WeaponEffectsPlayer should expose a spear combo reset method");
+	AssertTrue(source.Contains("SpearGlobalItem.TryStartThrowChargeInterrupt(Player);"), "local player update should allow right-click interruption during active spear channels");
 }
 
 static (byte ColorType, byte BitDepth, byte[] ImageData, int Width, int Height) ReadPng(Stream stream)
