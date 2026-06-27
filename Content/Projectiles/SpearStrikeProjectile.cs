@@ -16,7 +16,6 @@ namespace WeaponEffects;
 
 public class SpearStrikeProjectile : ModProjectile
 {
-	private const int CollisionSamples = 8;
 	private const Player.CompositeArmStretchAmount SpearArmStretch = Player.CompositeArmStretchAmount.Full;
 
 	private int _weaponItemType;
@@ -205,8 +204,9 @@ public class SpearStrikeProjectile : ModProjectile
 		float collisionPoint = 0f;
 		ref readonly SpearComboStep step = ref TridentSpearComboScheme.GetStep(_comboStepIndex);
 		float sampleSpacing = SpearCollisionEnvelope.TrailSampleSpacing(in step);
+		int sampleCount = SpearCollisionEnvelope.CollisionSampleCount(in step);
 
-		for (int i = 0; i < CollisionSamples; i++)
+		for (int i = 0; i < sampleCount; i++)
 		{
 			float progress = MathHelper.Clamp(CurrentProgress - i * sampleSpacing, 0f, 1f);
 			SpearPoseXna pose = EvaluatePoseAt(progress);
@@ -234,8 +234,10 @@ public class SpearStrikeProjectile : ModProjectile
 
 		XnaVector2 direction = shaft / spearLength;
 		XnaVector2 visibleTip = VisibleHeldSpearTip(pose, direction, spearLength);
+		float reachScale = SpearCollisionEnvelope.CollisionReachScale(in step);
+		XnaVector2 scaledTip = pose.Grip + (visibleTip - pose.Grip) * reachScale;
 		float extension = SpearCollisionEnvelope.CollisionTipExtensionDistance(in step, progress);
-		return visibleTip + direction * extension;
+		return scaledTip + direction * extension;
 	}
 
 	private SpearPoseXna EvaluatePoseAt(float progress)

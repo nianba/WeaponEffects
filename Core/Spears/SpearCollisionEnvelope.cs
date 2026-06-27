@@ -6,30 +6,24 @@ public static class SpearCollisionEnvelope
 {
 	public const int LifetimeTicks = 26;
 
-	private const float ForwardThrustCollisionWidth = 30f;
-	private const float RisingLiftCollisionWidth = 32f;
-	private const float BacksweepCollisionWidth = 36f;
-	private const float FinisherCollisionWidth = 42f;
-	private const float QuickTrailSampleSpacing = 0.035f;
-	private const float SweepTrailSampleSpacing = 0.09f;
-
 	public static float CollisionWidth(in SpearComboStep step)
 	{
-		return step.Kind switch
-		{
-			SpearComboStepKind.ForwardThrust => ForwardThrustCollisionWidth,
-			SpearComboStepKind.RisingLift => RisingLiftCollisionWidth,
-			SpearComboStepKind.Backsweep => BacksweepCollisionWidth,
-			SpearComboStepKind.Finisher => FinisherCollisionWidth,
-			_ => Math.Max(step.CollisionWidth, ForwardThrustCollisionWidth)
-		};
+		return SpearSweepAfterimageProfile.ForStep(in step).CollisionWidth;
+	}
+
+	public static float CollisionReachScale(in SpearComboStep step)
+	{
+		return SpearSweepAfterimageProfile.ForStep(in step).CollisionReachScale;
 	}
 
 	public static float TrailSampleSpacing(in SpearComboStep step)
 	{
-		return step.Kind is SpearComboStepKind.RisingLift or SpearComboStepKind.Backsweep
-			? SweepTrailSampleSpacing
-			: QuickTrailSampleSpacing;
+		return SpearSweepAfterimageProfile.ForStep(in step).CollisionSampleSpacing;
+	}
+
+	public static int CollisionSampleCount(in SpearComboStep step)
+	{
+		return SpearSweepAfterimageProfile.ForStep(in step).CollisionSampleCount;
 	}
 
 	public static bool DrawsTipGlow(in SpearComboStep step)

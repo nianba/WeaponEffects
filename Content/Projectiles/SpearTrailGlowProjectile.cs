@@ -166,21 +166,21 @@ public class SpearTrailGlowProjectile : ModProjectile
 	private void DrawSweepArc(float currentProgress)
 	{
 		ref readonly SpearComboStep step = ref TridentSpearComboScheme.GetStep(_comboStepIndex);
-		SweepArcSettings settings = SweepArcSettings.ForStep(step.Kind);
-		if (!settings.Enabled)
+		SpearSweepAfterimageProfile afterimage = SpearSweepAfterimageProfile.ForStep(in step);
+		if (!afterimage.Enabled)
 		{
 			return;
 		}
 
-		float motionFadeIn = Smooth01(MathHelper.Clamp(currentProgress / settings.FadeInEnd, 0f, 1f));
-		float motionFadeOut = Smooth01(MathHelper.Clamp((1f - currentProgress) / settings.FadeOutStart, 0f, 1f));
-		float motionAlpha = motionFadeIn * motionFadeOut * settings.Alpha;
+		float motionFadeIn = Smooth01(MathHelper.Clamp(currentProgress / afterimage.VisualFadeInEnd, 0f, 1f));
+		float motionFadeOut = Smooth01(MathHelper.Clamp((1f - currentProgress) / afterimage.VisualFadeOutStart, 0f, 1f));
+		float motionAlpha = motionFadeIn * motionFadeOut * afterimage.VisualAlpha;
 		if (motionAlpha <= 0.005f)
 		{
 			return;
 		}
 
-		DrawSweepArcVertices(currentProgress, in settings, motionAlpha);
+		DrawSweepArcVertices(currentProgress, in afterimage, motionAlpha);
 	}
 
 	private bool ShouldDrawSpearTipGlow()
@@ -197,17 +197,17 @@ public class SpearTrailGlowProjectile : ModProjectile
 		return next - previous;
 	}
 
-	private int BuildSweepArcVertices(float currentProgress, in SweepArcSettings settings, float motionAlpha, SweepArcPass pass)
+	private int BuildSweepArcVertices(float currentProgress, in SpearSweepAfterimageProfile afterimage, float motionAlpha, SweepArcPass pass)
 	{
 		int vertexCount = 0;
 		GetSweepArcPassSettings(pass, out float alphaScale, out float widthScale, out float offsetScale, out float progressLag, out Color passColor);
 
-		int activeSamples = Math.Max(4, Math.Min(SweepArcSamples, settings.SampleCount));
+		int activeSamples = Math.Max(4, Math.Min(SweepArcSamples, afterimage.VisualSampleCount));
 		for (int i = 0; i < activeSamples; i++)
 		{
 			float rawTrailPosition = activeSamples == 1 ? 0f : i / (float)(activeSamples - 1);
 			float trailPosition = FrontOpenedTrailPosition(rawTrailPosition);
-			float sampleProgress = MathHelper.Clamp(currentProgress - progressLag - settings.ProgressWindow * (1f - trailPosition), 0f, 1f);
+			float sampleProgress = MathHelper.Clamp(currentProgress - progressLag - afterimage.VisualProgressWindow * (1f - trailPosition), 0f, 1f);
 			SpearPoseXna pose = EvaluatePoseAt(sampleProgress);
 			XnaVector2 shaft = pose.Tip - pose.Grip;
 			float shaftLength = shaft.Length();
@@ -225,17 +225,18 @@ public class SpearTrailGlowProjectile : ModProjectile
 			tangent.Normalize();
 			XnaVector2 normal = new(-tangent.Y, tangent.X);
 			XnaVector2 shaftDirection = shaft / shaftLength;
+			XnaVector2 visualTip = pose.Grip + shaft * afterimage.VisualReachScale;
 			float widthFactor = SweepWidthFactor(trailPosition);
-			float edgeOffset = settings.Width * widthFactor * offsetScale;
-			float outerExtension = settings.Width * widthFactor * widthScale * 0.16f;
-			float innerExtension = settings.Width * widthFactor * widthScale * 0.08f;
+			float edgeOffset = afterimage.VisualWidth * widthFactor * offsetScale;
+			float outerExtension = afterimage.VisualWidth * widthFactor * widthScale * 0.16f;
+			float innerExtension = afterimage.VisualWidth * widthFactor * widthScale * 0.08f;
 			float alpha = motionAlpha * alphaScale * SweepAlphaFactor(rawTrailPosition);
 			Color color = passColor * alpha;
 			float innerShaftAmount = pass == SweepArcPass.NearEdge
 				? SweepTipEdgeInnerShaftAmount
-				: settings.InnerShaftAmount;
-			XnaVector2 innerPoint = XnaVector2.Lerp(pose.Grip, pose.Tip, innerShaftAmount);
-			XnaVector2 outer = pose.Tip + normal * edgeOffset + shaftDirection * outerExtension - Main.screenPosition;
+				: afterimage.VisualInnerShaftAmount;
+			XnaVector2 innerPoint = XnaVector2.Lerp(pose.Grip, visualTip, innerShaftAmount);
+			XnaVector2 outer = visualTip + normal * edgeOffset + shaftDirection * outerExtension - Main.screenPosition;
 			XnaVector2 inner = innerPoint + normal * edgeOffset - shaftDirection * innerExtension - Main.screenPosition;
 			float texX = MathHelper.Clamp(1f - rawTrailPosition, 0.08f, 0.92f);
 
@@ -251,7 +252,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 		return vertexCount;
 	}
 
-	private void DrawSweepArcVertices(float currentProgress, in SweepArcSettings settings, float motionAlpha)
+	private void DrawSweepArcVertices(float currentProgress, in SpearSweepAfterimageProfile afterimage, float motionAlpha)
 	{
 		GraphicsDevice device = Main.graphics.GraphicsDevice;
 		Effect effect = GetSweepArcEffect();
@@ -267,16 +268,16 @@ public class SpearTrailGlowProjectile : ModProjectile
 		device.Textures[0] = sweepTexture;
 		device.Textures[1] = colorTexture;
 		effect.CurrentTechnique.Passes[0].Apply();
-		DrawSweepArcPass(device, currentProgress, in settings, motionAlpha, SweepArcPass.Main);
-		DrawSweepArcPass(device, currentProgress, in settings, motionAlpha, SweepArcPass.Core);
+		DrawSweepArcPass(device, currentProgress, in afterimage, motionAlpha, SweepArcPass.Main);
+		DrawSweepArcPass(device, currentProgress, in afterimage, motionAlpha, SweepArcPass.Core);
 
 		Main.spriteBatch.End();
 		Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
 	}
 
-	private void DrawSweepArcPass(GraphicsDevice device, float currentProgress, in SweepArcSettings settings, float motionAlpha, SweepArcPass pass)
+	private void DrawSweepArcPass(GraphicsDevice device, float currentProgress, in SpearSweepAfterimageProfile afterimage, float motionAlpha, SweepArcPass pass)
 	{
-		int vertexCount = BuildSweepArcVertices(currentProgress, in settings, motionAlpha, pass);
+		int vertexCount = BuildSweepArcVertices(currentProgress, in afterimage, motionAlpha, pass);
 		if (vertexCount >= 4)
 		{
 			device.DrawUserPrimitives(PrimitiveType.TriangleStrip, _sweepArcVertices, 0, vertexCount - 2);
@@ -580,56 +581,6 @@ public class SpearTrailGlowProjectile : ModProjectile
 		}
 
 		public float Rotation => (Tip - Grip).ToRotation();
-	}
-
-	private readonly struct SweepArcSettings
-	{
-		public readonly bool Enabled;
-		public readonly int SampleCount;
-		public readonly float ProgressWindow;
-		public readonly float Width;
-		public readonly float Alpha;
-		public readonly float FadeInEnd;
-		public readonly float FadeOutStart;
-		public readonly float InnerShaftAmount;
-
-		private SweepArcSettings(int sampleCount, float progressWindow, float width, float alpha, float fadeInEnd, float fadeOutStart, float innerShaftAmount)
-		{
-			Enabled = true;
-			SampleCount = sampleCount;
-			ProgressWindow = progressWindow;
-			Width = width;
-			Alpha = alpha;
-			FadeInEnd = fadeInEnd;
-			FadeOutStart = fadeOutStart;
-			InnerShaftAmount = innerShaftAmount;
-		}
-
-		public static SweepArcSettings ForStep(SpearComboStepKind kind)
-		{
-			return kind switch
-			{
-				SpearComboStepKind.RisingLift => new SweepArcSettings(
-					sampleCount: 18,
-					progressWindow: 0.58f,
-					width: 22f,
-					alpha: 0.014f,
-					fadeInEnd: 0.24f,
-					fadeOutStart: 0.46f,
-					innerShaftAmount: 0.54f),
-
-				SpearComboStepKind.Backsweep => new SweepArcSettings(
-					sampleCount: 30,
-					progressWindow: 1.12f,
-					width: 30f,
-					alpha: 0.014f,
-					fadeInEnd: 0.18f,
-					fadeOutStart: 0.56f,
-					innerShaftAmount: 0.16f),
-
-				_ => default
-			};
-		}
 	}
 
 	private enum SweepArcPass
