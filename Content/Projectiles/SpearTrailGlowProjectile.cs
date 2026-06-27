@@ -178,7 +178,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 		float motionFadeIn = Smooth01(MathHelper.Clamp(currentProgress / settings.FadeInEnd, 0f, 1f));
 		float motionFadeOut = Smooth01(MathHelper.Clamp((1f - currentProgress) / settings.FadeOutStart, 0f, 1f));
 		float motionAlpha = motionFadeIn * motionFadeOut * settings.Alpha;
-		if (motionAlpha <= 0.01f)
+		if (motionAlpha <= 0.005f)
 		{
 			return;
 		}
@@ -584,7 +584,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 					sampleCount: 18,
 					progressWindow: 0.58f,
 					width: 22f,
-					alpha: 0.02f,
+					alpha: 0.01f,
 					fadeInEnd: 0.24f,
 					fadeOutStart: 0.46f,
 					innerShaftAmount: 0.54f),
@@ -593,7 +593,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 					sampleCount: 30,
 					progressWindow: 1.12f,
 					width: 30f,
-					alpha: 0.02f,
+					alpha: 0.01f,
 					fadeInEnd: 0.18f,
 					fadeOutStart: 0.56f,
 					innerShaftAmount: 0.16f),
