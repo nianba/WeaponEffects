@@ -74,7 +74,7 @@ public static class SpearMotion
 		Vector2 held = new(-reach * 0.55f, 44f);
 		Vector2 end = new(reach * 1.25f, 8f);
 		const float windupEnd = 0.4f;
-		const float thrustEnd = 0.9f;
+		const float thrustEnd = 0.7f;
 		if (progress <= windupEnd)
 		{
 			float windupProgress = Smooth01(progress / windupEnd);

@@ -13,7 +13,7 @@ public static class TridentSpearComboScheme
 			reachScale: 1.15f,
 			collisionWidth: 22f,
 			damageMultiplier: 0.85f,
-			timeMultiplier: 0.75f,
+			timeMultiplier: 0.65f,
 			extraUpdates: 4),
 
 		new(
@@ -25,7 +25,7 @@ public static class TridentSpearComboScheme
 			reachScale: 1.05f,
 			collisionWidth: 24f,
 			damageMultiplier: 1f,
-			timeMultiplier: 0.9f,
+			timeMultiplier: 0.65f,
 			extraUpdates: 4),
 
 		new(
@@ -44,12 +44,12 @@ public static class TridentSpearComboScheme
 			segmentIndex: 3,
 			kind: SpearComboStepKind.Finisher,
 			name: "Branching Finisher",
-			activeStart: 0.42f,
+			activeStart: 0.37f,
 			activeEnd: 0.86f,
 			reachScale: 1.35f,
 			collisionWidth: 32f,
 			damageMultiplier: 1.5f,
-			timeMultiplier: 1.15f,
+			timeMultiplier: 1.2f,
 			extraUpdates: 4,
 			airborneTimeMultiplier: 1.2f)
 	};
