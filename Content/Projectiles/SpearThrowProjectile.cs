@@ -130,7 +130,12 @@ public class SpearThrowProjectile : ModProjectile
 
 	public override bool? CanHitNPC(NPC target)
 	{
-		return target != null && !_hitNpcs[target.whoAmI];
+		if (target == null || _hitNpcs[target.whoAmI])
+		{
+			return false;
+		}
+
+		return null;
 	}
 
 	public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
