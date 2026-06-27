@@ -71,7 +71,8 @@ public class SpearGlobalItem : GlobalItem
 			return false;
 		}
 
-		bool interruptingSpearChannel = HasOwnedProjectile(player, ModContent.ProjectileType<SpearChannelProjectile>());
+		bool interruptingSpearChannel = HasOwnedProjectile(player, ModContent.ProjectileType<SpearChannelProjectile>())
+			|| HasOwnedProjectile(player, ModContent.ProjectileType<SpearComboHeldProjectile>());
 		if (!interruptingSpearChannel && player.itemAnimation <= 0 && player.itemTime <= 0)
 		{
 			return false;
@@ -119,17 +120,22 @@ public class SpearGlobalItem : GlobalItem
 		float weaponLength = GetWeaponLength(item);
 		Vector2 targetWorld = Main.MouseWorld;
 
+		if (TryRefreshOwnedSpearCombo(player, item.type, item.useAnimation, weaponLength, targetWorld))
+		{
+			return;
+		}
+
 		Projectile projectile = Projectile.NewProjectileDirect(
 			player.GetSource_ItemUse(item),
 			player.Center,
 			Vector2.Zero,
-			ModContent.ProjectileType<SpearChannelProjectile>(),
+			ModContent.ProjectileType<SpearComboHeldProjectile>(),
 			player.GetWeaponDamage(item),
 			player.GetWeaponKnockback(item),
 			player.whoAmI,
 			player.direction);
 
-		if (projectile.ModProjectile is SpearChannelProjectile spear)
+		if (projectile.ModProjectile is SpearComboHeldProjectile spear)
 		{
 			spear.Initialize(item.type, item.useAnimation, weaponLength, targetWorld);
 		}
@@ -186,13 +192,36 @@ public class SpearGlobalItem : GlobalItem
 		return false;
 	}
 
-	private static void KillOwnedSpearChannels(Player player)
+	private static bool TryRefreshOwnedSpearCombo(Player player, int weaponItemType, int useAnimation, float weaponLength, Vector2 targetWorld)
 	{
-		int spearChannelType = ModContent.ProjectileType<SpearChannelProjectile>();
+		int spearComboType = ModContent.ProjectileType<SpearComboHeldProjectile>();
 		for (int i = 0; i < Main.maxProjectiles; i++)
 		{
 			Projectile projectile = Main.projectile[i];
-			if (projectile.active && projectile.owner == player.whoAmI && projectile.type == spearChannelType)
+			if (projectile.active && projectile.owner == player.whoAmI && projectile.type == spearComboType)
+			{
+				if (projectile.ModProjectile is SpearComboHeldProjectile spear)
+				{
+					spear.RefreshWeaponState(weaponItemType, useAnimation, weaponLength, targetWorld);
+				}
+
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private static void KillOwnedSpearChannels(Player player)
+	{
+		int spearChannelType = ModContent.ProjectileType<SpearChannelProjectile>();
+		int spearComboType = ModContent.ProjectileType<SpearComboHeldProjectile>();
+		for (int i = 0; i < Main.maxProjectiles; i++)
+		{
+			Projectile projectile = Main.projectile[i];
+			if (projectile.active
+				&& projectile.owner == player.whoAmI
+				&& (projectile.type == spearChannelType || projectile.type == spearComboType))
 			{
 				projectile.Kill();
 			}

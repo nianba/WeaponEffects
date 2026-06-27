@@ -10,6 +10,7 @@ Projectiles: {
 	// ShadowFlameRecallKnifeProjectile.DisplayName: Shadow Flame Recall Knife Projectile
 	// ShadowFlameStuckKnifeProjectile.DisplayName: Shadow Flame Stuck Knife Projectile
 	// SpearChannelProjectile.DisplayName: Spear Channel Projectile
+	// SpearComboHeldProjectile.DisplayName: Spear Combo Held Projectile
 	// SpearStrikeProjectile.DisplayName: Spear Strike Projectile
 	// SpearTrailGlowProjectile.DisplayName: Spear Trail Glow Projectile
 	// SpearThrowChargeProjectile.DisplayName: Spear Throw Charge Projectile
