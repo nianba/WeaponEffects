@@ -73,9 +73,9 @@ internal class WeaponEffectsGameplayConfig : ModConfig
 
 	[Increment(1)]
 	[Range(1, 180)]
-	[DefaultValue(45)]
+	[DefaultValue(120)]
 	[Slider]
-	public int ComboResetDelay = 45;
+	public int ComboResetDelay = 120;
 
 	public override ConfigScope Mode => ConfigScope.ServerSide;
 }

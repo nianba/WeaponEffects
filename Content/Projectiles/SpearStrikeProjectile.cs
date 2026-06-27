@@ -209,6 +209,11 @@ public class SpearStrikeProjectile : ModProjectile
 		for (int i = 0; i < sampleCount; i++)
 		{
 			float progress = MathHelper.Clamp(CurrentProgress - i * sampleSpacing, 0f, 1f);
+			if (!SpearCollisionEnvelope.CanSampleCollisionAt(in step, progress))
+			{
+				continue;
+			}
+
 			SpearPoseXna pose = EvaluatePoseAt(progress);
 			XnaVector2 collisionTip = CollisionTipForPose(in step, pose, progress, out float collisionWidth);
 

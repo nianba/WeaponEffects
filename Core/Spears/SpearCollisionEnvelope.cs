@@ -26,6 +26,11 @@ public static class SpearCollisionEnvelope
 		return SpearSweepAfterimageProfile.ForStep(in step).CollisionSampleCount;
 	}
 
+	public static bool CanSampleCollisionAt(in SpearComboStep step, float progress)
+	{
+		return progress >= step.ActiveStart && progress <= step.ActiveEnd;
+	}
+
 	public static bool DrawsTipGlow(in SpearComboStep step)
 	{
 		return SpearTipGlowProfile.ForStep(in step).Enabled;

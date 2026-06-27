@@ -20,24 +20,24 @@ public static class TridentSpearComboScheme
 			segmentIndex: 1,
 			kind: SpearComboStepKind.RisingLift,
 			name: "Rising Lift",
-			activeStart: 0.22f,
-			activeEnd: 0.6f,
+			activeStart: 0.42f,
+			activeEnd: 0.76f,
 			reachScale: 1.05f,
 			collisionWidth: 24f,
-			damageMultiplier: 1f,
-			timeMultiplier: 0.65f,
+			damageMultiplier: 2.3f,
+			timeMultiplier: 1.8f,
 			extraUpdates: 4),
 
 		new(
 			segmentIndex: 2,
 			kind: SpearComboStepKind.Backsweep,
 			name: "Around-Body Backsweep",
-			activeStart: 0.2f,
-			activeEnd: 0.58f,
+			activeStart: 0.38f,
+			activeEnd: 0.78f,
 			reachScale: 1f,
 			collisionWidth: 28f,
-			damageMultiplier: 0.85f,
-			timeMultiplier: 1.05f,
+			damageMultiplier: 2.3f,
+			timeMultiplier: 1.8f,
 			extraUpdates: 4),
 
 		new(
@@ -48,8 +48,8 @@ public static class TridentSpearComboScheme
 			activeEnd: 0.86f,
 			reachScale: 1.35f,
 			collisionWidth: 32f,
-			damageMultiplier: 1.5f,
-			timeMultiplier: 1.2f,
+			damageMultiplier: 3f,
+			timeMultiplier: 2.3f,
 			extraUpdates: 4,
 			airborneTimeMultiplier: 1.2f)
 	};

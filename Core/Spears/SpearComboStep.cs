@@ -46,6 +46,6 @@ public readonly struct SpearComboStep
 			? AirborneTimeMultiplier
 			: TimeMultiplier;
 
-		return System.Math.Clamp(multiplier, 0.6f, 1.4f);
+		return System.Math.Clamp(multiplier, 0.2f, 3.0f);
 	}
 }
