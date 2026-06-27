@@ -260,7 +260,8 @@ public class SpearTrailGlowProjectile : ModProjectile
 		GraphicsDevice device = Main.graphics.GraphicsDevice;
 		Effect effect = GetSweepArcEffect();
 		Texture2D sweepTexture = MeleeEffectAssets.GetTexture(MeleeEffectAssets.SlashTexture);
-		if (effect == null || sweepTexture == null)
+		Texture2D colorTexture = MeleeEffectAssets.GetTexture(MeleeEffectAssets.SpearSweepColorTexture);
+		if (effect == null || sweepTexture == null || colorTexture == null)
 		{
 			return;
 		}
@@ -268,7 +269,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 		Main.spriteBatch.End();
 		Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
 		device.Textures[0] = sweepTexture;
-		device.Textures[1] = sweepTexture;
+		device.Textures[1] = colorTexture;
 		effect.CurrentTechnique.Passes[0].Apply();
 		DrawSweepArcPass(device, currentProgress, in settings, motionAlpha, SweepArcPass.Main);
 		DrawSweepArcPass(device, currentProgress, in settings, motionAlpha, SweepArcPass.Core);
