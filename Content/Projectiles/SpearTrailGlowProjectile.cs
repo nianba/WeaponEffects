@@ -259,21 +259,19 @@ public class SpearTrailGlowProjectile : ModProjectile
 	{
 		GraphicsDevice device = Main.graphics.GraphicsDevice;
 		Effect effect = GetSweepArcEffect();
-		Texture2D weaponTexture = GetWeaponTexture();
-		if (effect == null || weaponTexture == null)
+		Texture2D sweepTexture = MeleeEffectAssets.GetTexture(MeleeEffectAssets.SlashTexture);
+		if (effect == null || sweepTexture == null)
 		{
 			return;
 		}
 
 		Main.spriteBatch.End();
 		Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
-		device.Textures[0] = MeleeEffectAssets.GetTexture(MeleeEffectAssets.SlashTexture);
-		device.Textures[1] = weaponTexture;
+		device.Textures[0] = sweepTexture;
+		device.Textures[1] = sweepTexture;
 		effect.CurrentTechnique.Passes[0].Apply();
-		DrawSweepArcPass(device, currentProgress, in settings, motionAlpha, SweepArcPass.TrailEcho);
 		DrawSweepArcPass(device, currentProgress, in settings, motionAlpha, SweepArcPass.Main);
 		DrawSweepArcPass(device, currentProgress, in settings, motionAlpha, SweepArcPass.Core);
-		DrawSweepArcPass(device, currentProgress, in settings, motionAlpha, SweepArcPass.NearEdge);
 
 		Main.spriteBatch.End();
 		Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
@@ -535,30 +533,19 @@ public class SpearTrailGlowProjectile : ModProjectile
 
 	private static void GetSweepArcPassSettings(SweepArcPass pass, out float alphaScale, out float widthScale, out float offsetScale, out float progressLag, out Color passColor)
 	{
-		alphaScale = 0.56f;
+		alphaScale = 0.48f;
 		widthScale = 1f;
 		offsetScale = 0f;
 		progressLag = 0f;
-		passColor = Color.White;
+		passColor = new Color(245, 238, 205);
 
 		switch (pass)
 		{
-			case SweepArcPass.TrailEcho:
-				alphaScale = 0.09f;
-				widthScale = 0.62f;
-				offsetScale = -0.16f;
-				progressLag = 0.06f;
-				passColor = Color.Lerp(Color.White, Color.Black, 0.12f);
-				break;
 			case SweepArcPass.Core:
-				alphaScale = 0.26f;
-				widthScale = 0.24f;
+				alphaScale = 0.2f;
+				widthScale = 0.2f;
 				offsetScale = 0.08f;
-				break;
-			case SweepArcPass.NearEdge:
-				alphaScale = 0.72f;
-				widthScale = 0.08f;
-				offsetScale = 0.72f;
+				passColor = new Color(255, 250, 232);
 				break;
 		}
 	}
@@ -629,7 +616,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 					sampleCount: 18,
 					progressWindow: 0.58f,
 					width: 22f,
-					alpha: 0.01f,
+					alpha: 0.014f,
 					fadeInEnd: 0.24f,
 					fadeOutStart: 0.46f,
 					innerShaftAmount: 0.54f),
@@ -638,7 +625,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 					sampleCount: 30,
 					progressWindow: 1.12f,
 					width: 30f,
-					alpha: 0.01f,
+					alpha: 0.014f,
 					fadeInEnd: 0.18f,
 					fadeOutStart: 0.56f,
 					innerShaftAmount: 0.16f),

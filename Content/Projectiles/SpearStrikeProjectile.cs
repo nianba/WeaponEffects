@@ -322,7 +322,7 @@ public class SpearStrikeProjectile : ModProjectile
 		XnaVector2 tipOrigin = HeldSpearTipOrigin(weaponTexture);
 		XnaVector2 textureShaft = tipOrigin - gripOrigin;
 		float textureGripToTipLength = Math.Max(1f, textureShaft.Length());
-		float drawScale = MathHelper.Clamp(shaft.Length() / textureGripToTipLength, 0.65f, 1.18f);
+		float drawScale = MathHelper.Clamp(shaft.Length() / textureGripToTipLength, 0.65f, 1.18f) * 1.12f;
 		XnaVector2 drawPosition = pose.Grip + OwnerVisualOffset() - Main.screenPosition;
 		float rotation = pose.Rotation - textureShaft.ToRotation();
 
