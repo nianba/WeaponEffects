@@ -52,7 +52,7 @@ public static class SpearMotion
 
 	private static Vector2 RisingLiftTip(float reach, float progress)
 	{
-		const float windupEnd = 0.42f;
+		const float windupEnd = 0.48f;
 		const float liftEnd = 0.76f;
 		float liftEndAngle = DegreesToRadians(-210f);
 		float liftEndRadius = reach * 0.9f;
@@ -80,7 +80,7 @@ public static class SpearMotion
 
 	private static Vector2 BacksweepTip(float reach, float progress)
 	{
-		const float windupEnd = 0.38f;
+		const float windupEnd = 0.48f;
 		const float sweepEnd = 0.78f;
 		float sweepEndAngle = DegreesToRadians(510f);
 		float sweepEndRadius = reach * 0.9f;
@@ -110,12 +110,12 @@ public static class SpearMotion
 	{
 		Vector2 held = ArcTip(DegreesToRadians(150f), reach * 0.82f, 0f);
 		Vector2 end = new(reach * 1.25f, 8f);
-		const float windupEnd = 0.4f;
+		const float windupEnd = 0.48f;
 		const float thrustEnd = 0.7f;
 		if (progress <= windupEnd)
 		{
 			float windupProgress = Smooth01(progress / windupEnd);
-			float angle = LerpRadians(DegreesToRadians(150f), DegreesToRadians(150f), windupProgress);
+			float angle = LerpRadians(DegreesToRadians(150f), DegreesToRadians(120f), windupProgress);
 			float radius = reach * LerpFloat(0.9f, 0.82f, windupProgress);
 			return ArcTip(angle, radius, 0f);
 		}

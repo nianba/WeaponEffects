@@ -11,6 +11,7 @@ public readonly struct SpearComboStep
 	public readonly float CollisionWidth;
 	public readonly float DamageMultiplier;
 	public readonly float TimeMultiplier;
+	public readonly float SwingSoundDelay;
 	public readonly float AirborneTimeMultiplier;
 	public readonly int ExtraUpdates;
 
@@ -25,6 +26,7 @@ public readonly struct SpearComboStep
 		float damageMultiplier,
 		float timeMultiplier,
 		int extraUpdates,
+		float swingSoundDelay = 0f,
 		float airborneTimeMultiplier = 0f)
 	{
 		SegmentIndex = segmentIndex;
@@ -36,6 +38,7 @@ public readonly struct SpearComboStep
 		CollisionWidth = collisionWidth;
 		DamageMultiplier = damageMultiplier;
 		TimeMultiplier = timeMultiplier;
+		SwingSoundDelay = swingSoundDelay;
 		AirborneTimeMultiplier = airborneTimeMultiplier;
 		ExtraUpdates = extraUpdates;
 	}

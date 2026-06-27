@@ -152,9 +152,6 @@ public class SpearChannelProjectile : ModProjectile
 		int damage = Math.Max(1, (int)MathF.Round(NormalSpearDamage * step.DamageMultiplier));
 		float knockback = SpearKnockback;
 
-		SoundStyle swingSound = new("WeaponEffects/Sounds/S2") { Volume = 0.32f };
-		MeleeEffectAssets.PlaySound(in swingSound, player.Center);
-
 		SpearStrikeProjectile.Spawn(
 			Projectile.GetSource_FromAI(),
 			player.Center,

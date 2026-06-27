@@ -25,6 +25,7 @@ public class SpearStrikeProjectile : ModProjectile
 	private float _weaponLength;
 	private int _totalLifetimeUpdates;
 	private int _age;
+	private bool _playedSwingSound;
 
 	public override string Texture => "Terraria/Images/Item_" + ItemID.Trident;
 
@@ -103,6 +104,7 @@ public class SpearStrikeProjectile : ModProjectile
 		writer.Write(_weaponLength);
 		writer.Write(_totalLifetimeUpdates);
 		writer.Write(_age);
+		writer.Write(_playedSwingSound);
 	}
 
 	public override void ReceiveExtraAI(BinaryReader reader)
@@ -114,6 +116,7 @@ public class SpearStrikeProjectile : ModProjectile
 		_weaponLength = reader.ReadSingle();
 		_totalLifetimeUpdates = reader.ReadInt32();
 		_age = reader.ReadInt32();
+		_playedSwingSound = reader.ReadBoolean();
 	}
 
 	public override bool ShouldUpdatePosition()
@@ -146,6 +149,7 @@ public class SpearStrikeProjectile : ModProjectile
 
 		SpearPoseXna pose = EvaluatePoseAt(CurrentProgress);
 		ApplyPlayerUsePose(player, pose);
+		PlaySwingSoundAtRelease(player, CurrentProgress);
 
 		_age++;
 		if (_age >= TotalLifetimeUpdates)
@@ -389,6 +393,26 @@ public class SpearStrikeProjectile : ModProjectile
 	{
 		sourceItem = player.HeldItem;
 		return sourceItem != null && !sourceItem.IsAir && sourceItem.type == _weaponItemType;
+	}
+
+	private void PlaySwingSoundAtRelease(Player player, float progress)
+	{
+		if (_playedSwingSound)
+		{
+			return;
+		}
+
+		ref readonly SpearComboStep step = ref TridentSpearComboScheme.GetStep(_comboStepIndex);
+		float soundProgress = MathHelper.Clamp(step.ActiveStart + step.SwingSoundDelay, 0f, 1f);
+		if (progress < soundProgress)
+		{
+			return;
+		}
+
+		_playedSwingSound = true;
+		SoundStyle swingSound = new("WeaponEffects/Sounds/S2") { Volume = 0.32f };
+		MeleeEffectAssets.PlaySound(in swingSound, player.Center);
+		Projectile.netUpdate = true;
 	}
 
 	private int TotalLifetimeUpdates => _totalLifetimeUpdates > 0

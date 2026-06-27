@@ -26,7 +26,8 @@ public static class TridentSpearComboScheme
 			collisionWidth: 24f,
 			damageMultiplier: 2.3f,
 			timeMultiplier: 1.8f,
-			extraUpdates: 4),
+			extraUpdates: 4,
+			swingSoundDelay: 0.08f),
 
 		new(
 			segmentIndex: 2,
@@ -38,7 +39,8 @@ public static class TridentSpearComboScheme
 			collisionWidth: 28f,
 			damageMultiplier: 2.3f,
 			timeMultiplier: 1.8f,
-			extraUpdates: 4),
+			extraUpdates: 4,
+			swingSoundDelay: 0.08f),
 
 		new(
 			segmentIndex: 3,
@@ -51,6 +53,7 @@ public static class TridentSpearComboScheme
 			damageMultiplier: 3f,
 			timeMultiplier: 2.3f,
 			extraUpdates: 4,
+			swingSoundDelay: 0.08f,
 			airborneTimeMultiplier: 1.2f)
 	};
 
