@@ -25,7 +25,7 @@ public static class SpearMotion
 		Vector2 localTip = LocalTipFor(step.Kind, branch, reach, clampedProgress);
 		float facing = MathF.Cos(aimRotation) < 0f ? -1f : 1f;
 		Vector2 grip = ownerCenter + new Vector2(12f * facing, 4f);
-		Vector2 tip = grip + Rotate(localTip, aimRotation);
+		Vector2 tip = grip + TransformLocalTip(localTip, aimRotation, facing);
 		bool active = clampedProgress >= step.ActiveStart && clampedProgress <= step.ActiveEnd;
 
 		return new SpearPoseSnapshot(grip, tip, step.CollisionWidth, active);
@@ -107,11 +107,11 @@ public static class SpearMotion
 		return Lerp(overheadExit, slamEnd, slamProgress);
 	}
 
-	private static Vector2 Rotate(Vector2 value, float radians)
+	private static Vector2 TransformLocalTip(Vector2 value, float aimRotation, float facing)
 	{
-		float cos = MathF.Cos(radians);
-		float sin = MathF.Sin(radians);
-		return new Vector2(value.X * cos - value.Y * sin, value.X * sin + value.Y * cos);
+		Vector2 forward = new(MathF.Cos(aimRotation), MathF.Sin(aimRotation));
+		Vector2 screenDownPerpendicular = new Vector2(-forward.Y, forward.X) * facing;
+		return forward * value.X + screenDownPerpendicular * value.Y;
 	}
 
 	private static Vector2 Lerp(Vector2 start, Vector2 end, float amount)

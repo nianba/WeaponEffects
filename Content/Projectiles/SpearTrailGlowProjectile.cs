@@ -24,7 +24,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 	private const float FirstComboTipGlowWidthScale = 0.4f;
 	private const float FinisherTipGlowStartProgress = 0.62f;
 	private const float FinisherTipGlowReachScale = 1.3f;
-	private const float FinisherTipGlowWidthScale = 1.25f;
+	private const float FinisherTipGlowWidthScale = 1.5f;
 	private const float SweepTipEdgeInnerShaftAmount = 0.86f;
 	private static Asset<Effect> _sweepArcEffect;
 

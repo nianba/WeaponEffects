@@ -11,7 +11,7 @@ public static class SpearThrowChargeMath
 	public const float MaximumDamageMultiplier = 10f;
 	public const float MinimumScreenRange = 1.5f;
 	public const float MaximumScreenRange = 5f;
-	public const float ThrowSpeed = 42f;
+	public const float ThrowSpeed = 80f;
 	public const float MinimumVisualWidth = 18f;
 	public const float MaximumVisualWidth = 34f;
 	public const float MinimumCollisionWidth = 34f;
