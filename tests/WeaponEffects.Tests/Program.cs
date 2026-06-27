@@ -184,7 +184,7 @@ static void SpearTipGlowUsesStepSpecificWidthScale()
 	string path = Path.Combine(AppContext.BaseDirectory, "Content", "Projectiles", "SpearTrailGlowProjectile.cs");
 	string source = File.ReadAllText(path);
 
-	AssertTrue(source.Contains("private const float FirstComboTipGlowWidthScale = 0.55f;"), "first combo tip glow should have a dedicated thinner width scale");
+	AssertTrue(source.Contains("private const float FirstComboTipGlowWidthScale = 0.4f;"), "first combo tip glow should have a dedicated thinner width scale");
 	AssertTrue(source.Contains("private const float FinisherTipGlowWidthScale = 1.25f;"), "finisher tip glow should have a dedicated wider width scale");
 	AssertTrue(source.Contains("0 => FirstComboTipGlowWidthScale"), "first combo tip glow width scale must apply to combo step 1");
 	AssertTrue(source.Contains("3 => FinisherTipGlowWidthScale"), "finisher tip glow width scale must apply to combo step 4");

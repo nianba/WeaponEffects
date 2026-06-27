@@ -73,15 +73,21 @@ public static class SpearMotion
 		Vector2 start = new(-reach * 0.52f, 38f);
 		Vector2 held = new(-reach * 0.55f, 44f);
 		Vector2 end = new(reach * 1.25f, 8f);
-		const float windupEnd = 0.5f;
+		const float windupEnd = 0.4f;
+		const float thrustEnd = 0.9f;
 		if (progress <= windupEnd)
 		{
 			float windupProgress = Smooth01(progress / windupEnd);
 			return Lerp(start, held, windupProgress);
 		}
 
-		float thrustProgress = Smooth01((progress - windupEnd) / (1f - windupEnd));
-		return Lerp(held, end, thrustProgress);
+		if (progress <= thrustEnd)
+		{
+			float thrustProgress = Smooth01((progress - windupEnd) / (thrustEnd - windupEnd));
+			return Lerp(held, end, thrustProgress);
+		}
+
+		return end;
 	}
 
 	private static Vector2 AirborneFinisherTip(float reach, float progress)

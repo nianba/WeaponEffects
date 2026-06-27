@@ -44,7 +44,7 @@ public static class TridentSpearComboScheme
 			segmentIndex: 3,
 			kind: SpearComboStepKind.Finisher,
 			name: "Branching Finisher",
-			activeStart: 0.52f,
+			activeStart: 0.42f,
 			activeEnd: 0.86f,
 			reachScale: 1.35f,
 			collisionWidth: 32f,

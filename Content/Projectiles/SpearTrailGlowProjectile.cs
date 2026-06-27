@@ -20,7 +20,8 @@ public class SpearTrailGlowProjectile : ModProjectile
 	private const int TrailSamples = 8;
 	private const int SweepArcSamples = 30;
 	private const int SweepArcMaxVertices = SweepArcSamples * 2;
-	private const float FirstComboTipGlowWidthScale = 0.55f;
+	private const float FirstComboTipGlowWidthScale = 0.4f;
+	private const float FinisherTipGlowStartProgress = 0.62f;
 	private const float FinisherTipGlowReachScale = 1.3f;
 	private const float FinisherTipGlowWidthScale = 1.25f;
 	private const float SweepTipEdgeInnerShaftAmount = 0.86f;
@@ -347,7 +348,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 			return;
 		}
 
-		if (_comboStepIndex == 3 && progress <= 0.5f)
+		if (_comboStepIndex == 3 && progress < FinisherTipGlowStartProgress)
 		{
 			return;
 		}
