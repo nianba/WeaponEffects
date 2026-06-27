@@ -186,27 +186,6 @@ Texture use:
 
 The drawing code should keep `SlashTex.png` narrow for spear shaft visuals. A wide sword-like crescent is considered a V1 failure.
 
-## Testing
-
-Manual in-game verification is required because this is a visual and feel-heavy feature.
-
-Minimum checks:
-
-- Trident uses the spear combo instead of the sword slash combo.
-- Non-Trident items are unchanged.
-- Four combo steps advance in order and reset consistently.
-- Step 4 chooses grounded or airborne branch only at strike start.
-- Grounded finisher reaches farther than the first three steps.
-- Air finisher draws the large overhead semicircle and ends forward/down.
-- Enemy hits trigger damage and the reused hit flash.
-- Multiplayer-relevant fields are written through `SendExtraAI` and restored through `ReceiveExtraAI`.
-
-Code-level checks:
-
-- Build succeeds.
-- Existing sword behavior still compiles and remains isolated from spear projectiles.
-- New spear classes avoid direct dependency on `SlashArcProjectile` for damage or collision.
-
 ## Acceptance Criteria
 
 V1 is accepted when `ItemID.Trident` can execute the four-step combo with visible spear-tip trails, shaft afterimages, correct fourth-step branching, real enemy hits, and no visible fallback to sword crescent attacks.

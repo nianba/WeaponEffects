@@ -18,6 +18,7 @@ public class SpearStrikeProjectile : ModProjectile
 {
 	private const int StrikeLifetimeTicks = 28;
 	private const int CollisionSamples = 8;
+	private const Player.CompositeArmStretchAmount SpearArmStretch = Player.CompositeArmStretchAmount.Full;
 
 	private int _weaponItemType;
 	private int _comboStepIndex;
@@ -76,6 +77,7 @@ public class SpearStrikeProjectile : ModProjectile
 	{
 		ProjectileID.Sets.TrailCacheLength[Projectile.type] = 12;
 		ProjectileID.Sets.TrailingMode[Projectile.type] = 2;
+		ProjectileID.Sets.HeldProjDoesNotUsePlayerGfxOffY[Type] = true;
 	}
 
 	public override void SetDefaults()
@@ -140,13 +142,12 @@ public class SpearStrikeProjectile : ModProjectile
 			return;
 		}
 
-		Projectile.Center = player.Center;
+		Projectile.Center = player.MountedCenter;
 		Projectile.velocity = XnaVector2.Zero;
 		Projectile.rotation = _aimRotation;
 
 		SpearPoseXna pose = EvaluatePoseAt(CurrentProgress);
-		player.heldProj = Projectile.whoAmI;
-		player.itemRotation = player.direction > 0 ? pose.Rotation : pose.Rotation + MathHelper.Pi;
+		ApplyPlayerUsePose(player, pose);
 
 		_age++;
 		if (_age >= TotalLifetimeUpdates)
@@ -235,7 +236,7 @@ public class SpearStrikeProjectile : ModProjectile
 			_weaponLength,
 			progress);
 
-		return new SpearPoseXna(ToXna(pose.Grip), ToXna(pose.Tip), pose.CollisionWidth, pose.Active);
+		return AnchorPoseToPlayerFrontHand(new SpearPoseXna(ToXna(pose.Grip), ToXna(pose.Tip), pose.CollisionWidth, pose.Active));
 	}
 
 	private XnaVector2 OwnerCenterWorld()
@@ -245,11 +246,57 @@ public class SpearStrikeProjectile : ModProjectile
 			Player player = Main.player[Projectile.owner];
 			if (player.active)
 			{
-				return player.Center;
+				return player.MountedCenter;
 			}
 		}
 
 		return Projectile.Center;
+	}
+
+	private SpearPoseXna AnchorPoseToPlayerFrontHand(SpearPoseXna pose)
+	{
+		if (!TryGetOwner(out Player player))
+		{
+			return pose;
+		}
+
+		float armRotation = FrontArmRotation(pose.Rotation);
+		XnaVector2 handPosition = player.GetFrontHandPosition(SpearArmStretch, armRotation);
+		if (player.gravDir == -1f)
+		{
+			handPosition.Y = player.Bottom.Y + (player.position.Y - handPosition.Y);
+		}
+
+		return pose.Translated(handPosition - pose.Grip);
+	}
+
+	private void ApplyPlayerUsePose(Player player, SpearPoseXna pose)
+	{
+		player.heldProj = Projectile.whoAmI;
+		player.itemRotation = player.direction > 0 ? pose.Rotation : pose.Rotation + MathHelper.Pi;
+		player.SetCompositeArmFront(true, SpearArmStretch, FrontArmRotation(pose.Rotation));
+	}
+
+	private static float FrontArmRotation(float spearRotation)
+	{
+		return spearRotation - MathHelper.PiOver2;
+	}
+
+	private bool TryGetOwner(out Player player)
+	{
+		if (Projectile.owner >= 0 && Projectile.owner < Main.maxPlayers)
+		{
+			player = Main.player[Projectile.owner];
+			return player.active;
+		}
+
+		player = null;
+		return false;
+	}
+
+	private XnaVector2 OwnerVisualOffset()
+	{
+		return TryGetOwner(out Player player) ? new XnaVector2(0f, player.gfxOffY) : XnaVector2.Zero;
 	}
 
 	private void DrawHeldWeapon(SpearPoseXna pose, Color lightColor)
@@ -276,7 +323,7 @@ public class SpearStrikeProjectile : ModProjectile
 		XnaVector2 textureShaft = tipOrigin - gripOrigin;
 		float textureGripToTipLength = Math.Max(1f, textureShaft.Length());
 		float drawScale = MathHelper.Clamp(shaft.Length() / textureGripToTipLength, 0.65f, 1.18f);
-		XnaVector2 drawPosition = pose.Grip - Main.screenPosition;
+		XnaVector2 drawPosition = pose.Grip + OwnerVisualOffset() - Main.screenPosition;
 		float rotation = pose.Rotation - textureShaft.ToRotation();
 
 		Main.EntitySpriteDraw(
@@ -293,7 +340,7 @@ public class SpearStrikeProjectile : ModProjectile
 
 	private static XnaVector2 HeldSpearGripOrigin(Texture2D weaponTexture)
 	{
-		return new XnaVector2(weaponTexture.Width * 0.1f, weaponTexture.Height * 0.9f);
+		return new XnaVector2(weaponTexture.Width * 0.15f, weaponTexture.Height * 0.9f);
 	}
 
 	private static XnaVector2 HeldSpearTipOrigin(Texture2D weaponTexture)
@@ -353,6 +400,11 @@ public class SpearStrikeProjectile : ModProjectile
 			Tip = tip;
 			CollisionWidth = collisionWidth;
 			Active = active;
+		}
+
+		public SpearPoseXna Translated(XnaVector2 offset)
+		{
+			return new SpearPoseXna(Grip + offset, Tip + offset, CollisionWidth, Active);
 		}
 
 		public float Rotation => (Tip - Grip).ToRotation();

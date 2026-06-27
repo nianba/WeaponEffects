@@ -125,9 +125,12 @@ public class SpearChannelProjectile : ModProjectile
 	private void UpdateLocalAim(Player player)
 	{
 		_targetWorld = Main.MouseWorld;
-		Vector2 direction = (_targetWorld - player.Center).SafeNormalize(Vector2.UnitX * player.direction);
+		Vector2 direction = (_targetWorld - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
 		_aimRotation = direction.ToRotation();
-		player.direction = Math.Sign(direction.X);
+		if (Math.Abs(direction.X) > 0.001f)
+		{
+			player.direction = Math.Sign(direction.X);
+		}
 
 		float aimDelta = Math.Abs(MathHelper.WrapAngle(_aimRotation - _lastSyncedAimRotation));
 		if (aimDelta >= AimSyncThreshold || Projectile.ai[1] % AimSyncInterval == 0f)

@@ -20,6 +20,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 	private const int TrailSamples = 8;
 	private const int SweepArcSamples = 30;
 	private const int SweepArcMaxVertices = SweepArcSamples * 2;
+	private const Player.CompositeArmStretchAmount SpearArmStretch = Player.CompositeArmStretchAmount.Full;
 	private const float FirstComboTipGlowWidthScale = 0.4f;
 	private const float FinisherTipGlowStartProgress = 0.62f;
 	private const float FinisherTipGlowReachScale = 1.3f;
@@ -126,7 +127,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 			return;
 		}
 
-		Projectile.Center = player.Center;
+		Projectile.Center = player.MountedCenter;
 		Projectile.velocity = XnaVector2.Zero;
 		_age++;
 
@@ -444,7 +445,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 			_weaponLength,
 			progress);
 
-		return new SpearPoseXna(ToXna(pose.Grip), ToXna(pose.Tip));
+		return AnchorPoseToPlayerFrontHand(new SpearPoseXna(ToXna(pose.Grip), ToXna(pose.Tip))).Translated(OwnerVisualOffset());
 	}
 
 	private XnaVector2 OwnerCenterWorld()
@@ -454,11 +455,50 @@ public class SpearTrailGlowProjectile : ModProjectile
 			Player player = Main.player[Projectile.owner];
 			if (player.active)
 			{
-				return player.Center;
+				return player.MountedCenter;
 			}
 		}
 
 		return Projectile.Center;
+	}
+
+	private SpearPoseXna AnchorPoseToPlayerFrontHand(SpearPoseXna pose)
+	{
+		if (!TryGetOwner(out Player player))
+		{
+			return pose;
+		}
+
+		float armRotation = FrontArmRotation(pose.Rotation);
+		XnaVector2 handPosition = player.GetFrontHandPosition(SpearArmStretch, armRotation);
+		if (player.gravDir == -1f)
+		{
+			handPosition.Y = player.Bottom.Y + (player.position.Y - handPosition.Y);
+		}
+
+		return pose.Translated(handPosition - pose.Grip);
+	}
+
+	private static float FrontArmRotation(float spearRotation)
+	{
+		return spearRotation - MathHelper.PiOver2;
+	}
+
+	private bool TryGetOwner(out Player player)
+	{
+		if (Projectile.owner >= 0 && Projectile.owner < Main.maxPlayers)
+		{
+			player = Main.player[Projectile.owner];
+			return player.active;
+		}
+
+		player = null;
+		return false;
+	}
+
+	private XnaVector2 OwnerVisualOffset()
+	{
+		return TryGetOwner(out Player player) ? new XnaVector2(0f, player.gfxOffY) : XnaVector2.Zero;
 	}
 
 	private int TotalLifetimeUpdates => _totalLifetimeUpdates > 0
@@ -548,6 +588,11 @@ public class SpearTrailGlowProjectile : ModProjectile
 		{
 			Grip = grip;
 			Tip = tip;
+		}
+
+		public SpearPoseXna Translated(XnaVector2 offset)
+		{
+			return new SpearPoseXna(Grip + offset, Tip + offset);
 		}
 
 		public float Rotation => (Tip - Grip).ToRotation();

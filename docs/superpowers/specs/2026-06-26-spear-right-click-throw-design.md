@@ -115,7 +115,7 @@ Use an independent right-click chain:
 - `SpearThrowChargeProjectile`: new control projectile for charging. Owns aim tracking, charge timer, held spear pose, heating visuals, full-charge particles, release, and cancellation.
 - `SpearThrowProjectile`: new damage projectile for the released spear-light. Owns fixed-speed travel, max distance, wall piercing, multi-enemy piercing, one-hit-per-NPC state, collision width, damage, and spindle drawing.
 - `WeaponEffectsPlayer`: should expose a clear method for resetting spear combo state instead of requiring outside code to mutate fields directly.
-- `Core/Spears`: may contain a small pure helper for charge math if implementation benefits from tests, such as full-charge time, progress, damage multiplier, and travel distance calculations.
+- `Core/Spears`: may contain a small pure helper for charge math, such as full-charge time, progress, damage multiplier, and travel distance calculations.
 
 Do not route spear throw damage through `SlashArcProjectile`. Avoid coupling this feature to sword charge internals.
 
@@ -170,7 +170,7 @@ Cancellation before 1 second must not spawn the thrown projectile. Cleanup must 
 - The visible spear-light is narrower than its generous hit width.
 - Player movement and jumping remain normal during charge.
 - Existing left-click Trident combo still works after the throw special is cancelled or released.
-- Existing sword slash and sword charge behavior still compiles and remains isolated.
+- Existing sword slash and sword charge behavior remains isolated.
 
 ## Playtest Risks
 

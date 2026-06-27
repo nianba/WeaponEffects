@@ -6,7 +6,4 @@
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Remove="tests\**\*.cs" />
-  </ItemGroup>
 </Project>
