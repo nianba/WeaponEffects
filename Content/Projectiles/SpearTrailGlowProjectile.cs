@@ -16,15 +16,10 @@ namespace WeaponEffects;
 
 public class SpearTrailGlowProjectile : ModProjectile
 {
-	private const int TrailLifetimeTicks = 26;
 	private const int TrailSamples = 8;
 	private const int SweepArcSamples = 30;
 	private const int SweepArcMaxVertices = SweepArcSamples * 2;
 	private const Player.CompositeArmStretchAmount SpearArmStretch = Player.CompositeArmStretchAmount.Full;
-	private const float FirstComboTipGlowWidthScale = 0.4f;
-	private const float FinisherTipGlowStartProgress = 0.62f;
-	private const float FinisherTipGlowReachScale = 1.3f;
-	private const float FinisherTipGlowWidthScale = 1.5f;
 	private const float SweepTipEdgeInnerShaftAmount = 0.86f;
 	private static readonly Color SpearTipGlowColor = new(250, 236, 182, 0);
 	private static Asset<Effect> _sweepArcEffect;
@@ -85,7 +80,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 	{
 		Projectile.width = 12;
 		Projectile.height = 12;
-		Projectile.timeLeft = TrailLifetimeTicks;
+		Projectile.timeLeft = SpearCollisionEnvelope.LifetimeTicks;
 		Projectile.friendly = false;
 		Projectile.tileCollide = false;
 		Projectile.ignoreWater = true;
@@ -191,7 +186,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 	private bool ShouldDrawSpearTipGlow()
 	{
 		ref readonly SpearComboStep step = ref TridentSpearComboScheme.GetStep(_comboStepIndex);
-		return step.Kind is not SpearComboStepKind.RisingLift and not SpearComboStepKind.Backsweep;
+		return SpearCollisionEnvelope.DrawsTipGlow(in step);
 	}
 
 	private XnaVector2 SweepTangentAt(float progress)
@@ -349,11 +344,6 @@ public class SpearTrailGlowProjectile : ModProjectile
 			return;
 		}
 
-		if (_comboStepIndex == 3 && progress < FinisherTipGlowStartProgress)
-		{
-			return;
-		}
-
 		XnaVector2 direction = pose.Tip - pose.Grip;
 		float spearLength = direction.Length();
 		if (spearLength <= 1f)
@@ -364,11 +354,17 @@ public class SpearTrailGlowProjectile : ModProjectile
 		direction /= spearLength;
 
 		float extensionProgress = MathHelper.Clamp(progress, 0f, 1f);
-		float extensionDistance = TipGlowExtensionDistance(spearLength, progress);
-		float extensionSize = 10f + 10f * extensionProgress;
+		ref readonly SpearComboStep step = ref TridentSpearComboScheme.GetStep(_comboStepIndex);
+		SpearTipGlowProfile tipGlow = SpearTipGlowProfile.ForStep(in step);
+		if (!tipGlow.Enabled || progress < tipGlow.StartProgress)
+		{
+			return;
+		}
+
+		float centerDistance = Math.Max(0f, tipGlow.CenterOffset);
+		float extensionSize = tipGlow.SizeAt(progress);
 		float baseSpearHitboxDiagonal = MathF.Sqrt(22f * 22f + 2f * 2f);
 		float extensionScale = extensionSize * MathF.Sqrt(2f) / baseSpearHitboxDiagonal;
-		float widthScale = TipGlowWidthScale();
 		float glowStrength = Utils.Remap(extensionProgress, 0f, 0.3f, 0f, 1f) * Utils.Remap(extensionProgress, 0.3f, 1f, 1f, 0f);
 		glowStrength = 1f - (1f - glowStrength) * (1f - glowStrength);
 		glowStrength *= fade;
@@ -377,47 +373,39 @@ public class SpearTrailGlowProjectile : ModProjectile
 			return;
 		}
 
-		XnaVector2 grip = pose.Grip;
-		XnaVector2 spearTip = pose.Tip;
-		XnaVector2 extensionCenter = spearTip + direction * extensionDistance;
+		XnaVector2 visibleSpearTip = VisibleHeldSpearTip(pose);
+		float forwardExtent = tipGlow.ForwardExtentAt(progress);
+		float visualBackDistance = Math.Max(0f, centerDistance - forwardExtent * tipGlow.BackExtentScale);
+		float visualFrontDistance = tipGlow.FrontDistanceAt(progress);
+		XnaVector2 glowBack = visibleSpearTip + direction * visualBackDistance;
+		XnaVector2 glowCenter = visibleSpearTip + direction * centerDistance;
+		XnaVector2 glowFront = visibleSpearTip + direction * visualFrontDistance;
 		float rotation = pose.Rotation + MathHelper.PiOver2;
 		Texture2D glowTexture = TextureAssets.Extra[ExtrasID.SharpTears].Value;
 		XnaVector2 glowOrigin = glowTexture.Size() * 0.5f;
 		Color glowColor = SpearTipGlowColor * glowStrength;
 
-		DrawSpearTipGlowSegment(glowTexture, glowOrigin, XnaVector2.Lerp(extensionCenter, spearTip, 0.5f), glowColor, rotation, new XnaVector2(glowStrength * extensionScale * widthScale, extensionScale) * extensionScale);
-		DrawSpearTipGlowSegment(glowTexture, glowOrigin, XnaVector2.Lerp(extensionCenter, spearTip, 1f), glowColor, rotation, new XnaVector2(glowStrength * extensionScale * widthScale, extensionScale * 1.5f) * extensionScale);
-		// DrawSpearTipGlowSegment(glowTexture, glowOrigin, XnaVector2.Lerp(grip, spearTip, extensionProgress * 1.5f - 0.5f) + new XnaVector2(0f, 2f), glowColor, rotation, new XnaVector2(glowStrength * extensionScale * glowStrength * widthScale, extensionScale * 2f * glowStrength) * extensionScale);
+		DrawSpearTipGlowSegment(glowTexture, glowOrigin, XnaVector2.Lerp(glowCenter, glowFront, 0.35f), glowColor, rotation, new XnaVector2(glowStrength * extensionScale * tipGlow.WidthScale, extensionScale * tipGlow.LengthScale) * extensionScale * tipGlow.UniformScale);
+		DrawSpearTipGlowSegment(glowTexture, glowOrigin, glowCenter, glowColor, rotation, new XnaVector2(glowStrength * extensionScale * tipGlow.WidthScale, extensionScale * 1.5f * tipGlow.LengthScale) * extensionScale * tipGlow.UniformScale);
 
-		for (float amount = 0.4f; amount <= 1f; amount += 0.1f)
+		for (float amount = 0f; amount <= 1f; amount += 0.125f)
 		{
-			XnaVector2 position = XnaVector2.Lerp(grip, extensionCenter, amount + 0.2f) + new XnaVector2(0f, 2f);
+			XnaVector2 position = XnaVector2.Lerp(glowBack, glowFront, amount) + new XnaVector2(0f, 2f);
 			Color segmentColor = glowColor * 0.75f * amount;
-			XnaVector2 segmentScale = new XnaVector2(glowStrength * extensionScale * glowStrength * widthScale, extensionScale * 2f * glowStrength) * extensionScale;
+			XnaVector2 segmentScale = new XnaVector2(glowStrength * extensionScale * glowStrength * tipGlow.WidthScale, extensionScale * 2f * glowStrength * tipGlow.LengthScale) * extensionScale * tipGlow.UniformScale;
 			DrawSpearTipGlowSegment(glowTexture, glowOrigin, position, segmentColor, rotation, segmentScale);
 		}
 	}
 
-	private float TipGlowWidthScale()
+	private XnaVector2 VisibleHeldSpearTip(SpearPoseXna pose)
 	{
-		return _comboStepIndex switch
+		Texture2D weaponTexture = GetWeaponTexture();
+		if (weaponTexture == null)
 		{
-			0 => FirstComboTipGlowWidthScale,
-			3 => FinisherTipGlowWidthScale,
-			_ => 1f
-		};
-	}
-
-	private float TipGlowExtensionDistance(float spearLength, float progress)
-	{
-		if (_comboStepIndex != 3)
-		{
-			return 10f + 30f * MathHelper.Clamp(progress, 0f, 1f);
+			return pose.Tip;
 		}
 
-		ref readonly SpearComboStep step = ref TridentSpearComboScheme.GetStep(_comboStepIndex);
-		float targetReach = SpearMotion.ResolveReach(_weaponLength, step.ReachScale) * FinisherTipGlowReachScale;
-		return Math.Max(0f, targetReach - spearLength);
+		return SpearHeldVisualMetrics.VisibleTip(pose.Grip, pose.Tip, weaponTexture);
 	}
 
 	private static void DrawSpearTipGlowSegment(Texture2D texture, XnaVector2 origin, XnaVector2 worldPosition, Color color, float rotation, XnaVector2 scale)
@@ -503,15 +491,22 @@ public class SpearTrailGlowProjectile : ModProjectile
 
 	private int TotalLifetimeUpdates => _totalLifetimeUpdates > 0
 		? _totalLifetimeUpdates
-		: TrailLifetimeTicks * (Projectile.extraUpdates + 1);
+		: SpearCollisionEnvelope.LifetimeTicks * (Projectile.extraUpdates + 1);
 
 	private float CurrentProgress => MathHelper.Clamp(_age / (float)Math.Max(1, TotalLifetimeUpdates), 0f, 1f);
 
-	private float TrailSampleSpacing => _comboStepIndex == 1 || _comboStepIndex == 2 ? 0.09f : 0.035f;
+	private float TrailSampleSpacing
+	{
+		get
+		{
+			ref readonly SpearComboStep step = ref TridentSpearComboScheme.GetStep(_comboStepIndex);
+			return SpearCollisionEnvelope.TrailSampleSpacing(in step);
+		}
+	}
 
 	private static int ScaledLifetimeUpdates(in SpearComboStep step, SpearComboBranch branch)
 	{
-		float scaledTicks = TrailLifetimeTicks * step.GetTimeMultiplier(branch);
+		float scaledTicks = SpearCollisionEnvelope.LifetimeTicks * step.GetTimeMultiplier(branch);
 		return Math.Max(1, (int)MathF.Round(scaledTicks)) * (step.ExtraUpdates + 1);
 	}
 

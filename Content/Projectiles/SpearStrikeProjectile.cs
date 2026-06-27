@@ -16,7 +16,6 @@ namespace WeaponEffects;
 
 public class SpearStrikeProjectile : ModProjectile
 {
-	private const int StrikeLifetimeTicks = 28;
 	private const int CollisionSamples = 8;
 	private const Player.CompositeArmStretchAmount SpearArmStretch = Player.CompositeArmStretchAmount.Full;
 
@@ -85,7 +84,7 @@ public class SpearStrikeProjectile : ModProjectile
 		Projectile.width = 420;
 		Projectile.height = 420;
 		Projectile.DamageType = DamageClass.Melee;
-		Projectile.timeLeft = StrikeLifetimeTicks;
+		Projectile.timeLeft = SpearCollisionEnvelope.LifetimeTicks;
 		Projectile.friendly = true;
 		Projectile.tileCollide = false;
 		Projectile.penetrate = -1;
@@ -125,7 +124,7 @@ public class SpearStrikeProjectile : ModProjectile
 
 	public override bool? CanDamage()
 	{
-		return EvaluatePoseAt(CurrentProgress).Active;
+		return true;
 	}
 
 	public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
@@ -204,25 +203,39 @@ public class SpearStrikeProjectile : ModProjectile
 		XnaVector2 targetPosition = targetHitbox.TopLeft();
 		XnaVector2 targetSize = targetHitbox.Size();
 		float collisionPoint = 0f;
+		ref readonly SpearComboStep step = ref TridentSpearComboScheme.GetStep(_comboStepIndex);
+		float sampleSpacing = SpearCollisionEnvelope.TrailSampleSpacing(in step);
 
 		for (int i = 0; i < CollisionSamples; i++)
 		{
-			int sampleAge = Math.Max(0, _age - i * 2);
-			float progress = MathHelper.Clamp(sampleAge / (float)Math.Max(1, TotalLifetimeUpdates), 0f, 1f);
+			float progress = MathHelper.Clamp(CurrentProgress - i * sampleSpacing, 0f, 1f);
 			SpearPoseXna pose = EvaluatePoseAt(progress);
-			if (!pose.Active)
-			{
-				continue;
-			}
+			XnaVector2 collisionTip = CollisionTipForPose(in step, pose, progress, out float collisionWidth);
 
 			collisionPoint = 0f;
-			if (Collision.CheckAABBvLineCollision(targetPosition, targetSize, pose.Grip, pose.Tip, pose.CollisionWidth, ref collisionPoint))
+			if (Collision.CheckAABBvLineCollision(targetPosition, targetSize, pose.Grip, collisionTip, collisionWidth, ref collisionPoint))
 			{
 				return true;
 			}
 		}
 
 		return false;
+	}
+
+	private XnaVector2 CollisionTipForPose(in SpearComboStep step, SpearPoseXna pose, float progress, out float collisionWidth)
+	{
+		XnaVector2 shaft = pose.Tip - pose.Grip;
+		float spearLength = shaft.Length();
+		collisionWidth = SpearCollisionEnvelope.CollisionWidth(in step);
+		if (spearLength <= 1f)
+		{
+			return pose.Tip;
+		}
+
+		XnaVector2 direction = shaft / spearLength;
+		XnaVector2 visibleTip = VisibleHeldSpearTip(pose, direction, spearLength);
+		float extension = SpearCollisionEnvelope.CollisionTipExtensionDistance(in step, progress);
+		return visibleTip + direction * extension;
 	}
 
 	private SpearPoseXna EvaluatePoseAt(float progress)
@@ -318,11 +331,11 @@ public class SpearStrikeProjectile : ModProjectile
 			return;
 		}
 
-		XnaVector2 gripOrigin = HeldSpearGripOrigin(weaponTexture);
-		XnaVector2 tipOrigin = HeldSpearTipOrigin(weaponTexture);
+		XnaVector2 gripOrigin = SpearHeldVisualMetrics.GripOrigin(weaponTexture);
+		XnaVector2 tipOrigin = SpearHeldVisualMetrics.TipOrigin(weaponTexture);
 		XnaVector2 textureShaft = tipOrigin - gripOrigin;
-		float textureGripToTipLength = Math.Max(1f, textureShaft.Length());
-		float drawScale = MathHelper.Clamp(shaft.Length() / textureGripToTipLength, 0.65f, 1.18f) * 1.12f;
+		float textureGripToTipLength = SpearHeldVisualMetrics.TextureGripToTipLength(weaponTexture);
+		float drawScale = SpearHeldVisualMetrics.DrawScale(shaft.Length(), textureGripToTipLength);
 		XnaVector2 drawPosition = pose.Grip + OwnerVisualOffset() - Main.screenPosition;
 		float rotation = pose.Rotation - textureShaft.ToRotation();
 
@@ -338,14 +351,20 @@ public class SpearStrikeProjectile : ModProjectile
 			0f);
 	}
 
-	private static XnaVector2 HeldSpearGripOrigin(Texture2D weaponTexture)
+	private XnaVector2 VisibleHeldSpearTip(SpearPoseXna pose, XnaVector2 direction, float shaftLength)
 	{
-		return new XnaVector2(weaponTexture.Width * 0.15f, weaponTexture.Height * 0.9f);
-	}
+		if (_weaponItemType <= 0 || _weaponItemType >= TextureAssets.Item.Length)
+		{
+			return pose.Tip;
+		}
 
-	private static XnaVector2 HeldSpearTipOrigin(Texture2D weaponTexture)
-	{
-		return new XnaVector2(weaponTexture.Width, 0f);
+		Texture2D weaponTexture = TextureAssets.Item[_weaponItemType].Value;
+		if (weaponTexture == null)
+		{
+			return pose.Tip;
+		}
+
+		return SpearHeldVisualMetrics.VisibleTip(pose.Grip, pose.Tip, weaponTexture);
 	}
 
 	private void SpawnHitDust(NPC target, int dustType, int count, float minScale, float maxScale)
@@ -367,13 +386,13 @@ public class SpearStrikeProjectile : ModProjectile
 
 	private int TotalLifetimeUpdates => _totalLifetimeUpdates > 0
 		? _totalLifetimeUpdates
-		: StrikeLifetimeTicks * (Projectile.extraUpdates + 1);
+		: SpearCollisionEnvelope.LifetimeTicks * (Projectile.extraUpdates + 1);
 
 	private float CurrentProgress => MathHelper.Clamp(_age / (float)Math.Max(1, TotalLifetimeUpdates), 0f, 1f);
 
 	private static int ScaledLifetimeUpdates(in SpearComboStep step, SpearComboBranch branch)
 	{
-		float scaledTicks = StrikeLifetimeTicks * step.GetTimeMultiplier(branch);
+		float scaledTicks = SpearCollisionEnvelope.LifetimeTicks * step.GetTimeMultiplier(branch);
 		return Math.Max(1, (int)MathF.Round(scaledTicks)) * (step.ExtraUpdates + 1);
 	}
 
