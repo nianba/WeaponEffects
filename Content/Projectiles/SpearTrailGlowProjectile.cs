@@ -26,6 +26,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 	private const float FinisherTipGlowReachScale = 1.3f;
 	private const float FinisherTipGlowWidthScale = 1.5f;
 	private const float SweepTipEdgeInnerShaftAmount = 0.86f;
+	private static readonly Color SpearTipGlowColor = new(250, 236, 182, 0);
 	private static Asset<Effect> _sweepArcEffect;
 
 	private readonly SlashVertex[] _sweepArcVertices = new SlashVertex[SweepArcMaxVertices];
@@ -382,7 +383,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 		float rotation = pose.Rotation + MathHelper.PiOver2;
 		Texture2D glowTexture = TextureAssets.Extra[ExtrasID.SharpTears].Value;
 		XnaVector2 glowOrigin = glowTexture.Size() * 0.5f;
-		Color glowColor = new Color(245, 250, 255, 0) * glowStrength;
+		Color glowColor = SpearTipGlowColor * glowStrength;
 
 		DrawSpearTipGlowSegment(glowTexture, glowOrigin, XnaVector2.Lerp(extensionCenter, spearTip, 0.5f), glowColor, rotation, new XnaVector2(glowStrength * extensionScale * widthScale, extensionScale) * extensionScale);
 		DrawSpearTipGlowSegment(glowTexture, glowOrigin, XnaVector2.Lerp(extensionCenter, spearTip, 1f), glowColor, rotation, new XnaVector2(glowStrength * extensionScale * widthScale, extensionScale * 1.5f) * extensionScale);
