@@ -386,7 +386,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 
 		DrawSpearTipGlowSegment(glowTexture, glowOrigin, XnaVector2.Lerp(extensionCenter, spearTip, 0.5f), glowColor, rotation, new XnaVector2(glowStrength * extensionScale * widthScale, extensionScale) * extensionScale);
 		DrawSpearTipGlowSegment(glowTexture, glowOrigin, XnaVector2.Lerp(extensionCenter, spearTip, 1f), glowColor, rotation, new XnaVector2(glowStrength * extensionScale * widthScale, extensionScale * 1.5f) * extensionScale);
-		DrawSpearTipGlowSegment(glowTexture, glowOrigin, XnaVector2.Lerp(grip, spearTip, extensionProgress * 1.5f - 0.5f) + new XnaVector2(0f, 2f), glowColor, rotation, new XnaVector2(glowStrength * extensionScale * glowStrength * widthScale, extensionScale * 2f * glowStrength) * extensionScale);
+		// DrawSpearTipGlowSegment(glowTexture, glowOrigin, XnaVector2.Lerp(grip, spearTip, extensionProgress * 1.5f - 0.5f) + new XnaVector2(0f, 2f), glowColor, rotation, new XnaVector2(glowStrength * extensionScale * glowStrength * widthScale, extensionScale * 2f * glowStrength) * extensionScale);
 
 		for (float amount = 0.4f; amount <= 1f; amount += 0.1f)
 		{
