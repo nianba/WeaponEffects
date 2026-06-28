@@ -233,12 +233,12 @@ public class SpearChannelProjectile : ModProjectile
 
 	private static float SpearAttackSpeedDamageMultiplier(float attackSpeed)
 	{
-		float extraAttackSpeed = Math.Max(0f, attackSpeed - 1f);
-		return 1f + extraAttackSpeed * AttackSpeedDamageConversion;
+		return 1f + (attackSpeed - 1f) * AttackSpeedDamageConversion;
 	}
 
 	private static int SpearAttackSpeedCritBonus(float attackSpeed)
 	{
+		// Slow attack speed is handled by damage only; bonus crit only comes from speed above baseline.
 		float extraAttackSpeed = Math.Max(0f, attackSpeed - 1f);
 		return Math.Max(0, (int)MathF.Round(extraAttackSpeed * AttackSpeedCritConversion));
 	}
