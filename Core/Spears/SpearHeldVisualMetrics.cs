@@ -8,11 +8,21 @@ public static class SpearHeldVisualMetrics
 {
 	public static XnaVector2 GripOrigin(Texture2D weaponTexture, in SpearHeldVisualProfile profile)
 	{
+		if (profile.TextureOverride.HasSource)
+		{
+			return profile.TextureOverride.GripOrigin;
+		}
+
 		return new XnaVector2(weaponTexture.Width * profile.GripOriginFactor.X, weaponTexture.Height * profile.GripOriginFactor.Y);
 	}
 
 	public static XnaVector2 TipOrigin(Texture2D weaponTexture, in SpearHeldVisualProfile profile)
 	{
+		if (profile.TextureOverride.HasSource)
+		{
+			return profile.TextureOverride.TipOrigin;
+		}
+
 		return new XnaVector2(weaponTexture.Width * profile.TipOriginFactor.X, weaponTexture.Height * profile.TipOriginFactor.Y);
 	}
 

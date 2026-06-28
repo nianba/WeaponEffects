@@ -340,7 +340,8 @@ public class SpearStrikeProjectile : ModProjectile
 			return;
 		}
 
-		Texture2D weaponTexture = TextureAssets.Item[_weaponItemType].Value;
+		SpearHeldVisualProfile heldVisualProfile = SpearHeldVisualProfileResolver.Resolve(_weaponItemType);
+		Texture2D weaponTexture = GetHeldWeaponTexture(ref heldVisualProfile);
 		if (weaponTexture == null)
 		{
 			return;
@@ -352,7 +353,6 @@ public class SpearStrikeProjectile : ModProjectile
 			return;
 		}
 
-		SpearHeldVisualProfile heldVisualProfile = SpearHeldVisualProfileResolver.Resolve(_weaponItemType);
 		XnaVector2 gripOrigin = SpearHeldVisualMetrics.GripOrigin(weaponTexture, in heldVisualProfile);
 		XnaVector2 tipOrigin = SpearHeldVisualMetrics.TipOrigin(weaponTexture, in heldVisualProfile);
 		XnaVector2 textureShaft = tipOrigin - gripOrigin;
@@ -380,14 +380,31 @@ public class SpearStrikeProjectile : ModProjectile
 			return pose.Tip;
 		}
 
-		Texture2D weaponTexture = TextureAssets.Item[_weaponItemType].Value;
+		SpearHeldVisualProfile heldVisualProfile = SpearHeldVisualProfileResolver.Resolve(_weaponItemType);
+		Texture2D weaponTexture = GetHeldWeaponTexture(ref heldVisualProfile);
 		if (weaponTexture == null)
 		{
 			return pose.Tip;
 		}
 
-		SpearHeldVisualProfile heldVisualProfile = SpearHeldVisualProfileResolver.Resolve(_weaponItemType);
 		return SpearHeldVisualMetrics.VisibleTip(pose.Grip, pose.Tip, weaponTexture, in heldVisualProfile);
+	}
+
+	private Texture2D GetHeldWeaponTexture(ref SpearHeldVisualProfile heldVisualProfile)
+	{
+		if (heldVisualProfile.TextureOverride.HasSource
+			&& heldVisualProfile.TextureOverride.ProjectileType > 0
+			&& heldVisualProfile.TextureOverride.ProjectileType < TextureAssets.Projectile.Length)
+		{
+			Texture2D projectileTexture = TextureAssets.Projectile[heldVisualProfile.TextureOverride.ProjectileType].Value;
+			if (projectileTexture != null)
+			{
+				return projectileTexture;
+			}
+		}
+
+		heldVisualProfile = SpearHeldVisualProfileResolver.ResolveVanillaFallback(_weaponItemType);
+		return TextureAssets.Item[_weaponItemType].Value;
 	}
 
 	private void SpawnHitDust(NPC target, int dustType, int count, float minScale, float maxScale)

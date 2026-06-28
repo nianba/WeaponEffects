@@ -17,3 +17,4 @@ Properties/
 publish/
 *.rawimg
 TMOD_MANIFEST.txt
+.codex_tmp

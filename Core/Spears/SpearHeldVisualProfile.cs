@@ -10,7 +10,8 @@ public readonly struct SpearHeldVisualProfile
 		float minDrawScale,
 		float maxDrawScale,
 		float drawScaleMultiplier,
-		float visibleTipDistanceMultiplier = 1f)
+		float visibleTipDistanceMultiplier = 1f,
+		SpearHeldTextureOverride textureOverride = default)
 	{
 		GripOriginFactor = gripOriginFactor;
 		TipOriginFactor = tipOriginFactor;
@@ -18,6 +19,7 @@ public readonly struct SpearHeldVisualProfile
 		MaxDrawScale = maxDrawScale;
 		DrawScaleMultiplier = drawScaleMultiplier;
 		VisibleTipDistanceMultiplier = visibleTipDistanceMultiplier;
+		TextureOverride = textureOverride;
 	}
 
 	public Vector2 GripOriginFactor { get; }
@@ -31,4 +33,6 @@ public readonly struct SpearHeldVisualProfile
 	public float DrawScaleMultiplier { get; }
 
 	public float VisibleTipDistanceMultiplier { get; }
+
+	public SpearHeldTextureOverride TextureOverride { get; }
 }
