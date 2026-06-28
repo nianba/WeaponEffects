@@ -27,6 +27,7 @@ public class SpearStrikeProjectile : ModProjectile
 	private int _totalLifetimeUpdates;
 	private int _age;
 	private bool _playedSwingSound;
+	private bool _emittedVanillaProjectile;
 
 	public override string Texture => "Terraria/Images/Item_" + ItemID.Trident;
 
@@ -109,6 +110,7 @@ public class SpearStrikeProjectile : ModProjectile
 		writer.Write(_totalLifetimeUpdates);
 		writer.Write(_age);
 		writer.Write(_playedSwingSound);
+		writer.Write(_emittedVanillaProjectile);
 	}
 
 	public override void ReceiveExtraAI(BinaryReader reader)
@@ -122,6 +124,7 @@ public class SpearStrikeProjectile : ModProjectile
 		_totalLifetimeUpdates = reader.ReadInt32();
 		_age = reader.ReadInt32();
 		_playedSwingSound = reader.ReadBoolean();
+		_emittedVanillaProjectile = reader.ReadBoolean();
 	}
 
 	public override bool ShouldUpdatePosition()
@@ -162,6 +165,7 @@ public class SpearStrikeProjectile : ModProjectile
 
 		SpearPoseXna pose = EvaluatePoseAt(CurrentProgress);
 		ApplyPlayerUsePose(player, pose);
+		EmitVanillaProjectileAtRelease(player, CurrentProgress);
 		PlaySwingSoundAtRelease(player, CurrentProgress);
 
 		_age++;
@@ -437,6 +441,33 @@ public class SpearStrikeProjectile : ModProjectile
 		_playedSwingSound = true;
 		SoundStyle swingSound = new("WeaponEffects/Sounds/S2") { Volume = 0.32f };
 		MeleeEffectAssets.PlaySound(in swingSound, player.Center);
+		Projectile.netUpdate = true;
+	}
+
+	private void EmitVanillaProjectileAtRelease(Player player, float progress)
+	{
+		if (_emittedVanillaProjectile)
+		{
+			return;
+		}
+
+		ref readonly SpearActionStep step = ref SpearActionScheme.GetStep(_comboStepIndex);
+		float releaseProgress = MathHelper.Clamp(Math.Max(step.Timing.SwingSoundProgress, step.Timing.WindupEnd), 0f, 1f);
+		if (progress < releaseProgress)
+		{
+			return;
+		}
+
+		_emittedVanillaProjectile = true;
+		VanillaSpearProjectileEmitter.Emit(
+			Projectile,
+			player,
+			_weaponItemType,
+			_comboStepIndex,
+			_aimRotation,
+			_weaponLength,
+			Projectile.damage,
+			Projectile.knockBack);
 		Projectile.netUpdate = true;
 	}
 
