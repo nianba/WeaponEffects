@@ -13,6 +13,8 @@ public class SpearChannelProjectile : ModProjectile
 {
 	private const int AimSyncInterval = 6;
 	private const float AimSyncThreshold = 0.03f;
+	private const float AttackSpeedDamageConversion = 0.6f;
+	private const float AttackSpeedCritConversion = 20f;
 
 	private int _weaponItemType;
 	private int _useAnimation;
@@ -149,7 +151,10 @@ public class SpearChannelProjectile : ModProjectile
 			? SpearMotion.SelectFinisherBranch(IsGrounded(player))
 			: SpearComboBranch.None;
 
-		int damage = Math.Max(1, (int)MathF.Round(NormalSpearDamage * step.Gameplay.DamageMultiplier));
+		float attackSpeed = CurrentMeleeAttackSpeed;
+		float convertedDamageMultiplier = SpearAttackSpeedDamageMultiplier(attackSpeed);
+		int damage = Math.Max(1, (int)MathF.Round(NormalSpearDamage * step.Gameplay.DamageMultiplier * convertedDamageMultiplier));
+		int critChance = SpearAttackSpeedCritBonus(attackSpeed);
 		float knockback = SpearKnockback;
 
 		SpearStrikeProjectile.Spawn(
@@ -162,6 +167,7 @@ public class SpearChannelProjectile : ModProjectile
 			_aimRotation,
 			_weaponLength,
 			damage,
+			critChance,
 			knockback);
 
 		SpearTrailGlowProjectile.Spawn(
@@ -185,16 +191,6 @@ public class SpearChannelProjectile : ModProjectile
 			float multiplier = MathHelper.Clamp(ModContent.GetInstance<WeaponEffectsGameplayConfig>().NormalSlashIntervalMultiplier, 0.25f, 3f);
 			float interval = Math.Max(1, _useAnimation) * multiplier;
 
-			if (Projectile.owner >= 0 && Projectile.owner < Main.maxPlayers)
-			{
-				Player player = Main.player[Projectile.owner];
-				if (player.active)
-				{
-					float meleeSpeed = MathHelper.Clamp(player.GetAttackSpeed(DamageClass.Melee), 0.25f, 4f);
-					interval /= meleeSpeed;
-				}
-			}
-
 			return Math.Max(1, (int)MathF.Round(interval));
 		}
 	}
@@ -215,6 +211,37 @@ public class SpearChannelProjectile : ModProjectile
 	}
 
 	private float SpearKnockback => Projectile.knockBack * MathHelper.Clamp(ModContent.GetInstance<WeaponEffectsGameplayConfig>().SlashKnockbackMultiplier, 0f, 3f);
+
+	private float CurrentMeleeAttackSpeed
+	{
+		get
+		{
+			if (Projectile.owner < 0 || Projectile.owner >= Main.maxPlayers)
+			{
+				return 1f;
+			}
+
+			Player player = Main.player[Projectile.owner];
+			if (!player.active)
+			{
+				return 1f;
+			}
+
+			return MathHelper.Clamp(player.GetAttackSpeed(DamageClass.Melee), 0.25f, 4f);
+		}
+	}
+
+	private static float SpearAttackSpeedDamageMultiplier(float attackSpeed)
+	{
+		float extraAttackSpeed = Math.Max(0f, attackSpeed - 1f);
+		return 1f + extraAttackSpeed * AttackSpeedDamageConversion;
+	}
+
+	private static int SpearAttackSpeedCritBonus(float attackSpeed)
+	{
+		float extraAttackSpeed = Math.Max(0f, attackSpeed - 1f);
+		return Math.Max(0, (int)MathF.Round(extraAttackSpeed * AttackSpeedCritConversion));
+	}
 
 	private static bool IsGrounded(Player player)
 	{

@@ -23,6 +23,7 @@ public class SpearStrikeProjectile : ModProjectile
 	private SpearComboBranch _branch;
 	private float _aimRotation;
 	private float _weaponLength;
+	private int _critChance;
 	private int _totalLifetimeUpdates;
 	private int _age;
 	private bool _playedSwingSound;
@@ -39,6 +40,7 @@ public class SpearStrikeProjectile : ModProjectile
 		float aimRotation,
 		float weaponLength,
 		int damage,
+		int critChance,
 		float knockback)
 	{
 		Projectile projectile = Projectile.NewProjectileDirect(
@@ -52,19 +54,20 @@ public class SpearStrikeProjectile : ModProjectile
 
 		if (projectile.ModProjectile is SpearStrikeProjectile spear)
 		{
-			spear.Initialize(weaponItemType, comboStepIndex, branch, aimRotation, weaponLength);
+			spear.Initialize(weaponItemType, comboStepIndex, branch, aimRotation, weaponLength, critChance);
 		}
 
 		MeleeEffectAssets.SyncProjectile(projectile);
 	}
 
-	public void Initialize(int weaponItemType, int comboStepIndex, SpearComboBranch branch, float aimRotation, float weaponLength)
+	public void Initialize(int weaponItemType, int comboStepIndex, SpearComboBranch branch, float aimRotation, float weaponLength, int critChance)
 	{
 		_weaponItemType = weaponItemType;
 		_comboStepIndex = comboStepIndex;
 		_branch = branch;
 		_aimRotation = aimRotation;
 		_weaponLength = Math.Max(1f, weaponLength);
+		_critChance = Math.Max(0, critChance);
 		ref readonly SpearActionStep step = ref SpearActionScheme.GetStep(_comboStepIndex);
 		Projectile.extraUpdates = step.Gameplay.ExtraUpdates;
 		_totalLifetimeUpdates = ScaledLifetimeUpdates(in step, _branch);
@@ -102,6 +105,7 @@ public class SpearStrikeProjectile : ModProjectile
 		writer.Write((int)_branch);
 		writer.Write(_aimRotation);
 		writer.Write(_weaponLength);
+		writer.Write(_critChance);
 		writer.Write(_totalLifetimeUpdates);
 		writer.Write(_age);
 		writer.Write(_playedSwingSound);
@@ -114,6 +118,7 @@ public class SpearStrikeProjectile : ModProjectile
 		_branch = (SpearComboBranch)reader.ReadInt32();
 		_aimRotation = reader.ReadSingle();
 		_weaponLength = reader.ReadSingle();
+		_critChance = reader.ReadInt32();
 		_totalLifetimeUpdates = reader.ReadInt32();
 		_age = reader.ReadInt32();
 		_playedSwingSound = reader.ReadBoolean();
@@ -132,6 +137,14 @@ public class SpearStrikeProjectile : ModProjectile
 	public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
 	{
 		return CollisionAreaIntersects(targetHitbox);
+	}
+
+	public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+	{
+		if (_critChance > 0 && Main.rand.Next(100) < _critChance)
+		{
+			modifiers.SetCrit();
+		}
 	}
 
 	public override void AI()
