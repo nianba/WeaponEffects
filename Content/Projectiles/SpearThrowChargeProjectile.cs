@@ -175,10 +175,11 @@ public class SpearThrowChargeProjectile : ModProjectile
 		}
 
 		Player player = Main.player[Projectile.owner];
-		Texture2D weaponTexture = GetWeaponTexture();
+		SpearHeldVisualProfile heldVisualProfile = SpearHeldVisualProfileResolver.Resolve(_weaponItemType);
+		Texture2D weaponTexture = GetHeldWeaponTexture(ref heldVisualProfile);
 		if (player.active && weaponTexture != null)
 		{
-			DrawChargingSpear(player, weaponTexture, lightColor);
+			DrawChargingSpear(player, weaponTexture, in heldVisualProfile, lightColor);
 		}
 
 		return false;
@@ -281,7 +282,7 @@ public class SpearThrowChargeProjectile : ModProjectile
 		return _weaponItemType > 0 && item != null && !item.IsAir && item.type == _weaponItemType;
 	}
 
-	private void DrawChargingSpear(Player player, Texture2D weaponTexture, Color lightColor)
+	private void DrawChargingSpear(Player player, Texture2D weaponTexture, in SpearHeldVisualProfile heldVisualProfile, Color lightColor)
 	{
 		Vector2 direction = _aimRotation.ToRotationVector2();
 		float progress = ChargeProgress;
@@ -293,10 +294,10 @@ public class SpearThrowChargeProjectile : ModProjectile
 			return;
 		}
 
-		Vector2 gripOrigin = HeldSpearGripOrigin(weaponTexture);
-		Vector2 tipOrigin = HeldSpearTipOrigin(weaponTexture);
+		Vector2 gripOrigin = SpearHeldVisualMetrics.GripOrigin(weaponTexture, in heldVisualProfile);
+		Vector2 tipOrigin = SpearHeldVisualMetrics.TipOrigin(weaponTexture, in heldVisualProfile);
 		Vector2 textureShaft = tipOrigin - gripOrigin;
-		float scale = MathHelper.Clamp(shaft.Length() / Math.Max(1f, textureShaft.Length()), 0.65f, 1.18f);
+		float scale = SpearHeldVisualMetrics.DrawScale(shaft.Length(), textureShaft.Length(), in heldVisualProfile);
 		float rotation = shaft.ToRotation() - textureShaft.ToRotation();
 		Color heatColor = progress < 0.5f
 			? Color.Lerp(lightColor, new Color(255, 125, 32), progress / 0.5f)
@@ -456,6 +457,23 @@ public class SpearThrowChargeProjectile : ModProjectile
 		return TextureAssets.Item[_weaponItemType].Value;
 	}
 
+	private Texture2D GetHeldWeaponTexture(ref SpearHeldVisualProfile heldVisualProfile)
+	{
+		if (heldVisualProfile.TextureOverride.HasSource
+			&& heldVisualProfile.TextureOverride.ProjectileType > 0
+			&& heldVisualProfile.TextureOverride.ProjectileType < TextureAssets.Projectile.Length)
+		{
+			Texture2D projectileTexture = TextureAssets.Projectile[heldVisualProfile.TextureOverride.ProjectileType].Value;
+			if (projectileTexture != null)
+			{
+				return projectileTexture;
+			}
+		}
+
+		heldVisualProfile = SpearHeldVisualProfileResolver.ResolveVanillaFallback(_weaponItemType);
+		return GetWeaponTexture();
+	}
+
 	private int EffectiveFullChargeFrames => _effectiveFullChargeFrames > 0
 		? _effectiveFullChargeFrames
 		: SpearThrowChargeMath.BaseFullChargeFrames;
@@ -472,13 +490,4 @@ public class SpearThrowChargeProjectile : ModProjectile
 		return player.MountedCenter - direction * pullBack - normal * player.direction * 5f - Vector2.UnitY * readyLift;
 	}
 
-	private static Vector2 HeldSpearGripOrigin(Texture2D weaponTexture)
-	{
-		return new Vector2(weaponTexture.Width * 0.1f, weaponTexture.Height * 0.9f);
-	}
-
-	private static Vector2 HeldSpearTipOrigin(Texture2D weaponTexture)
-	{
-		return new Vector2(weaponTexture.Width, 0f);
-	}
 }
