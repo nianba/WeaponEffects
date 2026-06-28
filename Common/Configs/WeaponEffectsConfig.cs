@@ -8,6 +8,9 @@ internal class WeaponEffectsGameplayConfig : ModConfig
 	[DefaultValue(true)]
 	public bool EnableSlashRework = true;
 
+	[DefaultValue(true)]
+	public bool EnableSpearRework = true;
+
 	[Increment(0.01f)]
 	[Range(0, 1)]
 	[DefaultValue(0.5f)]
@@ -100,21 +103,6 @@ internal class WeaponEffectsVisualConfig : ModConfig
 
 	[DefaultValue(true)]
 	public bool DrawHeldWeapon = true;
-
-	[DefaultValue(true)]
-	public bool DrawSpearTipTrail = true;
-
-	[DefaultValue(true)]
-	public bool DrawSpearShaftTrail = true;
-
-	[DefaultValue(true)]
-	public bool DrawSpearSweepArc = true;
-
-	[DefaultValue(true)]
-	public bool DrawSpearHeldWeapon = true;
-
-	[DefaultValue(true)]
-	public bool DrawSpearHitFlash = true;
 
 	[Increment(0.05f)]
 	[Range(0f, 3f)]

@@ -134,27 +134,20 @@ public class SpearTrailGlowProjectile : ModProjectile
 
 	public override bool PreDraw(ref Color lightColor)
 	{
-		WeaponEffectsVisualConfig visualConfig = ModContent.GetInstance<WeaponEffectsVisualConfig>();
 		SpearVisualProfile visualProfile = SpearVisualProfileResolver.Resolve(_weaponItemType);
 		Texture2D shaftTexture = MeleeEffectAssets.GetTexture(MeleeEffectAssets.SlashTexture);
 		float currentProgress = CurrentProgress;
 
-		if (visualConfig.DrawSpearSweepArc)
-		{
-			DrawSweepArc(currentProgress, in visualProfile);
-		}
+		DrawSweepArc(currentProgress, in visualProfile);
 
 		for (int i = TrailSamples - 1; i >= 0; i--)
 		{
 			float sampleProgress = MathHelper.Clamp(currentProgress - i * TrailSampleSpacing, 0f, 1f);
 			SpearPoseXna pose = EvaluatePoseAt(sampleProgress);
 			float fade = (1f - i / (float)TrailSamples) * (1f - currentProgress * 0.35f);
-			if (visualConfig.DrawSpearShaftTrail)
-			{
-				DrawShaftTrail(shaftTexture, pose, fade, i);
-			}
+			DrawShaftTrail(shaftTexture, pose, fade, i);
 
-			if (visualConfig.DrawSpearTipTrail && ShouldDrawSpearTipGlow())
+			if (ShouldDrawSpearTipGlow())
 			{
 				DrawSpearTipGlow(pose, fade, sampleProgress, i, in visualProfile);
 			}

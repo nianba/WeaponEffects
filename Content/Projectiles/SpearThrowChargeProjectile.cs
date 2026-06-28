@@ -169,7 +169,7 @@ public class SpearThrowChargeProjectile : ModProjectile
 		}
 
 		WeaponEffectsVisualConfig visualConfig = ModContent.GetInstance<WeaponEffectsVisualConfig>();
-		if (!visualConfig.DrawHeldWeapon || !visualConfig.DrawSpearHeldWeapon)
+		if (!visualConfig.DrawHeldWeapon)
 		{
 			return false;
 		}

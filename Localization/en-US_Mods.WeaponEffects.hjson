@@ -120,7 +120,12 @@ Configs: {
 
 		EnableSlashRework: {
 			Label: Enable Slash Rework
-			Tooltip: Replaces supported melee weapons with this mod's slash controls.
+			Tooltip: Replaces supported blade weapons with this mod's slash controls.
+		}
+
+		EnableSpearRework: {
+			Label: Enable Spear Rework
+			Tooltip: Replaces supported spear weapons with this mod's spear controls.
 		}
 
 		SlashScale: {
@@ -220,31 +225,6 @@ Configs: {
 		EffectVolume: {
 			Label: Effect Volume
 			Tooltip: Volume multiplier for this mod's slash, charge, hit, and block sounds.
-		}
-
-		DrawSpearTipTrail: {
-			Label: Draw Spear Tip Trail
-			Tooltip: ""
-		}
-
-		DrawSpearShaftTrail: {
-			Label: Draw Spear Shaft Trail
-			Tooltip: ""
-		}
-
-		DrawSpearHeldWeapon: {
-			Label: Draw Spear Held Weapon
-			Tooltip: ""
-		}
-
-		DrawSpearHitFlash: {
-			Label: Draw Spear Hit Flash
-			Tooltip: ""
-		}
-
-		DrawSpearSweepArc: {
-			Label: Draw Spear Sweep Arc
-			Tooltip: ""
 		}
 	}
 }

@@ -140,7 +140,7 @@ public class SpearGlobalItem : GlobalItem
 
 	private static bool ShouldUseSpearAction(Item item)
 	{
-		return ModContent.GetInstance<WeaponEffectsGameplayConfig>().EnableSlashRework
+		return ModContent.GetInstance<WeaponEffectsGameplayConfig>().EnableSpearRework
 			&& SpearWeaponClassifier.IsSupportedSpear(item);
 	}
 

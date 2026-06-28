@@ -161,18 +161,15 @@ public class SpearThrowProjectile : ModProjectile
 		MeleeEffectAssets.PlaySound(in hitSound, target.Center);
 		SpawnGoldHitDust(target);
 
-		if (ModContent.GetInstance<WeaponEffectsVisualConfig>().DrawSpearHitFlash)
-		{
-			MeleeEffectAssets.NewProjectileDirect(
-				Projectile.GetSource_FromAI(),
-				target.Center,
-				Vector2.Zero,
-				ModContent.ProjectileType<SlashHitEffectProjectile>(),
-				0,
-				0f,
-				Projectile.owner,
-				_aimRotation);
-		}
+		MeleeEffectAssets.NewProjectileDirect(
+			Projectile.GetSource_FromAI(),
+			target.Center,
+			Vector2.Zero,
+			ModContent.ProjectileType<SlashHitEffectProjectile>(),
+			0,
+			0f,
+			Projectile.owner,
+			_aimRotation);
 	}
 
 	public override bool PreDraw(ref Color lightColor)

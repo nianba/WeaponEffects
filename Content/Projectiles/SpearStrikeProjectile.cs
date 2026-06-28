@@ -179,10 +179,7 @@ public class SpearStrikeProjectile : ModProjectile
 			ItemLoader.OnHitNPC(sourceItem, player, target, in hit, damageDone);
 		}
 
-		if (ModContent.GetInstance<WeaponEffectsVisualConfig>().DrawSpearHitFlash)
-		{
-			MeleeEffectAssets.NewProjectileDirect(Projectile.GetSource_FromAI(), target.Center, XnaVector2.Zero, ModContent.ProjectileType<SlashHitEffectProjectile>(), 0, 0f, Projectile.owner, Main.rand.NextFloat(-MathHelper.Pi, MathHelper.Pi));
-		}
+		MeleeEffectAssets.NewProjectileDirect(Projectile.GetSource_FromAI(), target.Center, XnaVector2.Zero, ModContent.ProjectileType<SlashHitEffectProjectile>(), 0, 0f, Projectile.owner, Main.rand.NextFloat(-MathHelper.Pi, MathHelper.Pi));
 
 		SoundStyle? targetHitSound = target.HitSound;
 		if (targetHitSound.HasValue && targetHitSound.Value == SoundID.NPCHit4)
@@ -206,7 +203,7 @@ public class SpearStrikeProjectile : ModProjectile
 	public override bool PreDraw(ref Color lightColor)
 	{
 		WeaponEffectsVisualConfig visualConfig = ModContent.GetInstance<WeaponEffectsVisualConfig>();
-		if (visualConfig.DrawHeldWeapon && visualConfig.DrawSpearHeldWeapon)
+		if (visualConfig.DrawHeldWeapon)
 		{
 			DrawHeldWeapon(EvaluatePoseAt(CurrentProgress), lightColor);
 		}
