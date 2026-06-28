@@ -16,7 +16,7 @@ public readonly struct SpearSweepAfterimageProfile
 	public readonly float CollisionWidth;
 	public readonly float CollisionReachScale;
 
-	private SpearSweepAfterimageProfile(
+	public SpearSweepAfterimageProfile(
 		bool enabled,
 		int visualSampleCount,
 		float visualProgressWindow,
@@ -46,59 +46,21 @@ public readonly struct SpearSweepAfterimageProfile
 		CollisionReachScale = collisionReachScale;
 	}
 
-	public static SpearSweepAfterimageProfile ForStep(in SpearComboStep step)
+	public static SpearSweepAfterimageProfile Disabled(float collisionWidth)
 	{
-		return step.Kind switch
-		{
-			SpearComboStepKind.RisingLift => new SpearSweepAfterimageProfile(
-				enabled: true,
-				visualSampleCount: 18,
-				visualProgressWindow: 0.34f,
-				visualWidth: 22f,
-				visualAlpha: 0.014f,
-				visualFadeInEnd: 0.42f,
-				visualFadeOutStart: 0.34f,
-				visualInnerShaftAmount: 0.54f,
-				visualReachScale: 1.6f,
-				collisionSampleCount: 8,
-				collisionSampleSpacing: 0.055f,
-				collisionWidth: 32f,
-				collisionReachScale: 2.7f),
-
-			SpearComboStepKind.Backsweep => new SpearSweepAfterimageProfile(
-				enabled: true,
-				visualSampleCount: 30,
-				visualProgressWindow: 0.46f,
-				visualWidth: 30f,
-				visualAlpha: 0.014f,
-				visualFadeInEnd: 0.38f,
-				visualFadeOutStart: 0.36f,
-				visualInnerShaftAmount: 0.16f,
-				visualReachScale: 1.6f,
-				collisionSampleCount: 8,
-				collisionSampleSpacing: 0.06f,
-				collisionWidth: 36f,
-				collisionReachScale: 2.7f),
-
-			_ => new SpearSweepAfterimageProfile(
-				enabled: false,
-				visualSampleCount: 0,
-				visualProgressWindow: 0f,
-				visualWidth: 0f,
-				visualAlpha: 0f,
-				visualFadeInEnd: 1f,
-				visualFadeOutStart: 1f,
-				visualInnerShaftAmount: 1f,
-				visualReachScale: 1f,
-				collisionSampleCount: 8,
-				collisionSampleSpacing: 0.035f,
-				collisionWidth: step.Kind switch
-				{
-					SpearComboStepKind.ForwardThrust => 30f,
-					SpearComboStepKind.Finisher => 42f,
-					_ => step.CollisionWidth
-				},
-				collisionReachScale: 1f)
-		};
+		return new SpearSweepAfterimageProfile(
+			enabled: false,
+			visualSampleCount: 0,
+			visualProgressWindow: 0f,
+			visualWidth: 0f,
+			visualAlpha: 0f,
+			visualFadeInEnd: 1f,
+			visualFadeOutStart: 1f,
+			visualInnerShaftAmount: 1f,
+			visualReachScale: 1f,
+			collisionSampleCount: 8,
+			collisionSampleSpacing: 0.035f,
+			collisionWidth: collisionWidth,
+			collisionReachScale: 1f);
 	}
 }

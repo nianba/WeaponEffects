@@ -15,7 +15,7 @@ public readonly struct SpearTipGlowProfile
 	public readonly float BackExtentScale;
 	public readonly float CollisionPadding;
 
-	private SpearTipGlowProfile(
+	public SpearTipGlowProfile(
 		bool enabled,
 		float startProgress,
 		float centerOffset,
@@ -39,37 +39,7 @@ public readonly struct SpearTipGlowProfile
 		CollisionPadding = collisionPadding;
 	}
 
-	public static SpearTipGlowProfile ForStep(in SpearComboStep step)
-	{
-		return step.Kind switch
-		{
-			SpearComboStepKind.ForwardThrust => new SpearTipGlowProfile(
-				enabled: true,
-				startProgress: 0f,
-				centerOffset: 5f,
-				baseSize: 10f,
-				growthSize: 30f,
-				widthScale: 0.4f,
-				lengthScale: 1f,
-				uniformScale: 1f,
-				backExtentScale: 0.35f,
-				collisionPadding: 6f),
-
-			SpearComboStepKind.Finisher => new SpearTipGlowProfile(
-				enabled: true,
-				startProgress: 0.62f,
-				centerOffset: 50f,
-				baseSize: 10f,
-				growthSize: 10f,
-				widthScale: 3.0f,
-				lengthScale: 1.45f,
-				uniformScale: 1.1f,
-				backExtentScale: 0.35f,
-				collisionPadding: 50f),
-
-			_ => default
-		};
-	}
+	public static SpearTipGlowProfile Disabled => default;
 
 	public float SizeAt(float progress)
 	{

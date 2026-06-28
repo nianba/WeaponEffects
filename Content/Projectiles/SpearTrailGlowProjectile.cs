@@ -69,8 +69,8 @@ public class SpearTrailGlowProjectile : ModProjectile
 		_branch = branch;
 		_aimRotation = aimRotation;
 		_weaponLength = Math.Max(1f, weaponLength);
-		ref readonly SpearComboStep step = ref TridentSpearComboScheme.GetStep(_comboStepIndex);
-		Projectile.extraUpdates = step.ExtraUpdates;
+		ref readonly SpearActionStep step = ref SpearActionScheme.GetStep(_comboStepIndex);
+		Projectile.extraUpdates = step.Gameplay.ExtraUpdates;
 		_totalLifetimeUpdates = ScaledLifetimeUpdates(in step, _branch);
 		Projectile.timeLeft = TotalLifetimeUpdates + 2;
 		Projectile.netUpdate = true;
@@ -80,7 +80,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 	{
 		Projectile.width = 12;
 		Projectile.height = 12;
-		Projectile.timeLeft = SpearCollisionEnvelope.LifetimeTicks;
+		Projectile.timeLeft = SpearActionScheme.LifetimeTicks;
 		Projectile.friendly = false;
 		Projectile.tileCollide = false;
 		Projectile.ignoreWater = true;
@@ -165,8 +165,8 @@ public class SpearTrailGlowProjectile : ModProjectile
 
 	private void DrawSweepArc(float currentProgress)
 	{
-		ref readonly SpearComboStep step = ref TridentSpearComboScheme.GetStep(_comboStepIndex);
-		SpearSweepAfterimageProfile afterimage = SpearSweepAfterimageProfile.ForStep(in step);
+		ref readonly SpearActionStep step = ref SpearActionScheme.GetStep(_comboStepIndex);
+		SpearSweepAfterimageProfile afterimage = step.Afterimage;
 		if (!afterimage.Enabled)
 		{
 			return;
@@ -185,7 +185,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 
 	private bool ShouldDrawSpearTipGlow()
 	{
-		ref readonly SpearComboStep step = ref TridentSpearComboScheme.GetStep(_comboStepIndex);
+		ref readonly SpearActionStep step = ref SpearActionScheme.GetStep(_comboStepIndex);
 		return SpearCollisionEnvelope.DrawsTipGlow(in step);
 	}
 
@@ -355,8 +355,8 @@ public class SpearTrailGlowProjectile : ModProjectile
 		direction /= spearLength;
 
 		float extensionProgress = MathHelper.Clamp(progress, 0f, 1f);
-		ref readonly SpearComboStep step = ref TridentSpearComboScheme.GetStep(_comboStepIndex);
-		SpearTipGlowProfile tipGlow = SpearTipGlowProfile.ForStep(in step);
+		ref readonly SpearActionStep step = ref SpearActionScheme.GetStep(_comboStepIndex);
+		SpearTipGlowProfile tipGlow = step.TipGlow;
 		if (!tipGlow.Enabled || progress < tipGlow.StartProgress)
 		{
 			return;
@@ -425,7 +425,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 
 	private SpearPoseXna EvaluatePoseAt(float progress)
 	{
-		ref readonly SpearComboStep step = ref TridentSpearComboScheme.GetStep(_comboStepIndex);
+		ref readonly SpearActionStep step = ref SpearActionScheme.GetStep(_comboStepIndex);
 		SpearPoseSnapshot pose = SpearMotion.EvaluatePose(
 			in step,
 			_branch,
@@ -492,7 +492,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 
 	private int TotalLifetimeUpdates => _totalLifetimeUpdates > 0
 		? _totalLifetimeUpdates
-		: SpearCollisionEnvelope.LifetimeTicks * (Projectile.extraUpdates + 1);
+		: SpearActionScheme.LifetimeTicks * (Projectile.extraUpdates + 1);
 
 	private float CurrentProgress => MathHelper.Clamp(_age / (float)Math.Max(1, TotalLifetimeUpdates), 0f, 1f);
 
@@ -500,15 +500,15 @@ public class SpearTrailGlowProjectile : ModProjectile
 	{
 		get
 		{
-			ref readonly SpearComboStep step = ref TridentSpearComboScheme.GetStep(_comboStepIndex);
+			ref readonly SpearActionStep step = ref SpearActionScheme.GetStep(_comboStepIndex);
 			return SpearCollisionEnvelope.TrailSampleSpacing(in step);
 		}
 	}
 
-	private static int ScaledLifetimeUpdates(in SpearComboStep step, SpearComboBranch branch)
+	private static int ScaledLifetimeUpdates(in SpearActionStep step, SpearComboBranch branch)
 	{
-		float scaledTicks = SpearCollisionEnvelope.LifetimeTicks * step.GetTimeMultiplier(branch);
-		return Math.Max(1, (int)MathF.Round(scaledTicks)) * (step.ExtraUpdates + 1);
+		float scaledTicks = SpearActionScheme.LifetimeTicks * step.Gameplay.GetTimeMultiplier(branch);
+		return Math.Max(1, (int)MathF.Round(scaledTicks)) * (step.Gameplay.ExtraUpdates + 1);
 	}
 
 	private static float SweepWidthFactor(float position)

@@ -5,6 +5,7 @@ using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
+using WeaponEffects.Spears;
 
 namespace WeaponEffects;
 
@@ -140,9 +141,7 @@ public class SpearGlobalItem : GlobalItem
 	private static bool ShouldUseSpearAction(Item item)
 	{
 		return ModContent.GetInstance<WeaponEffectsGameplayConfig>().EnableSlashRework
-			&& item != null
-			&& !item.IsAir
-			&& item.type == ItemID.Trident;
+			&& SpearWeaponClassifier.IsSupportedSpear(item);
 	}
 
 	private static float GetWeaponLength(Item item)

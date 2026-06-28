@@ -4,42 +4,40 @@ namespace WeaponEffects.Spears;
 
 public static class SpearCollisionEnvelope
 {
-	public const int LifetimeTicks = 26;
-
-	public static float CollisionWidth(in SpearComboStep step)
+	public static float CollisionWidth(in SpearActionStep step)
 	{
-		return SpearSweepAfterimageProfile.ForStep(in step).CollisionWidth;
+		return step.Afterimage.CollisionWidth;
 	}
 
-	public static float CollisionReachScale(in SpearComboStep step)
+	public static float CollisionReachScale(in SpearActionStep step)
 	{
-		return SpearSweepAfterimageProfile.ForStep(in step).CollisionReachScale;
+		return step.Afterimage.CollisionReachScale;
 	}
 
-	public static float TrailSampleSpacing(in SpearComboStep step)
+	public static float TrailSampleSpacing(in SpearActionStep step)
 	{
-		return SpearSweepAfterimageProfile.ForStep(in step).CollisionSampleSpacing;
+		return step.Afterimage.CollisionSampleSpacing;
 	}
 
-	public static int CollisionSampleCount(in SpearComboStep step)
+	public static int CollisionSampleCount(in SpearActionStep step)
 	{
-		return SpearSweepAfterimageProfile.ForStep(in step).CollisionSampleCount;
+		return step.Afterimage.CollisionSampleCount;
 	}
 
-	public static bool CanSampleCollisionAt(in SpearComboStep step, float progress)
+	public static bool CanSampleCollisionAt(in SpearActionStep step, float progress)
 	{
-		return progress >= step.ActiveStart && progress <= step.ActiveEnd;
+		return progress >= step.Timing.ActiveStart && progress <= step.Timing.ActiveEnd;
 	}
 
-	public static bool DrawsTipGlow(in SpearComboStep step)
+	public static bool DrawsTipGlow(in SpearActionStep step)
 	{
-		return SpearTipGlowProfile.ForStep(in step).Enabled;
+		return step.TipGlow.Enabled;
 	}
 
 	public static float CollisionTipExtensionDistance(
-		in SpearComboStep step,
+		in SpearActionStep step,
 		float progress)
 	{
-		return SpearTipGlowProfile.ForStep(in step).CollisionExtensionAt(progress);
+		return step.TipGlow.CollisionExtensionAt(progress);
 	}
 }

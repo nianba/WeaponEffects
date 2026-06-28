@@ -11,7 +11,6 @@ public class WeaponEffectsPlayer : ModPlayer
 	private const int MaxBladeMomentumStacks = 8;
 	private const int BladeMomentumDecayInterval = 30;
 	private const int BladeMomentumNpcCooldown = 12;
-	private const int FirstEnabledSpearComboStepIndex = 1;
 
 	public int ScreenShakeTimer;
 	public int SlashComboStepIndex;
@@ -72,16 +71,16 @@ public class WeaponEffectsPlayer : ModPlayer
 
 	public int ConsumeNextSpearComboStep()
 	{
-		if (SpearComboStepIndex < FirstEnabledSpearComboStepIndex)
+		if (SpearComboStepIndex < SpearActionScheme.FirstEnabledStepIndex)
 		{
-			SpearComboStepIndex = FirstEnabledSpearComboStepIndex;
+			SpearComboStepIndex = SpearActionScheme.FirstEnabledStepIndex;
 		}
 
 		int index = SpearComboStepIndex;
 		SpearComboStepIndex++;
-		if (SpearComboStepIndex >= TridentSpearComboScheme.Count)
+		if (SpearComboStepIndex >= SpearActionScheme.Count)
 		{
-			SpearComboStepIndex = FirstEnabledSpearComboStepIndex;
+			SpearComboStepIndex = SpearActionScheme.FirstEnabledStepIndex;
 		}
 
 		_spearComboResetTimer = ModContent.GetInstance<WeaponEffectsGameplayConfig>().ComboResetDelay;
@@ -90,7 +89,7 @@ public class WeaponEffectsPlayer : ModPlayer
 
 	public void ResetSpearCombo()
 	{
-		SpearComboStepIndex = FirstEnabledSpearComboStepIndex;
+		SpearComboStepIndex = SpearActionScheme.FirstEnabledStepIndex;
 		_spearComboResetTimer = 0;
 	}
 
@@ -250,7 +249,7 @@ public class WeaponEffectsPlayer : ModPlayer
 
 		if (_spearComboResetTimer <= 0)
 		{
-			SpearComboStepIndex = FirstEnabledSpearComboStepIndex;
+			SpearComboStepIndex = SpearActionScheme.FirstEnabledStepIndex;
 		}
 		else
 		{

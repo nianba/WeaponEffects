@@ -65,8 +65,8 @@ public class SpearStrikeProjectile : ModProjectile
 		_branch = branch;
 		_aimRotation = aimRotation;
 		_weaponLength = Math.Max(1f, weaponLength);
-		ref readonly SpearComboStep step = ref TridentSpearComboScheme.GetStep(_comboStepIndex);
-		Projectile.extraUpdates = step.ExtraUpdates;
+		ref readonly SpearActionStep step = ref SpearActionScheme.GetStep(_comboStepIndex);
+		Projectile.extraUpdates = step.Gameplay.ExtraUpdates;
 		_totalLifetimeUpdates = ScaledLifetimeUpdates(in step, _branch);
 		Projectile.timeLeft = TotalLifetimeUpdates + 2;
 		Projectile.netUpdate = true;
@@ -84,7 +84,7 @@ public class SpearStrikeProjectile : ModProjectile
 		Projectile.width = 420;
 		Projectile.height = 420;
 		Projectile.DamageType = DamageClass.Melee;
-		Projectile.timeLeft = SpearCollisionEnvelope.LifetimeTicks;
+		Projectile.timeLeft = SpearActionScheme.LifetimeTicks;
 		Projectile.friendly = true;
 		Projectile.tileCollide = false;
 		Projectile.penetrate = -1;
@@ -206,7 +206,7 @@ public class SpearStrikeProjectile : ModProjectile
 		XnaVector2 targetPosition = targetHitbox.TopLeft();
 		XnaVector2 targetSize = targetHitbox.Size();
 		float collisionPoint = 0f;
-		ref readonly SpearComboStep step = ref TridentSpearComboScheme.GetStep(_comboStepIndex);
+		ref readonly SpearActionStep step = ref SpearActionScheme.GetStep(_comboStepIndex);
 		float sampleSpacing = SpearCollisionEnvelope.TrailSampleSpacing(in step);
 		int sampleCount = SpearCollisionEnvelope.CollisionSampleCount(in step);
 
@@ -231,7 +231,7 @@ public class SpearStrikeProjectile : ModProjectile
 		return false;
 	}
 
-	private XnaVector2 CollisionTipForPose(in SpearComboStep step, SpearPoseXna pose, float progress, out float collisionWidth)
+	private XnaVector2 CollisionTipForPose(in SpearActionStep step, SpearPoseXna pose, float progress, out float collisionWidth)
 	{
 		XnaVector2 shaft = pose.Tip - pose.Grip;
 		float spearLength = shaft.Length();
@@ -251,7 +251,7 @@ public class SpearStrikeProjectile : ModProjectile
 
 	private SpearPoseXna EvaluatePoseAt(float progress)
 	{
-		ref readonly SpearComboStep step = ref TridentSpearComboScheme.GetStep(_comboStepIndex);
+		ref readonly SpearActionStep step = ref SpearActionScheme.GetStep(_comboStepIndex);
 		SpearPoseSnapshot pose = SpearMotion.EvaluatePose(
 			in step,
 			_branch,
@@ -402,8 +402,8 @@ public class SpearStrikeProjectile : ModProjectile
 			return;
 		}
 
-		ref readonly SpearComboStep step = ref TridentSpearComboScheme.GetStep(_comboStepIndex);
-		float soundProgress = MathHelper.Clamp(step.ActiveStart + step.SwingSoundDelay, 0f, 1f);
+		ref readonly SpearActionStep step = ref SpearActionScheme.GetStep(_comboStepIndex);
+		float soundProgress = MathHelper.Clamp(step.Timing.SwingSoundProgress, 0f, 1f);
 		if (progress < soundProgress)
 		{
 			return;
@@ -417,14 +417,14 @@ public class SpearStrikeProjectile : ModProjectile
 
 	private int TotalLifetimeUpdates => _totalLifetimeUpdates > 0
 		? _totalLifetimeUpdates
-		: SpearCollisionEnvelope.LifetimeTicks * (Projectile.extraUpdates + 1);
+		: SpearActionScheme.LifetimeTicks * (Projectile.extraUpdates + 1);
 
 	private float CurrentProgress => MathHelper.Clamp(_age / (float)Math.Max(1, TotalLifetimeUpdates), 0f, 1f);
 
-	private static int ScaledLifetimeUpdates(in SpearComboStep step, SpearComboBranch branch)
+	private static int ScaledLifetimeUpdates(in SpearActionStep step, SpearComboBranch branch)
 	{
-		float scaledTicks = SpearCollisionEnvelope.LifetimeTicks * step.GetTimeMultiplier(branch);
-		return Math.Max(1, (int)MathF.Round(scaledTicks)) * (step.ExtraUpdates + 1);
+		float scaledTicks = SpearActionScheme.LifetimeTicks * step.Gameplay.GetTimeMultiplier(branch);
+		return Math.Max(1, (int)MathF.Round(scaledTicks)) * (step.Gameplay.ExtraUpdates + 1);
 	}
 
 	private static NumericsVector2 ToNumerics(XnaVector2 value)

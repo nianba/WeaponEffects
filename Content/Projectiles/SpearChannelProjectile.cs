@@ -144,12 +144,12 @@ public class SpearChannelProjectile : ModProjectile
 	{
 		WeaponEffectsPlayer effectsPlayer = player.GetModPlayer<WeaponEffectsPlayer>();
 		int comboStepIndex = effectsPlayer.ConsumeNextSpearComboStep();
-		ref readonly SpearComboStep step = ref TridentSpearComboScheme.GetStep(comboStepIndex);
+		ref readonly SpearActionStep step = ref SpearActionScheme.GetStep(comboStepIndex);
 		SpearComboBranch branch = step.Kind == SpearComboStepKind.Finisher
 			? SpearMotion.SelectFinisherBranch(IsGrounded(player))
 			: SpearComboBranch.None;
 
-		int damage = Math.Max(1, (int)MathF.Round(NormalSpearDamage * step.DamageMultiplier));
+		int damage = Math.Max(1, (int)MathF.Round(NormalSpearDamage * step.Gameplay.DamageMultiplier));
 		float knockback = SpearKnockback;
 
 		SpearStrikeProjectile.Spawn(
@@ -199,9 +199,9 @@ public class SpearChannelProjectile : ModProjectile
 		}
 	}
 
-	private int IntervalForStep(in SpearComboStep step, SpearComboBranch branch)
+	private int IntervalForStep(in SpearActionStep step, SpearComboBranch branch)
 	{
-		float interval = NormalSpearInterval * step.GetTimeMultiplier(branch);
+		float interval = NormalSpearInterval * step.Gameplay.GetTimeMultiplier(branch);
 		return Math.Max(1, (int)MathF.Round(interval));
 	}
 

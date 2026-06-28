@@ -13,7 +13,7 @@ public static class SpearMotion
 	}
 
 	public static SpearPoseSnapshot EvaluatePose(
-		in SpearComboStep step,
+		in SpearActionStep step,
 		SpearComboBranch branch,
 		Vector2 ownerCenter,
 		float aimRotation,
@@ -21,14 +21,14 @@ public static class SpearMotion
 		float progress)
 	{
 		float clampedProgress = Math.Clamp(progress, 0f, 1f);
-		float reach = ResolveReach(weaponLength, step.ReachScale);
-		Vector2 localTip = LocalTipFor(step.Kind, branch, reach, clampedProgress);
+		float reach = ResolveReach(weaponLength, step.Gameplay.ReachScale);
+		Vector2 localTip = LocalTipFor(in step, branch, reach, clampedProgress);
 		float facing = MathF.Cos(aimRotation) < 0f ? -1f : 1f;
 		Vector2 grip = ownerCenter + new Vector2(12f * facing, 4f);
 		Vector2 tip = grip + TransformLocalTip(localTip, aimRotation, facing);
-		bool active = clampedProgress >= step.ActiveStart && clampedProgress <= step.ActiveEnd;
+		bool active = clampedProgress >= step.Timing.ActiveStart && clampedProgress <= step.Timing.ActiveEnd;
 
-		return new SpearPoseSnapshot(grip, tip, step.CollisionWidth, active);
+		return new SpearPoseSnapshot(grip, tip, step.Gameplay.CollisionWidth, active);
 	}
 
 	public static float ResolveReach(float weaponLength, float reachScale)
@@ -36,93 +36,68 @@ public static class SpearMotion
 		return Math.Max(MinimumSpearReach, Math.Max(1f, weaponLength)) * reachScale;
 	}
 
-	private static Vector2 LocalTipFor(SpearComboStepKind kind, SpearComboBranch branch, float reach, float progress)
+	private static Vector2 LocalTipFor(in SpearActionStep step, SpearComboBranch branch, float reach, float progress)
 	{
-		return kind switch
+		if (step.Kind == SpearComboStepKind.Finisher && branch == SpearComboBranch.AirborneFinisher)
+		{
+			return AirborneFinisherTip(reach, progress);
+		}
+
+		return step.Kind switch
 		{
 			SpearComboStepKind.ForwardThrust => Lerp(new Vector2(reach * 0.45f, 5f), new Vector2(reach * 0.82f, 0f), Smooth01(progress)),
-			SpearComboStepKind.RisingLift => RisingLiftTip(reach, progress),
-			SpearComboStepKind.Backsweep => BacksweepTip(reach, progress),
-			SpearComboStepKind.Finisher => branch == SpearComboBranch.AirborneFinisher
-				? AirborneFinisherTip(reach, progress)
-				: GroundedFinisherTip(reach, progress),
+			SpearComboStepKind.RisingLift => ArcTip(in step, reach, progress),
+			SpearComboStepKind.Backsweep => ArcTip(in step, reach, progress),
+			SpearComboStepKind.Finisher => GroundedFinisherTip(in step, reach, progress),
 			_ => new Vector2(reach, 0f)
 		};
 	}
 
-	private static Vector2 RisingLiftTip(float reach, float progress)
+	private static Vector2 ArcTip(in SpearActionStep step, float reach, float progress)
 	{
-		const float windupEnd = 0.48f;
-		const float liftEnd = 0.76f;
-		float liftEndAngle = DegreesToRadians(-210f);
-		float liftEndRadius = reach * 0.9f;
-		Vector2 liftEndTip = ArcTip(liftEndAngle, liftEndRadius, 0f);
-		if (progress <= windupEnd)
+		SpearActionTiming timing = step.Timing;
+		SpearMotionProfile motion = step.Motion;
+		float endAngle = DegreesToRadians(motion.EndAngleDegrees);
+		float endRadius = reach * motion.EndRadiusScale;
+		Vector2 endTip = ArcTip(endAngle, endRadius, 0f);
+		if (progress <= timing.WindupEnd)
 		{
-			float windupProgress = Smooth01(progress / windupEnd);
-			float angle = LerpRadians(DegreesToRadians(60f), DegreesToRadians(30f), windupProgress);
-			float radius = reach * LerpFloat(0.86f, 0.9f, windupProgress);
+			float windupProgress = Smooth01(progress / timing.WindupEnd);
+			float angle = LerpRadians(DegreesToRadians(motion.StartAngleDegrees), DegreesToRadians(motion.ReleaseAngleDegrees), windupProgress);
+			float radius = reach * LerpFloat(motion.StartRadiusScale, motion.ReleaseRadiusScale, windupProgress);
 			return ArcTip(angle, radius, 0f);
 		}
 
-		if (progress <= liftEnd)
+		if (progress <= timing.AttackEnd)
 		{
-			float liftProgress = Smooth01((progress - windupEnd) / (liftEnd - windupEnd));
-			float liftAngle = LerpRadians(DegreesToRadians(30f), liftEndAngle, liftProgress);
-			float liftRadius = reach * LerpFloat(0.9f, 0.9f, liftProgress);
-			return ArcTip(liftAngle, liftRadius, 0f);
+			float attackProgress = Smooth01((progress - timing.WindupEnd) / (timing.AttackEnd - timing.WindupEnd));
+			float attackAngle = LerpRadians(DegreesToRadians(motion.ReleaseAngleDegrees), endAngle, attackProgress);
+			float attackRadius = reach * LerpFloat(motion.ReleaseRadiusScale, motion.EndRadiusScale, attackProgress);
+			return ArcTip(attackAngle, attackRadius, 0f);
 		}
 
-		float recoveryProgress = Smooth01((progress - liftEnd) / (1f - liftEnd));
-		Vector2 recoveryEnd = ArcTip(DegreesToRadians(-210f), reach * 0.86f, 0f);
-		return Lerp(liftEndTip, recoveryEnd, recoveryProgress);
+		float recoveryProgress = Smooth01((progress - timing.AttackEnd) / (1f - timing.AttackEnd));
+		Vector2 recoveryEnd = ArcTip(DegreesToRadians(motion.RecoveryAngleDegrees), reach * motion.RecoveryRadiusScale, 0f);
+		return Lerp(endTip, recoveryEnd, recoveryProgress);
 	}
 
-	private static Vector2 BacksweepTip(float reach, float progress)
+	private static Vector2 GroundedFinisherTip(in SpearActionStep step, float reach, float progress)
 	{
-		const float windupEnd = 0.48f;
-		const float sweepEnd = 0.78f;
-		float sweepEndAngle = DegreesToRadians(510f);
-		float sweepEndRadius = reach * 0.9f;
-		Vector2 sweepEndTip = ArcTip(sweepEndAngle, sweepEndRadius, 0f);
-		if (progress <= windupEnd)
+		SpearActionTiming timing = step.Timing;
+		SpearMotionProfile motion = step.Motion;
+		Vector2 held = ArcTip(DegreesToRadians(motion.StartAngleDegrees), reach * motion.ReleaseRadiusScale, 0f);
+		Vector2 end = new(reach * motion.EndXScale, motion.EndY);
+		if (progress <= timing.WindupEnd)
 		{
-			float windupProgress = Smooth01(progress / windupEnd);
-			float angle = LerpRadians(DegreesToRadians(150f), DegreesToRadians(180f), windupProgress);
-			float radius = reach * LerpFloat(0.9f, 0.86f, windupProgress);
+			float windupProgress = Smooth01(progress / timing.WindupEnd);
+			float angle = LerpRadians(DegreesToRadians(motion.StartAngleDegrees), DegreesToRadians(motion.ReleaseAngleDegrees), windupProgress);
+			float radius = reach * LerpFloat(motion.StartRadiusScale, motion.ReleaseRadiusScale, windupProgress);
 			return ArcTip(angle, radius, 0f);
 		}
 
-		if (progress <= sweepEnd)
+		if (progress <= timing.AttackEnd)
 		{
-			float sweepProgress = Smooth01((progress - windupEnd) / (sweepEnd - windupEnd));
-			float sweepAngle = LerpRadians(DegreesToRadians(180f), sweepEndAngle, sweepProgress);
-			float sweepRadius = reach * LerpFloat(0.86f, sweepEndRadius / reach, sweepProgress);
-			return ArcTip(sweepAngle, sweepRadius, 0f);
-		}
-
-		float recoveryProgress = Smooth01((progress - sweepEnd) / (1f - sweepEnd));
-		Vector2 recoveryEnd = ArcTip(DegreesToRadians(510f), reach * 0.84f, 0f);
-		return Lerp(sweepEndTip, recoveryEnd, recoveryProgress);
-	}
-
-	private static Vector2 GroundedFinisherTip(float reach, float progress)
-	{
-		Vector2 held = ArcTip(DegreesToRadians(150f), reach * 0.82f, 0f);
-		Vector2 end = new(reach * 1.25f, 8f);
-		const float windupEnd = 0.48f;
-		const float thrustEnd = 0.7f;
-		if (progress <= windupEnd)
-		{
-			float windupProgress = Smooth01(progress / windupEnd);
-			float angle = LerpRadians(DegreesToRadians(150f), DegreesToRadians(120f), windupProgress);
-			float radius = reach * LerpFloat(0.9f, 0.82f, windupProgress);
-			return ArcTip(angle, radius, 0f);
-		}
-
-		if (progress <= thrustEnd)
-		{
-			float thrustProgress = Smooth01((progress - windupEnd) / (thrustEnd - windupEnd));
+			float thrustProgress = Smooth01((progress - timing.WindupEnd) / (timing.AttackEnd - timing.WindupEnd));
 			return Lerp(held, end, thrustProgress);
 		}
 
