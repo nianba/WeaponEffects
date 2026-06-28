@@ -399,7 +399,8 @@ public class SpearTrailGlowProjectile : ModProjectile
 			return pose.Tip;
 		}
 
-		return SpearHeldVisualMetrics.VisibleTip(pose.Grip, pose.Tip, weaponTexture);
+		SpearHeldVisualProfile heldVisualProfile = SpearHeldVisualProfileResolver.Resolve(_weaponItemType);
+		return SpearHeldVisualMetrics.VisibleTip(pose.Grip, pose.Tip, weaponTexture, in heldVisualProfile);
 	}
 
 	private static void DrawSpearTipGlowSegment(Texture2D texture, XnaVector2 origin, XnaVector2 worldPosition, Color color, float rotation, XnaVector2 scale)

@@ -352,11 +352,12 @@ public class SpearStrikeProjectile : ModProjectile
 			return;
 		}
 
-		XnaVector2 gripOrigin = SpearHeldVisualMetrics.GripOrigin(weaponTexture);
-		XnaVector2 tipOrigin = SpearHeldVisualMetrics.TipOrigin(weaponTexture);
+		SpearHeldVisualProfile heldVisualProfile = SpearHeldVisualProfileResolver.Resolve(_weaponItemType);
+		XnaVector2 gripOrigin = SpearHeldVisualMetrics.GripOrigin(weaponTexture, in heldVisualProfile);
+		XnaVector2 tipOrigin = SpearHeldVisualMetrics.TipOrigin(weaponTexture, in heldVisualProfile);
 		XnaVector2 textureShaft = tipOrigin - gripOrigin;
-		float textureGripToTipLength = SpearHeldVisualMetrics.TextureGripToTipLength(weaponTexture);
-		float drawScale = SpearHeldVisualMetrics.DrawScale(shaft.Length(), textureGripToTipLength);
+		float textureGripToTipLength = SpearHeldVisualMetrics.TextureGripToTipLength(weaponTexture, in heldVisualProfile);
+		float drawScale = SpearHeldVisualMetrics.DrawScale(shaft.Length(), textureGripToTipLength, in heldVisualProfile);
 		XnaVector2 drawPosition = pose.Grip + OwnerVisualOffset() - Main.screenPosition;
 		float rotation = pose.Rotation - textureShaft.ToRotation();
 
@@ -385,7 +386,8 @@ public class SpearStrikeProjectile : ModProjectile
 			return pose.Tip;
 		}
 
-		return SpearHeldVisualMetrics.VisibleTip(pose.Grip, pose.Tip, weaponTexture);
+		SpearHeldVisualProfile heldVisualProfile = SpearHeldVisualProfileResolver.Resolve(_weaponItemType);
+		return SpearHeldVisualMetrics.VisibleTip(pose.Grip, pose.Tip, weaponTexture, in heldVisualProfile);
 	}
 
 	private void SpawnHitDust(NPC target, int dustType, int count, float minScale, float maxScale)

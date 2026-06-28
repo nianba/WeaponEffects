@@ -6,43 +6,35 @@ namespace WeaponEffects.Spears;
 
 public static class SpearHeldVisualMetrics
 {
-	private const float GripOriginXFactor = 0.15f;
-	private const float GripOriginYFactor = 0.9f;
-	private const float TipOriginXFactor = 1f;
-	private const float TipOriginYFactor = 0f;
-	private const float MinDrawScale = 0.65f;
-	private const float MaxDrawScale = 1.18f;
-	private const float DrawScaleMultiplier = 1.12f;
-
-	public static XnaVector2 GripOrigin(Texture2D weaponTexture)
+	public static XnaVector2 GripOrigin(Texture2D weaponTexture, in SpearHeldVisualProfile profile)
 	{
-		return new XnaVector2(weaponTexture.Width * GripOriginXFactor, weaponTexture.Height * GripOriginYFactor);
+		return new XnaVector2(weaponTexture.Width * profile.GripOriginFactor.X, weaponTexture.Height * profile.GripOriginFactor.Y);
 	}
 
-	public static XnaVector2 TipOrigin(Texture2D weaponTexture)
+	public static XnaVector2 TipOrigin(Texture2D weaponTexture, in SpearHeldVisualProfile profile)
 	{
-		return new XnaVector2(weaponTexture.Width * TipOriginXFactor, weaponTexture.Height * TipOriginYFactor);
+		return new XnaVector2(weaponTexture.Width * profile.TipOriginFactor.X, weaponTexture.Height * profile.TipOriginFactor.Y);
 	}
 
-	public static float TextureGripToTipLength(Texture2D weaponTexture)
+	public static float TextureGripToTipLength(Texture2D weaponTexture, in SpearHeldVisualProfile profile)
 	{
-		return Math.Max(1f, (TipOrigin(weaponTexture) - GripOrigin(weaponTexture)).Length());
+		return Math.Max(1f, (TipOrigin(weaponTexture, in profile) - GripOrigin(weaponTexture, in profile)).Length());
 	}
 
-	public static float DrawScale(float poseLength, float textureGripToTipLength)
+	public static float DrawScale(float poseLength, float textureGripToTipLength, in SpearHeldVisualProfile profile)
 	{
 		float safeTextureLength = Math.Max(1f, textureGripToTipLength);
-		float poseScale = Math.Clamp(poseLength / safeTextureLength, MinDrawScale, MaxDrawScale);
-		return poseScale * DrawScaleMultiplier;
+		float poseScale = Math.Clamp(poseLength / safeTextureLength, profile.MinDrawScale, profile.MaxDrawScale);
+		return poseScale * profile.DrawScaleMultiplier;
 	}
 
-	public static float VisibleTipDistance(float poseLength, float textureGripToTipLength)
+	public static float VisibleTipDistance(float poseLength, float textureGripToTipLength, in SpearHeldVisualProfile profile)
 	{
 		float safeTextureLength = Math.Max(1f, textureGripToTipLength);
-		return safeTextureLength * DrawScale(poseLength, safeTextureLength);
+		return safeTextureLength * DrawScale(poseLength, safeTextureLength, in profile) * profile.VisibleTipDistanceMultiplier;
 	}
 
-	public static XnaVector2 VisibleTip(XnaVector2 grip, XnaVector2 tip, Texture2D weaponTexture)
+	public static XnaVector2 VisibleTip(XnaVector2 grip, XnaVector2 tip, Texture2D weaponTexture, in SpearHeldVisualProfile profile)
 	{
 		XnaVector2 shaft = tip - grip;
 		float shaftLength = shaft.Length();
@@ -51,7 +43,7 @@ public static class SpearHeldVisualMetrics
 			return tip;
 		}
 
-		float visibleTipDistance = VisibleTipDistance(shaftLength, TextureGripToTipLength(weaponTexture));
+		float visibleTipDistance = VisibleTipDistance(shaftLength, TextureGripToTipLength(weaponTexture, in profile), in profile);
 		return grip + shaft / shaftLength * visibleTipDistance;
 	}
 }
