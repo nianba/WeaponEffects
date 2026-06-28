@@ -28,14 +28,12 @@ public static class SpearActionScheme
 			tipGlow: new SpearTipGlowProfile(
 				enabled: true,
 				startProgress: 0f,
-				centerOffset: 5f,
-				baseSize: 10f,
-				growthSize: 30f,
+				baseLengthRatio: 0.12f,
+				growthLengthRatio: 0.22f,
+				visualScale: 1f,
 				widthScale: 0.4f,
-				lengthScale: 1f,
-				uniformScale: 1f,
-				backExtentScale: 0.35f,
-				collisionPadding: 6f)),
+				backOverlap: 4f,
+				hitboxScale: 1.1f)),
 
 		new(
 			segmentIndex: 1,
@@ -66,7 +64,7 @@ public static class SpearActionScheme
 				enabled: true,
 				visualSampleCount: 18,
 				visualProgressWindow: 0.34f,
-				visualWidth: 12f,
+				visualWidth: 6f,
 				visualAlpha: 0.014f,
 				visualFadeInEnd: 0.42f,
 				visualFadeOutStart: 0.34f,
@@ -107,7 +105,7 @@ public static class SpearActionScheme
 				enabled: true,
 				visualSampleCount: 30,
 				visualProgressWindow: 0.46f,
-				visualWidth: 15f,
+				visualWidth: 6f,
 				visualAlpha: 0.014f,
 				visualFadeInEnd: 0.38f,
 				visualFadeOutStart: 0.36f,
@@ -147,14 +145,12 @@ public static class SpearActionScheme
 			tipGlow: new SpearTipGlowProfile(
 				enabled: true,
 				startProgress: 0.62f,
-				centerOffset: 50f,
-				baseSize: 10f,
-				growthSize: 10f,
-				widthScale: 3.0f,
-				lengthScale: 1.45f,
-				uniformScale: 1.1f,
-				backExtentScale: 0.35f,
-				collisionPadding: 50f))
+				baseLengthRatio: 0.6f,
+				growthLengthRatio: 0.08f,
+				visualScale: 1f,
+				widthScale: 1.0f,
+				backOverlap: 6f,
+				hitboxScale: 1.1f))
 	};
 
 	public static int Count => Steps.Length;

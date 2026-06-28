@@ -347,7 +347,6 @@ public class SpearTrailGlowProjectile : ModProjectile
 
 		direction /= spearLength;
 
-		float extensionProgress = MathHelper.Clamp(progress, 0f, 1f);
 		ref readonly SpearActionStep step = ref SpearActionScheme.GetStep(_comboStepIndex);
 		SpearTipGlowProfile tipGlow = step.TipGlow;
 		if (!tipGlow.Enabled || progress < tipGlow.StartProgress)
@@ -355,11 +354,12 @@ public class SpearTrailGlowProjectile : ModProjectile
 			return;
 		}
 
-		float centerDistance = Math.Max(0f, tipGlow.CenterOffset);
-		float extensionSize = tipGlow.SizeAt(progress);
+		float localProgress = tipGlow.LocalProgress(progress);
+		float visualLength = tipGlow.VisualLengthAt(progress, spearLength);
 		float baseSpearHitboxDiagonal = MathF.Sqrt(22f * 22f + 2f * 2f);
-		float extensionScale = extensionSize * MathF.Sqrt(2f) / baseSpearHitboxDiagonal;
-		float glowStrength = Utils.Remap(extensionProgress, 0f, 0.3f, 0f, 1f) * Utils.Remap(extensionProgress, 0.3f, 1f, 1f, 0f);
+		float spriteSize = MathHelper.Clamp(visualLength * 0.22f, 8f, 24f);
+		float spriteScale = spriteSize * MathF.Sqrt(2f) / baseSpearHitboxDiagonal;
+		float glowStrength = Utils.Remap(localProgress, 0f, 0.24f, 0f, 1f) * Utils.Remap(localProgress, 0.38f, 1f, 1f, 0f);
 		glowStrength = 1f - (1f - glowStrength) * (1f - glowStrength);
 		glowStrength *= fade;
 		if (glowStrength <= 0f)
@@ -368,25 +368,22 @@ public class SpearTrailGlowProjectile : ModProjectile
 		}
 
 		XnaVector2 visibleSpearTip = VisibleHeldSpearTip(pose);
-		float forwardExtent = tipGlow.ForwardExtentAt(progress);
-		float visualBackDistance = Math.Max(0f, centerDistance - forwardExtent * tipGlow.BackExtentScale);
-		float visualFrontDistance = tipGlow.FrontDistanceAt(progress);
-		XnaVector2 glowBack = visibleSpearTip + direction * visualBackDistance;
-		XnaVector2 glowCenter = visibleSpearTip + direction * centerDistance;
-		XnaVector2 glowFront = visibleSpearTip + direction * visualFrontDistance;
+		XnaVector2 glowBack = visibleSpearTip - direction * Math.Max(0f, tipGlow.BackOverlap);
+		XnaVector2 glowFront = visibleSpearTip + direction * visualLength;
+		XnaVector2 glowCenter = XnaVector2.Lerp(visibleSpearTip, glowFront, 0.42f);
 		float rotation = pose.Rotation + MathHelper.PiOver2;
 		Texture2D glowTexture = TextureAssets.Extra[ExtrasID.SharpTears].Value;
 		XnaVector2 glowOrigin = glowTexture.Size() * 0.5f;
 		Color glowColor = visualProfile.TipGlowColor * glowStrength;
 
-		DrawSpearTipGlowSegment(glowTexture, glowOrigin, XnaVector2.Lerp(glowCenter, glowFront, 0.35f), glowColor, rotation, new XnaVector2(glowStrength * extensionScale * tipGlow.WidthScale, extensionScale * tipGlow.LengthScale) * extensionScale * tipGlow.UniformScale);
-		DrawSpearTipGlowSegment(glowTexture, glowOrigin, glowCenter, glowColor, rotation, new XnaVector2(glowStrength * extensionScale * tipGlow.WidthScale, extensionScale * 1.5f * tipGlow.LengthScale) * extensionScale * tipGlow.UniformScale);
+		DrawSpearTipGlowSegment(glowTexture, glowOrigin, XnaVector2.Lerp(glowCenter, glowFront, 0.35f), glowColor, rotation, new XnaVector2(glowStrength * spriteScale * tipGlow.WidthScale, spriteScale));
+		DrawSpearTipGlowSegment(glowTexture, glowOrigin, glowCenter, glowColor, rotation, new XnaVector2(glowStrength * spriteScale * tipGlow.WidthScale * 0.78f, spriteScale * 1.35f));
 
 		for (float amount = 0f; amount <= 1f; amount += 0.125f)
 		{
 			XnaVector2 position = XnaVector2.Lerp(glowBack, glowFront, amount) + new XnaVector2(0f, 2f);
 			Color segmentColor = glowColor * 0.75f * amount;
-			XnaVector2 segmentScale = new XnaVector2(glowStrength * extensionScale * glowStrength * tipGlow.WidthScale, extensionScale * 2f * glowStrength * tipGlow.LengthScale) * extensionScale * tipGlow.UniformScale;
+			XnaVector2 segmentScale = new XnaVector2(glowStrength * glowStrength * spriteScale * tipGlow.WidthScale * 0.55f, spriteScale * 1.45f * glowStrength);
 			DrawSpearTipGlowSegment(glowTexture, glowOrigin, position, segmentColor, rotation, segmentScale);
 		}
 	}

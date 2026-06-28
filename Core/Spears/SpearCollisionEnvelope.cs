@@ -36,8 +36,9 @@ public static class SpearCollisionEnvelope
 
 	public static float CollisionTipExtensionDistance(
 		in SpearActionStep step,
-		float progress)
+		float progress,
+		float spearLength)
 	{
-		return step.TipGlow.CollisionExtensionAt(progress);
+		return step.TipGlow.HitboxExtensionAt(progress, spearLength);
 	}
 }

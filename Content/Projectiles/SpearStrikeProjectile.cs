@@ -257,7 +257,7 @@ public class SpearStrikeProjectile : ModProjectile
 			? pose.Grip + shaft * step.Afterimage.VisualReachScale
 			: VisibleHeldSpearTip(pose);
 		XnaVector2 scaledTip = pose.Grip + (baseTip - pose.Grip) * hitboxScale;
-		float extension = SpearCollisionEnvelope.CollisionTipExtensionDistance(in step, progress);
+		float extension = SpearCollisionEnvelope.CollisionTipExtensionDistance(in step, progress, spearLength);
 		return scaledTip + direction * extension;
 	}
 
