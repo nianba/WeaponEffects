@@ -21,7 +21,6 @@ public class SpearTrailGlowProjectile : ModProjectile
 	private const int SweepArcMaxVertices = SweepArcSamples * 2;
 	private const Player.CompositeArmStretchAmount SpearArmStretch = Player.CompositeArmStretchAmount.Full;
 	private const float SweepTipEdgeInnerShaftAmount = 0.86f;
-	private static readonly Color SpearTipGlowColor = new(250, 236, 182, 0);
 	private static Asset<Effect> _sweepArcEffect;
 
 	private readonly SlashVertex[] _sweepArcVertices = new SlashVertex[SweepArcMaxVertices];
@@ -136,12 +135,13 @@ public class SpearTrailGlowProjectile : ModProjectile
 	public override bool PreDraw(ref Color lightColor)
 	{
 		WeaponEffectsVisualConfig visualConfig = ModContent.GetInstance<WeaponEffectsVisualConfig>();
+		SpearVisualProfile visualProfile = SpearVisualProfileResolver.Resolve(_weaponItemType);
 		Texture2D shaftTexture = MeleeEffectAssets.GetTexture(MeleeEffectAssets.SlashTexture);
 		float currentProgress = CurrentProgress;
 
 		if (visualConfig.DrawSpearSweepArc)
 		{
-			DrawSweepArc(currentProgress);
+			DrawSweepArc(currentProgress, in visualProfile);
 		}
 
 		for (int i = TrailSamples - 1; i >= 0; i--)
@@ -156,14 +156,14 @@ public class SpearTrailGlowProjectile : ModProjectile
 
 			if (visualConfig.DrawSpearTipTrail && ShouldDrawSpearTipGlow())
 			{
-				DrawSpearTipGlow(pose, fade, sampleProgress, i);
+				DrawSpearTipGlow(pose, fade, sampleProgress, i, in visualProfile);
 			}
 		}
 
 		return false;
 	}
 
-	private void DrawSweepArc(float currentProgress)
+	private void DrawSweepArc(float currentProgress, in SpearVisualProfile visualProfile)
 	{
 		ref readonly SpearActionStep step = ref SpearActionScheme.GetStep(_comboStepIndex);
 		SpearSweepAfterimageProfile afterimage = step.Afterimage;
@@ -180,7 +180,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 			return;
 		}
 
-		DrawSweepArcVertices(currentProgress, in afterimage, motionAlpha);
+		DrawSweepArcVertices(currentProgress, in afterimage, motionAlpha, in visualProfile);
 	}
 
 	private bool ShouldDrawSpearTipGlow()
@@ -252,12 +252,12 @@ public class SpearTrailGlowProjectile : ModProjectile
 		return vertexCount;
 	}
 
-	private void DrawSweepArcVertices(float currentProgress, in SpearSweepAfterimageProfile afterimage, float motionAlpha)
+	private void DrawSweepArcVertices(float currentProgress, in SpearSweepAfterimageProfile afterimage, float motionAlpha, in SpearVisualProfile visualProfile)
 	{
 		GraphicsDevice device = Main.graphics.GraphicsDevice;
 		Effect effect = GetSweepArcEffect();
 		Texture2D sweepTexture = MeleeEffectAssets.GetTexture(MeleeEffectAssets.SlashTexture);
-		Texture2D colorTexture = MeleeEffectAssets.GetTexture(MeleeEffectAssets.SpearSweepColorTexture);
+		Texture2D colorTexture = MeleeEffectAssets.GetTexture(visualProfile.SweepColorTexturePath);
 		if (effect == null || sweepTexture == null || colorTexture == null)
 		{
 			return;
@@ -338,7 +338,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 			0f);
 	}
 
-	private void DrawSpearTipGlow(SpearPoseXna pose, float fade, float progress, int sampleIndex)
+	private void DrawSpearTipGlow(SpearPoseXna pose, float fade, float progress, int sampleIndex, in SpearVisualProfile visualProfile)
 	{
 		if (sampleIndex > 0)
 		{
@@ -384,7 +384,7 @@ public class SpearTrailGlowProjectile : ModProjectile
 		float rotation = pose.Rotation + MathHelper.PiOver2;
 		Texture2D glowTexture = TextureAssets.Extra[ExtrasID.SharpTears].Value;
 		XnaVector2 glowOrigin = glowTexture.Size() * 0.5f;
-		Color glowColor = SpearTipGlowColor * glowStrength;
+		Color glowColor = visualProfile.TipGlowColor * glowStrength;
 
 		DrawSpearTipGlowSegment(glowTexture, glowOrigin, XnaVector2.Lerp(glowCenter, glowFront, 0.35f), glowColor, rotation, new XnaVector2(glowStrength * extensionScale * tipGlow.WidthScale, extensionScale * tipGlow.LengthScale) * extensionScale * tipGlow.UniformScale);
 		DrawSpearTipGlowSegment(glowTexture, glowOrigin, glowCenter, glowColor, rotation, new XnaVector2(glowStrength * extensionScale * tipGlow.WidthScale, extensionScale * 1.5f * tipGlow.LengthScale) * extensionScale * tipGlow.UniformScale);
