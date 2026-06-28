@@ -156,6 +156,11 @@ public class SpearGlobalItem : GlobalItem
 
 	private static float TextureWeaponLength(Item item)
 	{
+		if (Main.dedServ)
+		{
+			return item.scale * new Vector2(item.width, item.height).Length();
+		}
+
 		Texture2D texture = TextureAssets.Item[item.type].Value;
 		return item.scale * new Vector2(texture.Width, texture.Height).Length();
 	}

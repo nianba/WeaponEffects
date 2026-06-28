@@ -66,16 +66,10 @@ public static class SpearReachProfile
 		string projectileName,
 		VanillaSpearMotionProfile profile)
 	{
-		try
+		int projectileType = SpearItemIdResolver.TryGetVanillaProjectileId(projectileName);
+		if (projectileType > ProjectileID.None)
 		{
-			int projectileType = ProjectileID.Search.GetId(projectileName);
-			if (projectileType > ProjectileID.None)
-			{
-				profiles[projectileType] = profile;
-			}
-		}
-		catch
-		{
+			profiles[projectileType] = profile;
 		}
 	}
 
