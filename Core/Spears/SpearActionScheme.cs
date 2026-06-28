@@ -75,7 +75,7 @@ public static class SpearActionScheme
 				collisionSampleCount: 8,
 				collisionSampleSpacing: 0.055f,
 				collisionWidth: 32f,
-				collisionReachScale: 2.7f),
+				hitboxScale: 1.1f),
 			tipGlow: SpearTipGlowProfile.Disabled),
 
 		new(
@@ -116,7 +116,7 @@ public static class SpearActionScheme
 				collisionSampleCount: 8,
 				collisionSampleSpacing: 0.06f,
 				collisionWidth: 36f,
-				collisionReachScale: 2.7f),
+				hitboxScale: 1.1f),
 			tipGlow: SpearTipGlowProfile.Disabled),
 
 		new(

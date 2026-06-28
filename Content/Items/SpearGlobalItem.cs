@@ -12,6 +12,7 @@ namespace WeaponEffects;
 public class SpearGlobalItem : GlobalItem
 {
 	private bool _usesSpearAction;
+	private float _spearBaseLength;
 
 	public override bool InstancePerEntity => true;
 
@@ -23,10 +24,10 @@ public class SpearGlobalItem : GlobalItem
 		}
 
 		_usesSpearAction = true;
+		_spearBaseLength = ResolveWeaponLength(item);
 		item.noUseGraphic = true;
 		item.noMelee = true;
 		item.channel = true;
-		item.shootSpeed = 40f;
 		item.useStyle = ItemUseStyleID.Rapier;
 		item.UseSound = SoundID.Item1;
 		item.shoot = ProjectileID.None;
@@ -51,11 +52,11 @@ public class SpearGlobalItem : GlobalItem
 
 		if (player.altFunctionUse == 2)
 		{
-			StartSpearThrowCharge(item, player);
+			StartSpearThrowCharge(item, player, StoredWeaponLength(item));
 			return true;
 		}
 
-		StartSpearAction(item, player);
+		StartSpearAction(item, player, StoredWeaponLength(item));
 		return true;
 	}
 
@@ -78,11 +79,12 @@ public class SpearGlobalItem : GlobalItem
 			return false;
 		}
 
-		StartSpearThrowCharge(item, player);
+		float weaponLength = item.GetGlobalItem<SpearGlobalItem>().StoredWeaponLength(item);
+		StartSpearThrowCharge(item, player, weaponLength);
 		return true;
 	}
 
-	private static void StartSpearThrowCharge(Item item, Player player)
+	private static void StartSpearThrowCharge(Item item, Player player, float weaponLength)
 	{
 		if (HasOwnedProjectile(player, ModContent.ProjectileType<SpearThrowChargeProjectile>()))
 		{
@@ -94,7 +96,6 @@ public class SpearGlobalItem : GlobalItem
 		player.itemAnimation = 0;
 		player.itemTime = 0;
 
-		float weaponLength = GetWeaponLength(item);
 		Vector2 targetWorld = Main.MouseWorld;
 
 		Projectile projectile = Projectile.NewProjectileDirect(
@@ -115,9 +116,8 @@ public class SpearGlobalItem : GlobalItem
 		MeleeEffectAssets.SyncProjectile(projectile);
 	}
 
-	private static void StartSpearAction(Item item, Player player)
+	private static void StartSpearAction(Item item, Player player, float weaponLength)
 	{
-		float weaponLength = GetWeaponLength(item);
 		Vector2 targetWorld = Main.MouseWorld;
 
 		Projectile projectile = Projectile.NewProjectileDirect(
@@ -144,7 +144,17 @@ public class SpearGlobalItem : GlobalItem
 			&& SpearWeaponClassifier.IsSupportedSpear(item);
 	}
 
-	private static float GetWeaponLength(Item item)
+	private float StoredWeaponLength(Item item)
+	{
+		return _spearBaseLength > 0f ? _spearBaseLength : ResolveWeaponLength(item);
+	}
+
+	private static float ResolveWeaponLength(Item item)
+	{
+		return SpearReachProfile.ResolveBaseLength(item, TextureWeaponLength(item));
+	}
+
+	private static float TextureWeaponLength(Item item)
 	{
 		Texture2D texture = TextureAssets.Item[item.type].Value;
 		return item.scale * new Vector2(texture.Width, texture.Height).Length();

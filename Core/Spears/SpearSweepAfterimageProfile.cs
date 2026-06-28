@@ -14,7 +14,7 @@ public readonly struct SpearSweepAfterimageProfile
 	public readonly int CollisionSampleCount;
 	public readonly float CollisionSampleSpacing;
 	public readonly float CollisionWidth;
-	public readonly float CollisionReachScale;
+	public readonly float HitboxScale;
 
 	public SpearSweepAfterimageProfile(
 		bool enabled,
@@ -29,7 +29,7 @@ public readonly struct SpearSweepAfterimageProfile
 		int collisionSampleCount,
 		float collisionSampleSpacing,
 		float collisionWidth,
-		float collisionReachScale)
+		float hitboxScale)
 	{
 		Enabled = enabled;
 		VisualSampleCount = visualSampleCount;
@@ -43,7 +43,7 @@ public readonly struct SpearSweepAfterimageProfile
 		CollisionSampleCount = collisionSampleCount;
 		CollisionSampleSpacing = collisionSampleSpacing;
 		CollisionWidth = collisionWidth;
-		CollisionReachScale = collisionReachScale;
+		HitboxScale = hitboxScale;
 	}
 
 	public static SpearSweepAfterimageProfile Disabled(float collisionWidth)
@@ -61,6 +61,6 @@ public readonly struct SpearSweepAfterimageProfile
 			collisionSampleCount: 8,
 			collisionSampleSpacing: 0.035f,
 			collisionWidth: collisionWidth,
-			collisionReachScale: 1f);
+			hitboxScale: 1f);
 	}
 }

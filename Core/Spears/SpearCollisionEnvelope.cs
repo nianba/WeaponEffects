@@ -9,9 +9,9 @@ public static class SpearCollisionEnvelope
 		return step.Afterimage.CollisionWidth;
 	}
 
-	public static float CollisionReachScale(in SpearActionStep step)
+	public static float HitboxScale(in SpearActionStep step)
 	{
-		return step.Afterimage.CollisionReachScale;
+		return step.Afterimage.HitboxScale;
 	}
 
 	public static float TrailSampleSpacing(in SpearActionStep step)
